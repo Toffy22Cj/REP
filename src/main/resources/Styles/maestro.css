@@ -1,0 +1,212 @@
+/* === Colores base REP (tema bosque) === */
+.root {
+    -fx-primary-color: #4caf50;     /* Verde principal */
+    -fx-secondary-color: #81c784;   /* Verde claro */
+    -fx-accent-color: #8d6e63;      /* Café suave */
+    -fx-light-color: #f1f8e9;       /* Verde muy claro */
+    -fx-dark-color: #2e3c2f;        /* Verde bosque oscuro */
+    -fx-gray-color: #5f6368;        /* Gris neutro */
+}
+
+/* === Fondo general === */
+.main-container {
+    -fx-background-color: #f0f7f2;
+}
+
+/* === Header === */
+.header-box {
+    -fx-background-color: linear-gradient(to right, #4caf50, #81c784);
+    -fx-padding: 15 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 0, 4, 0, 0);
+}
+
+.header-title {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.header-separator {
+    -fx-padding: 0 0 1 0;
+}
+
+/* === Secciones === */
+.section-title {
+    -fx-text-fill: -fx-dark-color;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.filter-section, .creation-section, .activities-section {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);
+}
+
+/* === Formularios === */
+.form-grid {
+    -fx-padding: 10;
+}
+
+.form-label {
+    -fx-text-fill: #355e3b; /* Verde bosque oscuro */
+    -fx-font-size: 14px;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.form-field, .form-combo, .form-datepicker {
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-color: #a5a58d;
+    -fx-border-width: 1;
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+}
+
+.form-field:focused, .form-combo:focused, .form-datepicker:focused {
+    -fx-border-color: -fx-primary-color;
+    -fx-effect: dropshadow(three-pass-box, rgba(76,175,80,0.25), 5, 0, 0, 2);
+}
+
+/* === Tablas === */
+.activities-table {
+    -fx-background-color: transparent;
+    -fx-border-color: #8d6e63;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.table-column {
+    -fx-font-size: 14px;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 15;
+}
+
+.table-column .label {
+    -fx-text-fill: #3e2c1c;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-border-color: transparent transparent #d7ccc8 transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #f5faf6;
+}
+
+.table-row-cell:even {
+    -fx-background-color: #e8f5e9;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #c8e6c9;
+    -fx-text-fill: -fx-dark-color;
+}
+
+.table-placeholder {
+    -fx-text-fill: -fx-gray-color;
+    -fx-font-size: 14px;
+    -fx-padding: 20;
+    -fx-alignment: CENTER;
+}
+
+/* === Botones === */
+.create-button {
+    -fx-background-color: -fx-secondary-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 8 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.create-button:hover {
+    -fx-background-color: #66bb6a;
+}
+
+.action-button {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-dark-color;
+    -fx-font-size: 14px;
+    -fx-padding: 8 15;
+    -fx-background-radius: 4;
+    -fx-border-color: #a5a58d;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.action-button:hover {
+    -fx-background-color: #f1f8e9;
+}
+
+.primary-action {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+    -fx-border-width: 0;
+}
+
+.primary-action:hover {
+    -fx-background-color: #388e3c;
+}
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-primary-color;
+    -fx-font-size: 14px;
+    -fx-padding: 5 10;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+
+.secondary-button:hover {
+    -fx-text-fill: #2e7d32;
+    -fx-underline: true;
+}
+
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+
+.logout-button:hover {
+    -fx-underline: true;
+}
+
+/* === Etiquetas de estado === */
+.status-label {
+    -fx-font-size: 14px;
+    -fx-padding: 5 0 0 0;
+}
+
+.status-label.error {
+    -fx-text-fill: #e53935;
+}
+
+.status-label.success {
+    -fx-text-fill: -fx-secondary-color;
+}
+
+/* === Footer === */
+.footer-box {
+    -fx-background-color: -fx-light-color;
+    -fx-padding: 10 20;
+    -fx-border-color: #c5e1a5;
+    -fx-border-width: 1 0 0 0;
+}
+
+.footer-text {
+    -fx-text-fill: -fx-dark-color;
+    -fx-font-size: 12px;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+}

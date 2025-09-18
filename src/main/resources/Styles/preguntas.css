@@ -1,0 +1,174 @@
+/* === Estilos base === */
+.editor-root {
+    -fx-background-color: #f0f7f2;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* === Encabezado === */
+.editor-header {
+    -fx-background-color: linear-gradient(to right, #4caf50, #81c784);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 0, 4, 0, 0);
+}
+
+.editor-title {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+/* === Paneles === */
+.panel-preguntas, .panel-edicion {
+    -fx-background-color: white;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);
+}
+
+.section-title {
+    -fx-text-fill: #2e3c2f;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* === Tabla de preguntas === */
+.preguntas-table {
+    -fx-border-color: #8d6e63;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+}
+
+.preguntas-table .column-header {
+    -fx-background-color: #a1887f;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.preguntas-table .table-row-cell {
+    -fx-border-color: transparent transparent #d7ccc8 transparent;
+}
+
+.preguntas-table .table-row-cell:odd {
+    -fx-background-color: #f5faf6;
+}
+
+.preguntas-table .table-row-cell:even {
+    -fx-background-color: #e8f5e9;
+}
+
+.preguntas-table .table-row-cell:selected {
+    -fx-background-color: #c8e6c9;
+    -fx-text-fill: #2e3c2f;
+}
+
+/* === Formulario === */
+.form-container {
+    -fx-spacing: 15;
+}
+
+.input-label {
+    -fx-text-fill: #355e3b; /* Verde bosque */
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.input-area {
+    -fx-background-color: white;
+    -fx-border-color: #a5a58d;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+}
+
+.input-area:focused {
+    -fx-border-color: #4caf50;
+    -fx-effect: dropshadow(three-pass-box, rgba(76,175,80,0.25), 5, 0, 0, 2);
+}
+
+.input-field {
+    -fx-background-color: white;
+    -fx-border-color: #a5a58d;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+}
+
+/* === Panel de opciones === */
+.panel-opciones {
+    -fx-spacing: 10;
+    -fx-padding: 10;
+    -fx-background-color: #f1f8e9;
+    -fx-border-color: #a5a58d;
+    -fx-border-radius: 4;
+}
+
+.opciones-list {
+    -fx-border-color: #a5a58d;
+    -fx-border-radius: 4;
+}
+
+.opciones-list .list-cell {
+    -fx-padding: 5 10;
+}
+
+.opciones-list .list-cell:odd {
+    -fx-background-color: #f5faf6;
+}
+
+.opciones-list .list-cell:even {
+    -fx-background-color: #e8f5e9;
+}
+
+.correct-checkbox {
+    -fx-text-fill: #388e3c;
+}
+
+/* === Botones === */
+.primary-button {
+    -fx-background-color: #4caf50;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #388e3c;
+}
+
+.danger-button {
+    -fx-background-color: #e53935;
+    -fx-text-fill: white;
+}
+
+.danger-button:hover {
+    -fx-background-color: #c62828;
+}
+
+.small-button {
+    -fx-font-size: 12px;
+    -fx-padding: 5 10;
+}
+
+.save-button {
+    -fx-background-color: #81c784;
+}
+
+.save-button:hover {
+    -fx-background-color: #66bb6a;
+}
+
+/* === Estado === */
+.status-label {
+    -fx-font-size: 14px;
+    -fx-padding: 10 0 0 0;
+}
+
+.status-label.error {
+    -fx-text-fill: #e53935;
+}
+
+.status-label.success {
+    -fx-text-fill: #388e3c;
+}
+
+.status-label.info {
+    -fx-text-fill: #5f6368;
+}

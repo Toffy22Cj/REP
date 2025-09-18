@@ -1,0 +1,148 @@
+/* === Estilos globales refinados para una app infantil con temática bosque === */
+.root {
+    -fx-font-family: "Nunito", "Comic Sans MS", "Arial Rounded MT Bold", sans-serif;
+    -fx-font-size: 14px;
+}
+
+/* === Fondo con gradiente natural === */
+.login-container {
+    -fx-background-color: linear-gradient(to bottom, #cdeac0 0%, #a5d6a7 100%);
+    -fx-padding: 40;
+    -fx-spacing: 25;
+    -fx-alignment: center;
+}
+
+/* === Encabezado con ícono y sombra elegante === */
+.header {
+    -fx-alignment: center;
+    -fx-spacing: 12;
+}
+
+.icon-circle {
+    -fx-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0.5, 2, 2);
+}
+
+.icon-text {
+    -fx-font-size: 30;
+    -fx-font-weight: bold;
+    -fx-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 3, 0.6, 1, 1);
+}
+
+/* === Panel central del formulario === */
+.form-panel {
+    -fx-background-color: #f1f8e9;
+    -fx-background-radius: 20;
+    -fx-padding: 30;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 12, 0.6, 0, 2);
+    -fx-spacing: 18;
+    -fx-alignment: center;
+}
+
+/* === Campos de texto con estilo natural === */
+.input-field, .combo-box {
+    -fx-background-radius: 25;
+    -fx-border-radius: 25;
+    -fx-padding: 10 15;
+    -fx-font-size: 15;
+    -fx-pref-width: 280;
+    -fx-background-insets: 0;
+    -fx-border-color: #a5a58d;
+    -fx-border-width: 1;
+    -fx-text-fill: #2e3c2f;
+}
+
+.input-field:hover, .combo-box:hover {
+    -fx-border-color: #81c784;
+}
+
+.input-field:focused, .combo-box:focused {
+    -fx-border-color: #66bb6a;
+    -fx-border-width: 2;
+}
+
+/* === Botón principal con vibras naturales === */
+.main-button {
+    -fx-background-color: #4caf50;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-background-radius: 25;
+    -fx-padding: 12 30;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 6, 0.5, 0, 1);
+    -fx-cursor: hand;
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+.main-button:hover {
+    -fx-background-color: #388e3c;
+}
+
+.main-button:pressed {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0.4, 0, 1);
+}
+
+/* === Pie de página con enlaces amigables === */
+.footer {
+    -fx-alignment: center;
+    -fx-spacing: 6;
+}
+
+.footer-label {
+    -fx-text-fill: #2e7d32;
+    -fx-font-size: 14;
+}
+
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #aed581;
+    -fx-font-weight: bold;
+    -fx-underline: true;
+    -fx-font-size: 14;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.link-button:hover {
+    -fx-text-fill: #c5e1a5;
+}
+
+/* === Mensaje de error o notificación en tonos tierra === */
+.message-label {
+    -fx-text-fill: #ffb74d;
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+}
+
+/* === Indicador de carga en verde suave === */
+.progress-indicator {
+    -fx-progress-color: #66bb6a;
+}
+
+/* === Decoración para texto grande e infantil === */
+.kids-decoration {
+    -fx-font-size: 26;
+    -fx-padding: 0 5;
+}
+
+/* === Estilos específicos para registro === */
+..input-label {
+     -fx-text-fill: #558b2f;         /* Verde oscuro */
+     -fx-font-weight: bold;
+     -fx-font-size: 14px;
+ }
+
+.section-label {
+    -fx-text-fill: #6d4c41;
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-padding: 0 0 8 0;
+    -fx-border-color: #6d4c41;
+    -fx-border-width: 0 0 2 0;
+}
+
+.kids-checkbox {
+    -fx-scale-x: 1.4;
+    -fx-scale-y: 1.4;
+}

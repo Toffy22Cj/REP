@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.collections.FXCollections?>
+
+<?import java.lang.String?>
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      stylesheets="@/Styles/login.css"
+      styleClass="login-container"
+      fx:controller="com.rep.controller.views.RegistroController"
+      alignment="CENTER"
+      spacing="20"
+      prefWidth="600">
+
+    <!-- Encabezado con icono -->
+    <VBox styleClass="header" alignment="CENTER" spacing="10">
+        <HBox alignment="CENTER" spacing="10">
+            <StackPane>
+                <Circle styleClass="icon-circle" radius="30"/>
+                <Text text="📝" styleClass="kids-decoration"/>
+            </StackPane>
+        </HBox>
+        <Text styleClass="icon-text" text="Registro de Estudiante"/>
+    </VBox>
+
+    <!-- Formulario de Registro -->
+    <VBox styleClass="form-panel" alignment="CENTER" spacing="15" prefWidth="550">
+        <!-- Primera fila (Nombre y Edad) -->
+        <HBox alignment="CENTER" spacing="20">
+            <VBox spacing="5">
+                <Label text="Nombre:" styleClass="input-label"/>
+                <TextField fx:id="nombre" styleClass="input-field" promptText="Tu nombre completo"/>
+            </VBox>
+            <VBox spacing="5">
+                <Label text="Edad:" styleClass="input-label"/>
+                <TextField fx:id="edad" styleClass="input-field" promptText="Tu edad"/>
+            </VBox>
+        </HBox>
+
+        <!-- Segunda fila (Identificación) -->
+        <HBox alignment="CENTER" spacing="20">
+            <VBox spacing="5">
+                <Label text="Tipo de ID:" styleClass="input-label"/>
+                <ComboBox fx:id="tipoIdentificacion" styleClass="input-field">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="CC" />
+                            <String fx:value="TI" />
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+            </VBox>
+            <VBox spacing="5">
+                <Label text="Número:" styleClass="input-label"/>
+                <TextField fx:id="identificacion" styleClass="input-field" promptText="Tu número de ID"/>
+            </VBox>
+        </HBox>
+        <ComboBox fx:id="sexo" promptText="Seleccione sexo"/>
+        <!-- Tercera fila (Credenciales) -->
+        <VBox spacing="15" alignment="CENTER">
+            <Label text="Crea tus credenciales" styleClass="section-label"/>
+
+            <HBox alignment="CENTER" spacing="20">
+                <VBox spacing="5">
+                    <Label text="Correo:" styleClass="input-label"/>
+                    <TextField fx:id="correo" styleClass="input-field" promptText="tucorreo@ejemplo.com"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Contraseña:" styleClass="input-label"/>
+                    <PasswordField fx:id="contraseña" styleClass="input-field" promptText="Crea una contraseña"/>
+                </VBox>
+            </HBox>
+
+            <PasswordField fx:id="confirmarContrasena" styleClass="input-field"
+                           promptText="Repite tu contraseña" style="-fx-pref-width: 400;"/>
+        </VBox>
+
+        <!-- Cuarta fila (Curso y Activo) -->
+        <HBox alignment="CENTER" spacing="20">
+            <VBox spacing="5">
+                <Label text="Curso:" styleClass="input-label"/>
+                <ComboBox fx:id="curso" styleClass="input-field"/>
+            </VBox>
+            <VBox spacing="5" alignment="CENTER">
+                <Label text="Activo:" styleClass="input-label"/>
+                <CheckBox fx:id="activo" selected="true" styleClass="kids-checkbox"/>
+            </VBox>
+        </HBox>
+
+        <!-- Botón de registro -->
+        <Button fx:id="registrar" onAction="#registrar"
+                styleClass="main-button" text="¡Completar Registro!"
+                style="-fx-font-size: 18; -fx-pref-width: 300;"/>
+
+        <ProgressIndicator fx:id="progressIndicator" visible="false"
+                           styleClass="progress-indicator"/>
+    </VBox>
+
+    <!-- Mensajes -->
+    <Label fx:id="lblMensaje" styleClass="message-label"/>
+</VBox>

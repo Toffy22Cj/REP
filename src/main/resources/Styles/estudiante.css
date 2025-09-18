@@ -1,0 +1,57 @@
+/* Estilos generales */
+.root {
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Estilos para los botones del menú */
+.button {
+    -fx-background-color: #4a6baf;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #3a5a9f;
+}
+
+/* Estilo para el área de contenido */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Estilo para las tarjetas de actividades/materias */
+.vbox {
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 5;
+    -fx-padding: 10;
+}
+
+.label {
+    -fx-text-fill: #333;
+}
+
+/* Estilo para títulos */
+.label-titulo {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+}
+
+/* Estilo para el estado del estudiante */
+.estado-activo {
+    -fx-text-fill: #27ae60;
+}
+
+.estado-suspendido {
+    -fx-text-fill: #e74c3c;
+}
+
+.estado-graduado {
+    -fx-text-fill: #3498db;
+}

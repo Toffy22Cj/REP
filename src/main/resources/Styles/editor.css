@@ -1,0 +1,20 @@
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.status-label {
+    -fx-background-color: #eeeeee;
+    -fx-font-weight: bold;
+    -fx-padding: 8;
+    -fx-text-fill: green;
+}
+
+.button {
+    -fx-cursor: hand;
+}
+
+.text-area, .text-field, .combo-box {
+    -fx-background-radius: 5;
+}

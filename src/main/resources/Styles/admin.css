@@ -1,0 +1,220 @@
+/* === Estilo general refinado - Tema ecológico moderno (REP) === */
+.root {
+    -fx-font-family: "Segoe UI", "Noto Sans", sans-serif;
+    -fx-font-size: 13px;
+    -fx-base: #8cbf75;
+    -fx-background-color: #f0f7f2;
+}
+
+/* === Encabezado con degradado de bosque === */
+.header-box {
+    -fx-background-color: linear-gradient(to right, #7aa97e, #b4d4ae); /* Verde hoja a verde claro */
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0.5, 0, 2);
+}
+
+.header-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 3, 0.5, 0, 1);
+}
+
+/* === Barra lateral ecológica y suave === */
+.sidebar {
+    -fx-background-color: #ffffff;
+    -fx-padding: 25 20;
+    -fx-border-color: #cfe8d9;
+    -fx-border-width: 0 1 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 4, 0.5, 0, 0);
+}
+
+.menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #4a6f52;
+    -fx-font-size: 14px;
+    -fx-padding: 12 20;
+    -fx-border-radius: 8;
+}
+
+.menu-button:hover {
+    -fx-background-color: #e2f1e4;
+    -fx-text-fill: #2d5f3b;
+    -fx-font-weight: bold;
+}
+
+/* === Panel de pestañas con verde suave === */
+.admin-tab-pane {
+    -fx-tab-min-height: 40;
+    -fx-tab-max-height: 40;
+    -fx-background-color: transparent;
+}
+
+.admin-tab {
+    -fx-background-color: #dcf0e0;
+    -fx-background-radius: 10 10 0 0;
+    -fx-text-fill: #4e8a63;
+    -fx-font-weight: semi-bold;
+}
+
+.admin-tab:selected {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #c3e2cb #c3e2cb transparent #c3e2cb;
+    -fx-border-width: 2;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6fa276;
+}
+
+.tab-content {
+    -fx-padding: 20;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cfe8d9;
+    -fx-border-width: 0 1 1 1;
+    -fx-border-radius: 0 0 10 10;
+}
+
+/* === Tabla de Preguntas y Opciones === */
+.table-view {
+    -fx-background-color: #f8f5f2; /* Fondo general suave */
+    -fx-border-color: #5c4033; /* Borde externo en café oscuro */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+/* === Encabezados de columna === */
+.table-view .column-header-background {
+    -fx-background-color: linear-gradient(to bottom, #8b5e3c, #5c4033); /* Café degradado */
+    -fx-padding: 8px;
+    -fx-border-color: #3e2c1c;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER;
+}
+
+/* === Filas === */
+.table-row-cell {
+    -fx-background-color: #fdfaf6; /* Fondo fila normal */
+    -fx-border-color: #b08968; /* Líneas internas en café claro */
+    -fx-border-width: 0 0 1px 0;
+}
+
+.table-row-cell:filled:selected {
+    -fx-background-color: #eaf5ed; /* Selección en beige/café claro */
+    -fx-text-fill: #000000;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #f4ede3; /* Fila alterna */
+}
+
+/* === Celdas === */
+.table-cell {
+    -fx-text-fill: #3e2c1c; /* Texto en café oscuro */
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 6px 8px;
+    -fx-border-color: transparent transparent #d2b48c transparent;
+}
+
+/* === ScrollBar para tablas === */
+.table-view .scroll-bar:vertical,
+.table-view .scroll-bar:horizontal {
+    -fx-background-color: #eae0d5;
+}
+
+.table-view .increment-button,
+.table-view .decrement-button {
+    -fx-background-color: #cbb59c;
+}
+
+/* === Tooltip (opcional si usas) === */
+.tooltip {
+    -fx-background-color: #5c4033;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+}
+
+
+/* === Botones con verdes armónicos === */
+.admin-action-button {
+    -fx-background-color: #6fa276;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-padding: 10 18;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0.4, 0, 1);
+}
+
+.admin-action-button:hover {
+    -fx-background-color: #588f5c;
+    -fx-cursor: hand;
+}
+
+.admin-delete-button {
+    -fx-background-color: #ffc9b9;
+    -fx-text-fill: #6b2e2e;
+    -fx-background-radius: 6;
+    -fx-padding: 10 18;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0.5, 0, 1);
+}
+
+.admin-delete-button:hover {
+    -fx-background-color: #ff9e8a;
+}
+
+/* === Contenedores elegantes con borde orgánico === */
+.section-box {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10;
+    -fx-padding: 20;
+    -fx-border-color: #d4e6d1;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 4, 0.3, 0, 2);
+}
+
+.section-title {
+    -fx-text-fill: #4e944f;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 10 0;
+    -fx-border-color: #bddfc3;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* === Etiquetas de estado === */
+.status-label {
+    -fx-text-fill: #f28c8c;
+    -fx-font-size: 13px;
+    -fx-padding: 5 0;
+}
+
+.success-message {
+    -fx-text-fill: #2f9e44;
+}
+
+.warning-message {
+    -fx-text-fill: #f9c74f;
+}
+
+/* === Botón de logout minimalista === */
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: white;
+    -fx-border-radius: 20;
+    -fx-padding: 6 20;
+}
+
+.logout-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-cursor: hand;
+}

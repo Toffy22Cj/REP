@@ -1,0 +1,55 @@
++-------------+       +-------------+       +-------------+
+|  usuarios   |       |   cursos    |       |  materias   |
++-------------+       +-------------+       +-------------+
+| PK id       |------>| PK id       |       | PK id       |
+| nombre      |       | grado       |       | nombre      |
+| correo      |       | grupo       |  +----+-------------+
+| identificac.|       | nombre      |  |    +-------------+
+| tipo_ident. |       +-------------+  |    |profesor_mat.|
+| contraseña  |       +-------------+  |    +-------------+
+| rol         |       | estudiantes |  |    | PK id       |
+| creado_en   |       +-------------+  |    | FK profesor|
++-------------+       | PK id       |<-+    | FK materia |
+       |              | FK curso_id |       | FK curso_id|
+       |              | edad        |       +-------------+
+       |              | fecha_ingr. |              |
+       |              | estado      |              |
+       |              +-------------+              |
+       |              +-------------+              |
+       |              | profesores  |<-------------+
+       |              +-------------+       +-------------+
+       |              | PK id       |       | actividades |
+       +------------->| estado      |       +-------------+
+                      | fecha_ingr. |<-----| PK id       |
+                      +-------------+       | titulo      |
+                                            | tipo        |
+                                            | descripcion |
+                                            | fecha_entre.|
+                                            | FK prof_mat.|
+                                            +-------------+
+                                                   |
+                                                   |
++-------------+       +-------------+       +-------------+
+| resp_estud. |       | preguntas   |       |  opciones   |
++-------------+       +-------------+       +-------------+
+| PK id       |       | PK id       |<------| PK id       |
+| FK estudiante|      | FK actividad|       | FK pregunta |
+| FK actividad |      | enunciado   |       | texto       |
+| nota        |       | tipo        |       | es_correcta |
+| entregado   |       +-------------+       +-------------+
+| fecha_inicio|              |
+| fecha_entrega|             |
+| duracion_min|              |
++-------------+              |
+       |                     |
+       |                     |
+       |             +-------------+
+       +------------>| resp_preg.  |
+                      +-------------+
+                      | PK id       |
+                      | FK estudiante
+                      | FK pregunta |
+                      | FK opcion   |
+                      | resp_abierta|
+                      | es_correcta |
+                      +-------------+

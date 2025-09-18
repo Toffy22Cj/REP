@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.rep.model.Pregunta.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Orientation?>
+
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.rep.controller.views.EditorPreguntasController"
+            stylesheets="@../Styles/preguntas.css"
+            styleClass="editor-root">
+
+    <!-- TOP: Encabezado -->
+    <top>
+        <HBox alignment="CENTER_LEFT" styleClass="editor-header">
+            <spacing>20.0</spacing>
+            <padding>
+                <Insets top="15.0" right="20.0" bottom="15.0" left="20.0"/>
+            </padding>
+            <Label fx:id="tituloLabel" text="Editor de Preguntas" styleClass="editor-title"/>
+        </HBox>
+    </top>
+
+    <!-- CENTER: Vista dividida -->
+    <center>
+        <SplitPane orientation="HORIZONTAL" dividerPositions="0.5">
+            <!-- Panel de preguntas -->
+            <VBox styleClass="panel-preguntas">
+                <spacing>10.0</spacing>
+                <padding>
+                    <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+                </padding>
+                <Label text="Preguntas de la Actividad" styleClass="section-title"/>
+                <TableView fx:id="preguntasTable" styleClass="preguntas-table">
+                    <columns>
+                        <TableColumn fx:id="colEnunciado" text="Enunciado" prefWidth="300.0"/>
+                        <TableColumn fx:id="colTipo" text="Tipo" prefWidth="150.0">
+                            <cellValueFactory>
+                                <PropertyValueFactory property="tipo" />
+                            </cellValueFactory>
+                        </TableColumn>
+                    </columns>
+                </TableView>
+                <HBox alignment="CENTER_RIGHT" spacing="10">
+                    <Button fx:id="btnAgregarPregunta" text="Nueva Pregunta" styleClass="primary-button" onAction="#agregarPregunta"/>
+                    <Button fx:id="btnEliminarPregunta" text="Eliminar" styleClass="danger-button" onAction="#eliminarPregunta"/>
+                </HBox>
+            </VBox>
+
+            <!-- Panel de edición -->
+            <VBox styleClass="panel-edicion">
+                <spacing>15.0</spacing>
+                <padding>
+                    <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+                </padding>
+                <Label text="Editar Pregunta" styleClass="section-title"/>
+
+                <!-- Formulario de edición -->
+                <VBox styleClass="form-container">
+                    <Label text="Enunciado:" styleClass="input-label"/>
+                    <TextArea fx:id="campoPregunta" promptText="Escriba el enunciado aquí..." styleClass="input-area" prefRowCount="3" wrapText="true"/>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="Tipo:" styleClass="input-label"/>
+                        <ComboBox fx:id="tipoComboBox" styleClass="input-field" prefWidth="200"/>
+                    </HBox>
+
+                    <!-- Panel de opciones (solo visible para OPCION_MULTIPLE) -->
+                    <VBox fx:id="panelOpciones" styleClass="panel-opciones">
+                        <Label text="Opciones:" styleClass="input-label"/>
+                        <ListView fx:id="listaOpciones" styleClass="opciones-list" prefHeight="150.0"/>
+                        <!-- Panel para VERDADERO_FALSO -->
+                        <VBox fx:id="panelVerdaderoFalso" styleClass="subpanel" visible="false">
+                            <Label text="Seleccione la respuesta correcta:" styleClass="input-label"/>
+                            <HBox spacing="10">
+                                <RadioButton fx:id="radioVerdadero" text="Verdadero" styleClass="radio-button"/>
+                                <RadioButton fx:id="radioFalso" text="Falso" styleClass="radio-button"/>
+                            </HBox>
+                        </VBox>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <TextField fx:id="campoNuevaOpcion" promptText="Nueva opción" styleClass="input-field" prefWidth="200"/>
+                            <CheckBox fx:id="checkCorrecta" text="Correcta" styleClass="correct-checkbox"/>
+                            <Button fx:id="btnAgregarOpcion" text="Agregar" styleClass="small-button" onAction="#agregarOpcion"/>
+                            <Button fx:id="btnEliminarOpcion" text="Eliminar" styleClass="small-button danger-button" onAction="#eliminarOpcion"/>
+                        </HBox>
+                    </VBox>
+
+                    <Button fx:id="btnGuardar" text="Guardar Cambios" styleClass="primary-button save-button" onAction="#guardarPregunta"/>
+                </VBox>
+
+                <Label fx:id="statusLabel" styleClass="status-label"/>
+            </VBox>
+        </SplitPane>
+    </center>
+</BorderPane>

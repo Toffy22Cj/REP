@@ -25,11 +25,11 @@ public class AdminApi {
 
     @Autowired
     public AdminApi(UsuarioRepository usuarioRepository,
-                    EstudianteRepository estudianteRepository,
-                    ProfesorRepository profesorRepository,
-                    CursoRepository cursoRepository,
-                    MateriaRepository materiaRepository,
-                    ProfesorMateriaRepository profesorMateriaRepository) {
+            EstudianteRepository estudianteRepository,
+            ProfesorRepository profesorRepository,
+            CursoRepository cursoRepository,
+            MateriaRepository materiaRepository,
+            ProfesorMateriaRepository profesorMateriaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.estudianteRepository = estudianteRepository;
         this.profesorRepository = profesorRepository;
@@ -105,11 +105,13 @@ public class AdminApi {
                     .orElseThrow(() -> new RuntimeException("Curso no encontrado"));
 
             if (!estudianteRepository.findByCursoId(id).isEmpty()) {
-                return ResponseEntity.badRequest().body("No se puede eliminar el curso porque tiene estudiantes asignados");
+                return ResponseEntity.badRequest()
+                        .body("No se puede eliminar el curso porque tiene estudiantes asignados");
             }
 
             if (!profesorMateriaRepository.findByCursoId(id).isEmpty()) {
-                return ResponseEntity.badRequest().body("No se puede eliminar el curso porque tiene materias asignadas");
+                return ResponseEntity.badRequest()
+                        .body("No se puede eliminar el curso porque tiene materias asignadas");
             }
 
             cursoRepository.delete(curso);
@@ -147,6 +149,7 @@ public class AdminApi {
             return ResponseEntity.internalServerError().build();
         }
     }
+
     @GetMapping("/asignaciones/curso-materia")
     public ResponseEntity<List<ProfesorMateria>> getAsignacionesPorCursoYMateria(
             @RequestParam Long cursoId,
@@ -159,6 +162,7 @@ public class AdminApi {
             return ResponseEntity.internalServerError().build();
         }
     }
+
     // -------------------- Gestión de Materias --------------------
     @GetMapping("/materias")
     public ResponseEntity<List<Materia>> listarMaterias() {
@@ -200,7 +204,8 @@ public class AdminApi {
             }
 
             if (profesorMateriaRepository.existsByMateriaId(id)) {
-                return ResponseEntity.badRequest().body("No se puede eliminar la materia porque está asignada a uno o más profesores");
+                return ResponseEntity.badRequest()
+                        .body("No se puede eliminar la materia porque está asignada a uno o más profesores");
             }
 
             materiaRepository.deleteById(id);
@@ -252,6 +257,11 @@ public class AdminApi {
                     .map(usuario -> {
                         usuario.setNombre(usuarioActualizado.getNombre());
                         usuario.setCorreo(usuarioActualizado.getCorreo());
+                        // Only update password if provided and not empty
+                        if (usuarioActualizado.getContraseña() != null
+                                && !usuarioActualizado.getContraseña().isEmpty()) {
+                            usuario.setContraseña(usuarioActualizado.getContraseña());
+                        }
                         usuario.setRol(usuarioActualizado.getRol());
                         usuario.setActivo(usuarioActualizado.isActivo());
                         return ResponseEntity.ok(usuarioRepository.save(usuario));
@@ -263,6 +273,21 @@ public class AdminApi {
         }
     }
 
+    @PutMapping("/usuarios/{id}/estado")
+    public ResponseEntity<?> cambiarEstadoUsuario(@PathVariable Long id, @RequestParam boolean activo) {
+        try {
+            return usuarioRepository.findById(id)
+                    .map(usuario -> {
+                        usuario.setActivo(activo);
+                        return ResponseEntity.ok(usuarioRepository.save(usuario));
+                    })
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("Error al cambiar estado: " + e.getMessage());
+        }
+    }
+
     @DeleteMapping("/usuarios/{id}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
         try {
@@ -271,7 +296,8 @@ public class AdminApi {
 
             if (usuario.getRol() == Usuario.Rol.PROFESOR &&
                     !profesorMateriaRepository.findByProfesorId(id).isEmpty()) {
-                return ResponseEntity.badRequest().body("No se puede eliminar el profesor porque tiene materias asignadas");
+                return ResponseEntity.badRequest()
+                        .body("No se puede eliminar el profesor porque tiene materias asignadas");
             }
 
             usuarioRepository.delete(usuario);
@@ -338,7 +364,8 @@ public class AdminApi {
         }
     }
 
-    // -------------------- Gestión de Asignaciones Profesor-Materia --------------------
+    // -------------------- Gestión de Asignaciones Profesor-Materia
+    // --------------------
     @GetMapping("/profesores/{id}/asignaciones")
     public ResponseEntity<List<ProfesorMateria>> getAsignacionesPorProfesor(@PathVariable Long id) {
         try {

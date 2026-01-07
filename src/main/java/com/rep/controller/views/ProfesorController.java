@@ -1,7 +1,7 @@
 package com.rep.controller.views;
 
 import com.rep.config.SpringFXMLLoader;
-import javafx.geometry.Rectangle2D;  // Para Rectangle2D
+import javafx.geometry.Rectangle2D; // Para Rectangle2D
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import com.rep.dto.actividad.ActividadCreateDTO;
@@ -48,19 +48,32 @@ public class ProfesorController {
     private final String API_actividad_URL = "http://localhost:8080/api";
     private final String API_PREGUNTAS_URL = "http://localhost:8080/api/preguntas";
     // Elementos de la UI
-    @FXML private ComboBox<Materia> materiaComboBox;
-    @FXML private ComboBox<CursoDTO> cursoComboBox;
-    @FXML private ComboBox<String> tipoActividadComboBox;
-    @FXML private TextField tituloTextField;
-    @FXML private DatePicker fechaEntregaPicker;
-    @FXML private TextField duracionTextField;
-    @FXML private Button crearActividadButton;
-    @FXML private Label statusActividadLabel;
-    @FXML private TableView<Actividad> actividadesTable;
-    @FXML private TableColumn<Actividad, String> colTitulo;
-    @FXML private TableColumn<Actividad, String> colTipo;
-    @FXML private TableColumn<Actividad, LocalDate> colFecha;
-    @FXML private TableColumn<Actividad, Integer> colDuracion;
+    @FXML
+    private ComboBox<Materia> materiaComboBox;
+    @FXML
+    private ComboBox<CursoDTO> cursoComboBox;
+    @FXML
+    private ComboBox<String> tipoActividadComboBox;
+    @FXML
+    private TextField tituloTextField;
+    @FXML
+    private DatePicker fechaEntregaPicker;
+    @FXML
+    private TextField duracionTextField;
+    @FXML
+    private Button crearActividadButton;
+    @FXML
+    private Label statusActividadLabel;
+    @FXML
+    private TableView<Actividad> actividadesTable;
+    @FXML
+    private TableColumn<Actividad, String> colTitulo;
+    @FXML
+    private TableColumn<Actividad, String> colTipo;
+    @FXML
+    private TableColumn<Actividad, LocalDate> colFecha;
+    @FXML
+    private TableColumn<Actividad, Integer> colDuracion;
     @Autowired
     private JwtTokenHolder jwtTokenHolder;
     @Autowired
@@ -71,7 +84,7 @@ public class ProfesorController {
     private ProfesorMateriaService profesorMateriaService;
     private ObservableList<Actividad> actividadesList = FXCollections.observableArrayList();
     @Autowired
-    private  SpringFXMLLoader springFXMLLoader;
+    private SpringFXMLLoader springFXMLLoader;
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -111,10 +124,9 @@ public class ProfesorController {
             }
         });
 
-
         // Configurar combobox de tipos de actividad
         tipoActividadComboBox.setItems(FXCollections.observableArrayList(
-                "examen", "quiz", "taller"  // Valores en minúsculas para coincidir con la BD
+                "examen", "quiz", "taller" // Valores en minúsculas para coincidir con la BD
         ));
         // Configurar tabla de actividades
         configurarTablaActividades();
@@ -148,10 +160,7 @@ public class ProfesorController {
 
         actividadesTable.setItems(actividadesList);
 
-
     }
-
-
 
     private void cargarMaterias() {
         try {
@@ -162,8 +171,8 @@ public class ProfesorController {
                     API_BASE_URL + "/materias",
                     HttpMethod.GET,
                     entity,
-                    new ParameterizedTypeReference<List<Materia>>() {}
-            );
+                    new ParameterizedTypeReference<List<Materia>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 materiaComboBox.setItems(FXCollections.observableArrayList(response.getBody()));
@@ -197,8 +206,8 @@ public class ProfesorController {
                     API_BASE_URL + "/cursos",
                     HttpMethod.GET,
                     entity,
-                    new ParameterizedTypeReference<List<CursoDTO>>() {}
-            );
+                    new ParameterizedTypeReference<List<CursoDTO>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 cursoComboBox.setItems(FXCollections.observableArrayList(response.getBody()));
@@ -226,7 +235,8 @@ public class ProfesorController {
                     url += "materiaId=" + materiaId;
                 }
                 if (cursoId != null) {
-                    if (materiaId != null) url += "&";
+                    if (materiaId != null)
+                        url += "&";
                     url += "cursoId=" + cursoId;
                 }
             }
@@ -235,8 +245,8 @@ public class ProfesorController {
                     url,
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<List<ActividadDTO>>() {}
-            );
+                    new ParameterizedTypeReference<List<ActividadDTO>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 actividadesList.clear();
@@ -327,8 +337,7 @@ public class ProfesorController {
             ResponseEntity<ActividadDTO> response = restTemplate.postForEntity(
                     "http://localhost:8080/api/actividades",
                     new HttpEntity<>(actividadDTO, headers),
-                    ActividadDTO.class
-            );
+                    ActividadDTO.class);
 
             // Procesar respuesta
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -389,8 +398,8 @@ public class ProfesorController {
                     API_actividad_URL + "/respuestas/actividad/" + actividadSeleccionada.getId(),
                     HttpMethod.GET,
                     entity,
-                    new ParameterizedTypeReference<List<RespuestaEstudiante>>() {}
-            );
+                    new ParameterizedTypeReference<List<RespuestaEstudiante>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 // Aquí puedes mostrar los resultados en una nueva ventana o diálogo
@@ -411,8 +420,8 @@ public class ProfesorController {
                     API_PREGUNTAS_URL + "/actividad/" + actividadId,
                     HttpMethod.GET,
                     entity,
-                    new ParameterizedTypeReference<List<Pregunta>>() {}
-            );
+                    new ParameterizedTypeReference<List<Pregunta>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 return FXCollections.observableArrayList(response.getBody());
@@ -431,8 +440,7 @@ public class ProfesorController {
             ResponseEntity<Pregunta> response = restTemplate.postForEntity(
                     API_BASE_URL + "/preguntas",
                     new HttpEntity<>(pregunta, headers),
-                    Pregunta.class
-            );
+                    Pregunta.class);
 
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
@@ -451,8 +459,7 @@ public class ProfesorController {
                     API_PREGUNTAS_URL + "/" + preguntaId,
                     HttpMethod.DELETE,
                     entity,
-                    Void.class
-            );
+                    Void.class);
 
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
@@ -532,8 +539,8 @@ public class ProfesorController {
             dialog.setOnCloseRequest(event -> {
                 // Opcional: Mostrar confirmación si hay cambios no guardados
                 // if (controller.tieneCambiosNoGuardados()) {
-                //     event.consume();
-                //     mostrarConfirmacionCierre(dialog);
+                // event.consume();
+                // mostrarConfirmacionCierre(dialog);
                 // }
             });
 
@@ -551,6 +558,7 @@ public class ProfesorController {
             e.printStackTrace();
         }
     }
+
     private void mostrarResultados(List<RespuestaEstudiante> respuestas, String tituloActividad) {
         // Implementa la lógica para mostrar los resultados
         // Puedes crear un diálogo o una nueva ventana con una tabla
@@ -562,12 +570,12 @@ public class ProfesorController {
         TableView<RespuestaEstudiante> table = new TableView<>();
 
         TableColumn<RespuestaEstudiante, String> colEstudiante = new TableColumn<>("Estudiante");
-        colEstudiante.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getEstudiante().getNombre()));
+        colEstudiante.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
+                cellData.getValue().getEstudiante().getNombre()));
 
         TableColumn<RespuestaEstudiante, String> colNota = new TableColumn<>("Nota");
-        colNota.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(String.valueOf(cellData.getValue().getNota())));
+        colNota.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
+                String.valueOf(cellData.getValue().getNota())));
 
         table.getColumns().addAll(colEstudiante, colNota);
         table.setItems(FXCollections.observableArrayList(respuestas));
@@ -575,21 +583,20 @@ public class ProfesorController {
         dialog.getDialogPane().setContent(table);
         dialog.showAndWait();
     }
+
     private <T> ResponseEntity<T> executeAuthenticatedRequest(String url, HttpMethod method,
-                                                              HttpEntity<?> requestEntity,
-                                                              ParameterizedTypeReference<T> responseType) {
+            HttpEntity<?> requestEntity,
+            ParameterizedTypeReference<T> responseType) {
         try {
             HttpHeaders headers = createHeaders();
-            HttpEntity<?> entity = requestEntity != null ?
-                    new HttpEntity<>(requestEntity.getBody(), headers) :
-                    new HttpEntity<>(headers);
+            HttpEntity<?> entity = requestEntity != null ? new HttpEntity<>(requestEntity.getBody(), headers)
+                    : new HttpEntity<>(headers);
 
             return restTemplate.exchange(
                     url,
                     method,
                     entity,
-                    responseType
-            );
+                    responseType);
         } catch (HttpClientErrorException.Forbidden e) {
             mostrarError("Acceso denegado: No tiene permisos para esta acción", Color.RED);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -604,20 +611,18 @@ public class ProfesorController {
 
     // Mantén también la versión original para Class<T>
     private <T> ResponseEntity<T> executeAuthenticatedRequest(String url, HttpMethod method,
-                                                              HttpEntity<?> requestEntity,
-                                                              Class<T> responseType) {
+            HttpEntity<?> requestEntity,
+            Class<T> responseType) {
         try {
             HttpHeaders headers = createHeaders();
-            HttpEntity<?> entity = requestEntity != null ?
-                    new HttpEntity<>(requestEntity.getBody(), headers) :
-                    new HttpEntity<>(headers);
+            HttpEntity<?> entity = requestEntity != null ? new HttpEntity<>(requestEntity.getBody(), headers)
+                    : new HttpEntity<>(headers);
 
             return restTemplate.exchange(
                     url,
                     method,
                     entity,
-                    responseType
-            );
+                    responseType);
         } catch (HttpClientErrorException.Forbidden e) {
             mostrarError("Acceso denegado: No tiene permisos para esta acción", Color.RED);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -629,6 +634,7 @@ public class ProfesorController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
     @FXML
     private void cerrarSesion() {
         try {
@@ -652,6 +658,7 @@ public class ProfesorController {
             e.printStackTrace();
         }
     }
+
     @FXML
     private void actualizarActividad() {
         // Obtener la actividad seleccionada
@@ -675,7 +682,8 @@ public class ProfesorController {
                 actividadDTO.setTitulo(tituloTextField.getText().trim());
                 actividadDTO.setFechaEntrega(fechaEntregaPicker.getValue());
                 actividadDTO.setDuracionMinutos(Integer.parseInt(duracionTextField.getText().trim()));
-                actividadDTO.setTipo(Actividad.TipoActividad.forValue(tipoActividadComboBox.getSelectionModel().getSelectedItem().toLowerCase()));
+                actividadDTO.setTipo(Actividad.TipoActividad
+                        .forValue(tipoActividadComboBox.getSelectionModel().getSelectedItem().toLowerCase()));
                 actividadDTO.setDescripcion(""); // O actualizar si tienes campo de descripción
 
                 // Configurar headers
@@ -687,8 +695,7 @@ public class ProfesorController {
                         API_actividad_URL + "/actividades/" + actividadSeleccionada.getId(),
                         HttpMethod.PUT,
                         new HttpEntity<>(actividadDTO, headers),
-                        ActividadDTO.class
-                );
+                        ActividadDTO.class);
 
                 // Procesar respuesta
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -705,6 +712,7 @@ public class ProfesorController {
             }
         }
     }
+
     @FXML
     private void exportarResultados() {
         // 1. Validar selección de actividad y curso
@@ -731,8 +739,7 @@ public class ProfesorController {
                     API_BASE_URL,
                     cursoComboBox.getValue().getId(),
                     actividad.getId(),
-                    formato
-            );
+                    formato);
 
             try {
                 // 3. Configurar headers con el token JWT
@@ -745,18 +752,15 @@ public class ProfesorController {
                         url,
                         HttpMethod.GET,
                         entity,
-                        byte[].class
-                );
+                        byte[].class);
 
                 // 5. Mostrar diálogo para guardar el archivo
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setInitialFileName(
-                        String.format("resultados_%s.%s", actividad.getTitulo(), formato)
-                );
+                        String.format("resultados_%s.%s", actividad.getTitulo(), formato));
                 fileChooser.getExtensionFilters().addAll(
                         new FileChooser.ExtensionFilter(
-                                formato.toUpperCase() + " Files", "*." + formato)
-                );
+                                formato.toUpperCase() + " Files", "*." + formato));
                 File file = fileChooser.showSaveDialog(actividadesTable.getScene().getWindow());
 
                 if (file != null) {
@@ -772,4 +776,46 @@ public class ProfesorController {
 
     }
 
+    @FXML
+    private void abrirAsistencia() {
+        try {
+            URL fxmlUrl = getClass().getResource("/view/asistencia.fxml");
+            if (fxmlUrl == null) {
+                mostrarError("No se encontró el archivo asistencia.fxml", Color.RED);
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            Parent root = loader.load();
+
+            AsistenciaController controller = loader.getController();
+            if (controller == null) {
+                mostrarError("Error al inicializar el controlador de asistencia", Color.RED);
+                return;
+            }
+
+            // Pass dependencies
+            controller.setJwtTokenHolder(this.jwtTokenHolder);
+
+            // Pass current selection if any (optional, purely for UX)
+            if (cursoComboBox.getValue() != null) {
+                // controller.setCurso(cursoComboBox.getValue()); // If we implemented this
+                // setter
+            }
+
+            // Pass the lists from the current combo boxes
+            controller.setCursos(cursoComboBox.getItems());
+            controller.setMaterias(materiaComboBox.getItems());
+
+            Stage stage = new Stage();
+            stage.setTitle("Gestión de Asistencia");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.show();
+
+        } catch (Exception e) {
+            mostrarError("Error al abrir asistencia: " + e.getMessage(), Color.RED);
+            e.printStackTrace();
+        }
+    }
 }

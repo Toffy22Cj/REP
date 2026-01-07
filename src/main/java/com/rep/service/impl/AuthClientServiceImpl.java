@@ -1,8 +1,9 @@
-package com.rep.service.funciones;
+package com.rep.service.impl;
 
 import com.rep.dto.auth.LoginRequest;
 import com.rep.dto.auth.LoginResponse;
 import com.rep.service.ApiClientService;
+import com.rep.service.funciones.AuthServiceClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
@@ -20,8 +21,7 @@ public class AuthClientServiceImpl implements AuthServiceClient {
         ResponseEntity<LoginResponse> response = apiClient.post(
                 "/auth/login",
                 new LoginRequest(identificacion, password),
-                LoginResponse.class
-        );
+                LoginResponse.class);
         return response.getStatusCode().is2xxSuccessful()
                 ? Optional.ofNullable(response.getBody())
                 : Optional.empty();

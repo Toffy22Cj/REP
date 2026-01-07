@@ -1,6 +1,5 @@
 package com.rep.controller.views;
 
-
 import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.auth.RegistroUsuarioDTO;
 
@@ -33,49 +32,92 @@ import java.util.*;
 public class AdminPanelController {
     // ----------- UI Components -----------
     // Materias section
-    @FXML private TextField materiaTextField;
-    @FXML private TableView<Materia> materiasTable;
-    @FXML private TableColumn<Materia, Long> colMateriaId;
-    @FXML private TableColumn<Materia, String> colMateriaNombre;
-    @FXML private Label statusMateriaLabel;
+    @FXML
+    private TextField materiaTextField;
+    @FXML
+    private TableView<Materia> materiasTable;
+    @FXML
+    private TableColumn<Materia, Long> colMateriaId;
+    @FXML
+    private TableColumn<Materia, String> colMateriaNombre;
+    @FXML
+    private Label statusMateriaLabel;
 
     // Cursos section
-    @FXML private TextField gradoCursoField;
-    @FXML private TextField grupoCursoField;
-    @FXML private Button crearCursoButton;
-    @FXML private Label statusCursoLabel;
-    @FXML private TableView<Curso> cursosTable;
-    @FXML private TableColumn<Curso, String> colCursoNombre;
-    @FXML private TableColumn<Curso, Integer> colCursoGrado;
-    @FXML private TableColumn<Curso, String> colCursoGrupo;
+    @FXML
+    private TextField gradoCursoField;
+    @FXML
+    private TextField grupoCursoField;
+    @FXML
+    private Button crearCursoButton;
+    @FXML
+    private Label statusCursoLabel;
+    @FXML
+    private TableView<Curso> cursosTable;
+    @FXML
+    private TableColumn<Curso, String> colCursoNombre;
+    @FXML
+    private TableColumn<Curso, Integer> colCursoGrado;
+    @FXML
+    private TableColumn<Curso, String> colCursoGrupo;
 
     // Profesores section
-    @FXML private TextField nombreProfesorField;
-    @FXML private TextField correoProfesorField;
-    @FXML private PasswordField claveProfesorField;
-    @FXML private ComboBox<String> materiaAsignarCombo;
-    @FXML private ComboBox<String> cursoAsignarCombo;
-    @FXML private ComboBox<String> profesorAsignarCombo;
-    @FXML private TableView<Usuario> profesoresTable;
-    @FXML private TableColumn<Usuario, Long> colProfId;
-    @FXML private TableColumn<Usuario, String> colProfNombre;
-    @FXML private TableColumn<Usuario, String> colProfCorreo;
+    @FXML
+    private TextField nombreProfesorField;
+    @FXML
+    private TextField correoProfesorField;
+    @FXML
+    private PasswordField claveProfesorField;
+    @FXML
+    private ComboBox<String> materiaAsignarCombo;
+    @FXML
+    private ComboBox<String> cursoAsignarCombo;
+    @FXML
+    private ComboBox<String> profesorAsignarCombo;
+    @FXML
+    private TableView<Usuario> profesoresTable;
+    @FXML
+    private TableColumn<Usuario, Long> colProfId;
+    @FXML
+    private TableColumn<Usuario, String> colProfNombre;
+    @FXML
+    private TableColumn<Usuario, String> colProfCorreo;
+    @FXML
+    private TableColumn<Usuario, Boolean> colProfActivo;
+    @FXML
+    private TextField searchProfesorField;
 
     // Estudiantes section
-    @FXML private TextField nombreEstudianteField;
-    @FXML private TextField correoEstudianteField;
-    @FXML private PasswordField claveEstudianteField;
-    @FXML private ComboBox<String> cursoEstudianteCombo;
-    @FXML private TableView<Usuario> estudiantesTable;
-    @FXML private TableColumn<Usuario, Long> colEstId;
-    @FXML private TableColumn<Usuario, String> colEstNombre;
-    @FXML private TableColumn<Usuario, String> colEstCorreo;
-    @FXML private TableColumn<Usuario, String> colEstCurso;
+    @FXML
+    private TextField nombreEstudianteField;
+    @FXML
+    private TextField correoEstudianteField;
+    @FXML
+    private PasswordField claveEstudianteField;
+    @FXML
+    private ComboBox<String> cursoEstudianteCombo;
+    @FXML
+    private TableView<Usuario> estudiantesTable;
+    @FXML
+    private TableColumn<Usuario, Long> colEstId;
+    @FXML
+    private TableColumn<Usuario, String> colEstNombre;
+    @FXML
+    private TableColumn<Usuario, String> colEstCorreo;
+    @FXML
+    private TableColumn<Usuario, String> colEstCurso;
+    @FXML
+    private TableColumn<Usuario, Boolean> colEstActivo;
+    @FXML
+    private TextField searchEstudianteField;
 
     // Asignaciones section
-    @FXML private TableView<ProfesorMateria> asignacionesTable;
-    @FXML private TableColumn<ProfesorMateria, String> colAsignacionMateria;
-    @FXML private TableColumn<ProfesorMateria, String> colAsignacionCurso;
+    @FXML
+    private TableView<ProfesorMateria> asignacionesTable;
+    @FXML
+    private TableColumn<ProfesorMateria, String> colAsignacionMateria;
+    @FXML
+    private TableColumn<ProfesorMateria, String> colAsignacionCurso;
     @FXML
     private TabPane tabPane;
     // ----------- Services -----------
@@ -87,14 +129,15 @@ public class AdminPanelController {
 
     @Autowired
     public AdminPanelController(AdminApiService adminApiService,
-                                UsuarioRegistrationService registrationService,
-                                JwtTokenHolder jwtTokenHolder,
-                                SpringFXMLLoader springFXMLLoader) { // Añade este parámetro
+            UsuarioRegistrationService registrationService,
+            JwtTokenHolder jwtTokenHolder,
+            SpringFXMLLoader springFXMLLoader) { // Añade este parámetro
         this.adminApiService = adminApiService;
         this.registrationService = registrationService;
         this.jwtTokenHolder = jwtTokenHolder;
         this.springFXMLLoader = springFXMLLoader; // Asigna
     }
+
     // ----------- Initialization Methods -----------
     @FXML
     public void initialize() {
@@ -135,22 +178,71 @@ public class AdminPanelController {
         // Profesores
         colProfId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProfNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colProfCorreo.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getIdentificacion()));
+        colProfCorreo
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIdentificacion()));
+
+        colProfActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        colProfActivo.setCellFactory(column -> new TableCell<Usuario, Boolean>() {
+            private final CheckBox checkBox = new CheckBox();
+
+            {
+                checkBox.setOnAction(event -> {
+                    Usuario usuario = getTableView().getItems().get(getIndex());
+                    boolean nuevoEstado = checkBox.isSelected();
+                    usuario.setActivo(nuevoEstado);
+                    // Llama al servicio para actualizar el estado en el backend
+                    adminApiService.cambiarEstadoUsuario(usuario.getId(), nuevoEstado);
+                });
+            }
+
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    checkBox.setSelected(item);
+                    setGraphic(checkBox);
+                }
+            }
+        });
 
         // Estudiantes
         colEstId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colEstNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colEstCorreo.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getIdentificacion()));
+        colEstCorreo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIdentificacion()));
         colEstCurso.setCellValueFactory(new PropertyValueFactory<>("cursoNombre"));
+        colEstActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        colEstActivo.setCellFactory(column -> new TableCell<Usuario, Boolean>() {
+            private final CheckBox checkBox = new CheckBox();
+
+            {
+                checkBox.setOnAction(event -> {
+                    Usuario usuario = getTableView().getItems().get(getIndex());
+                    boolean nuevoEstado = checkBox.isSelected();
+                    usuario.setActivo(nuevoEstado);
+                    adminApiService.cambiarEstadoUsuario(usuario.getId(), nuevoEstado);
+                });
+            }
+
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    checkBox.setSelected(item);
+                    setGraphic(checkBox);
+                }
+            }
+        });
     }
 
     private void configurarTablaAsignaciones() {
-        colAsignacionMateria.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getMateria().getNombre()));
-        colAsignacionCurso.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getCurso().getNombreCompleto()));
+        colAsignacionMateria.setCellValueFactory(
+                cellData -> new SimpleStringProperty(cellData.getValue().getMateria().getNombre()));
+        colAsignacionCurso.setCellValueFactory(
+                cellData -> new SimpleStringProperty(cellData.getValue().getCurso().getNombreCompleto()));
     }
 
     private void configurarListenersParaEdicion() {
@@ -245,7 +337,8 @@ public class AdminPanelController {
 
         try {
             materiaSeleccionada.setNombre(nuevoNombre);
-            Materia materiaActualizada = adminApiService.actualizarMateria(materiaSeleccionada.getId(), materiaSeleccionada);
+            Materia materiaActualizada = adminApiService.actualizarMateria(materiaSeleccionada.getId(),
+                    materiaSeleccionada);
             if (materiaActualizada != null) {
                 materiaTextField.clear();
                 cargarMaterias();
@@ -384,8 +477,33 @@ public class AdminPanelController {
             List<Usuario> profesores = adminApiService.listarUsuariosPorRol("PROFESOR");
             ObservableList<Usuario> profesoresObservable = FXCollections.observableArrayList(profesores);
 
+            // Filtro para profesores
+            javafx.collections.transformation.FilteredList<Usuario> filteredData = new javafx.collections.transformation.FilteredList<>(
+                    profesoresObservable, p -> true);
+
+            searchProfesorField.textProperty().addListener((observable, oldValue, newValue) -> {
+                filteredData.setPredicate(profesor -> {
+                    if (newValue == null || newValue.isEmpty()) {
+                        return true;
+                    }
+                    String lowerCaseFilter = newValue.toLowerCase();
+                    if (profesor.getNombre().toLowerCase().contains(lowerCaseFilter)) {
+                        return true;
+                    }
+                    if (profesor.getIdentificacion() != null
+                            && profesor.getIdentificacion().contains(lowerCaseFilter)) {
+                        return true;
+                    }
+                    return false;
+                });
+            });
+
+            javafx.collections.transformation.SortedList<Usuario> sortedData = new javafx.collections.transformation.SortedList<>(
+                    filteredData);
+            sortedData.comparatorProperty().bind(profesoresTable.comparatorProperty());
+
             Platform.runLater(() -> {
-                profesoresTable.setItems(profesoresObservable);
+                profesoresTable.setItems(sortedData);
 
                 ObservableList<String> nombres = FXCollections.observableArrayList();
                 profesores.forEach(p -> nombres.add(p.getNombre()));
@@ -511,7 +629,8 @@ public class AdminPanelController {
                 profesorSeleccionado.setContraseña(nuevaClave);
             }
 
-            Usuario profesorActualizado = adminApiService.actualizarUsuario(profesorSeleccionado.getId(), profesorSeleccionado);
+            Usuario profesorActualizado = adminApiService.actualizarUsuario(profesorSeleccionado.getId(),
+                    profesorSeleccionado);
             if (profesorActualizado != null) {
                 mostrarAlerta("Profesor actualizado exitosamente", false);
                 limpiarCampos();
@@ -547,8 +666,33 @@ public class AdminPanelController {
             List<Usuario> estudiantes = adminApiService.listarUsuariosPorRol("ESTUDIANTE");
             ObservableList<Usuario> estudiantesObservable = FXCollections.observableArrayList(estudiantes);
 
+            // Filtro para estudiantes
+            javafx.collections.transformation.FilteredList<Usuario> filteredData = new javafx.collections.transformation.FilteredList<>(
+                    estudiantesObservable, p -> true);
+
+            searchEstudianteField.textProperty().addListener((observable, oldValue, newValue) -> {
+                filteredData.setPredicate(estudiante -> {
+                    if (newValue == null || newValue.isEmpty()) {
+                        return true;
+                    }
+                    String lowerCaseFilter = newValue.toLowerCase();
+                    if (estudiante.getNombre().toLowerCase().contains(lowerCaseFilter)) {
+                        return true;
+                    }
+                    if (estudiante.getIdentificacion() != null
+                            && estudiante.getIdentificacion().contains(lowerCaseFilter)) {
+                        return true;
+                    }
+                    return false;
+                });
+            });
+
+            javafx.collections.transformation.SortedList<Usuario> sortedData = new javafx.collections.transformation.SortedList<>(
+                    filteredData);
+            sortedData.comparatorProperty().bind(estudiantesTable.comparatorProperty());
+
             Platform.runLater(() -> {
-                estudiantesTable.setItems(estudiantesObservable);
+                estudiantesTable.setItems(sortedData);
                 estudiantesTable.refresh();
             });
         } catch (Exception e) {
@@ -693,7 +837,8 @@ public class AdminPanelController {
                 estudianteSeleccionado.setContraseña(nuevaClave);
             }
 
-            Usuario estudianteActualizado = adminApiService.actualizarUsuario(estudianteSeleccionado.getId(), estudianteSeleccionado);
+            Usuario estudianteActualizado = adminApiService.actualizarUsuario(estudianteSeleccionado.getId(),
+                    estudianteSeleccionado);
             if (estudianteActualizado != null) {
                 adminApiService.asignarCursoAEstudiante(estudianteSeleccionado.getId(), cursoSeleccionado.getId());
                 mostrarAlerta("Estudiante actualizado exitosamente", false);

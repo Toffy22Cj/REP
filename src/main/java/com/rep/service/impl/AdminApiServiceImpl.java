@@ -44,8 +44,8 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/cursos",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<Curso>>() {}
-        );
+                new ParameterizedTypeReference<List<Curso>>() {
+                });
         return response.getBody();
     }
 
@@ -56,8 +56,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/cursos/" + id,
                 HttpMethod.GET,
                 entity,
-                Curso.class
-        );
+                Curso.class);
         return response.getBody();
     }
 
@@ -68,8 +67,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/cursos",
                 HttpMethod.POST,
                 entity,
-                Curso.class
-        );
+                Curso.class);
         return response.getBody();
     }
 
@@ -80,8 +78,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/cursos/" + id,
                 HttpMethod.PUT,
                 entity,
-                Curso.class
-        );
+                Curso.class);
         return response.getBody();
     }
 
@@ -92,8 +89,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/cursos/" + id,
                 HttpMethod.DELETE,
                 entity,
-                Void.class
-        );
+                Void.class);
     }
 
     @Override
@@ -103,8 +99,8 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/cursos/" + cursoId + "/estudiantes",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<Estudiante>>() {}
-        );
+                new ParameterizedTypeReference<List<Estudiante>>() {
+                });
         return response.getBody();
     }
 
@@ -116,8 +112,8 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/materias",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<Materia>>() {}
-        );
+                new ParameterizedTypeReference<List<Materia>>() {
+                });
         return response.getBody();
     }
 
@@ -128,8 +124,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/materias/" + id,
                 HttpMethod.GET,
                 entity,
-                Materia.class
-        );
+                Materia.class);
         return response.getBody();
     }
 
@@ -140,8 +135,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/materias",
                 HttpMethod.POST,
                 entity,
-                Materia.class
-        );
+                Materia.class);
         return response.getBody();
     }
 
@@ -152,8 +146,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/materias/" + id,
                 HttpMethod.PUT,
                 entity,
-                Materia.class
-        );
+                Materia.class);
         return response.getBody();
     }
 
@@ -164,8 +157,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/materias/" + id,
                 HttpMethod.DELETE,
                 entity,
-                Void.class
-        );
+                Void.class);
     }
 
     // -------------------- Gestión de Usuarios --------------------
@@ -177,10 +169,11 @@ public class AdminApiServiceImpl implements AdminApiService {
                 url,
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<Usuario>>() {}
-        );
+                new ParameterizedTypeReference<List<Usuario>>() {
+                });
         return response.getBody();
     }
+
     @Override
     public Usuario obtenerUsuarioPorId(Long id) {
         HttpEntity<String> entity = new HttpEntity<>(createHeadersWithToken());
@@ -188,8 +181,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/usuarios/" + id,
                 HttpMethod.GET,
                 entity,
-                Usuario.class
-        );
+                Usuario.class);
         return response.getBody();
     }
 
@@ -200,8 +192,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/usuarios/" + id,
                 HttpMethod.PUT,
                 entity,
-                Usuario.class
-        );
+                Usuario.class);
         return response.getBody();
     }
 
@@ -212,8 +203,18 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/usuarios/" + id,
                 HttpMethod.DELETE,
                 entity,
-                Void.class
-        );
+                Void.class);
+    }
+
+    @Override
+    public Usuario cambiarEstadoUsuario(Long id, boolean activo) {
+        HttpEntity<String> entity = new HttpEntity<>(createHeadersWithToken());
+        ResponseEntity<Usuario> response = restTemplate.exchange(
+                baseUrl + "/usuarios/" + id + "/estado?activo=" + activo,
+                HttpMethod.PUT,
+                entity,
+                Usuario.class);
+        return response.getBody();
     }
 
     @Override
@@ -223,8 +224,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/estudiantes/" + estudianteId + "/curso?cursoId=" + cursoId,
                 HttpMethod.PUT,
                 entity,
-                Void.class
-        );
+                Void.class);
     }
 
     @Override
@@ -234,8 +234,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/profesores/" + id,
                 HttpMethod.GET,
                 entity,
-                Profesor.class
-        );
+                Profesor.class);
         return response.getBody();
     }
 
@@ -243,14 +242,12 @@ public class AdminApiServiceImpl implements AdminApiService {
     public Profesor actualizarEstadoProfesor(Long id, String estado) {
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(
                 Collections.singletonMap("estado", estado),
-                createHeadersWithToken()
-        );
+                createHeadersWithToken());
         ResponseEntity<Profesor> response = restTemplate.exchange(
                 baseUrl + "/profesores/" + id + "/estado",
                 HttpMethod.PUT,
                 entity,
-                Profesor.class
-        );
+                Profesor.class);
         return response.getBody();
     }
 
@@ -258,15 +255,17 @@ public class AdminApiServiceImpl implements AdminApiService {
     public List<ProfesorMateria> listarAsignaciones(Long cursoId, Long materiaId) {
         HttpEntity<String> entity = new HttpEntity<>(createHeadersWithToken());
         String url = baseUrl + "/asignaciones?";
-        if (cursoId != null) url += "cursoId=" + cursoId;
-        if (materiaId != null) url += (cursoId != null ? "&" : "") + "materiaId=" + materiaId;
+        if (cursoId != null)
+            url += "cursoId=" + cursoId;
+        if (materiaId != null)
+            url += (cursoId != null ? "&" : "") + "materiaId=" + materiaId;
 
         ResponseEntity<List<ProfesorMateria>> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<ProfesorMateria>>() {}
-        );
+                new ParameterizedTypeReference<List<ProfesorMateria>>() {
+                });
         return response.getBody();
     }
 
@@ -277,8 +276,8 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/profesores/" + profesorId + "/asignaciones",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<ProfesorMateria>>() {}
-        );
+                new ParameterizedTypeReference<List<ProfesorMateria>>() {
+                });
         return response.getBody();
     }
 
@@ -289,8 +288,8 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/profesores/" + profesorId + "/materias",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<Materia>>() {}
-        );
+                new ParameterizedTypeReference<List<Materia>>() {
+                });
         return response.getBody();
     }
 
@@ -301,8 +300,7 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/asignaciones",
                 HttpMethod.POST,
                 entity,
-                ProfesorMateria.class
-        );
+                ProfesorMateria.class);
         return response.getBody();
     }
 
@@ -313,7 +311,6 @@ public class AdminApiServiceImpl implements AdminApiService {
                 baseUrl + "/asignaciones/" + id,
                 HttpMethod.DELETE,
                 entity,
-                Void.class
-        );
+                Void.class);
     }
 }

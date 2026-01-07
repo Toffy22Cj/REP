@@ -99,6 +99,11 @@
                             <Button onAction="#actualizarProfesor" styleClass="admin-action-button" text="Actualizar"/>
                             <Button onAction="#eliminarProfesor" styleClass="admin-delete-button" text="Eliminar"/>
                         </HBox>
+                        
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                             <Label text="🔍" styleClass="search-icon"/>
+                             <TextField fx:id="searchProfesorField" promptText="Buscar profesor..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
+                        </HBox>
 
                         <VBox spacing="10" styleClass="section-box">
                             <HBox spacing="15" alignment="CENTER_LEFT">
@@ -141,6 +146,11 @@
                             <Button onAction="#registrarEstudiante" styleClass="admin-action-button" text="Registrar"/>
                             <Button onAction="#actualizarEstudiante" styleClass="admin-action-button" text="Actualizar"/>
                             <Button onAction="#eliminarEstudiante" styleClass="admin-delete-button" text="Eliminar"/>
+                        </HBox>
+
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                             <Label text="🔍" styleClass="search-icon"/>
+                             <TextField fx:id="searchEstudianteField" promptText="Buscar estudiante..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
                         </HBox>
 
                         <Label fx:id="statusEstudianteLabel" styleClass="status-label"/>

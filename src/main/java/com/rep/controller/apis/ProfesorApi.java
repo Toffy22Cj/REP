@@ -7,6 +7,11 @@ import com.rep.repositories.MateriaRepository;
 import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.repositories.ProfesorRepository;
 import com.rep.service.logica.*;
+import com.rep.service.logica.AsistenciaService; // Explicit import if wildcard doesn't catch it, though wildcard should.
+// Wait, the wildcard import com.rep.service.logica.* is already there (line 9).
+// If AsistenciaService is in com.rep.service.logica, it should be picked up.
+// Let's verify package of AsistenciaService.
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -53,6 +58,9 @@ public class ProfesorApi {
     @Autowired
     private ValidacionService validacionService;
 
+    @Autowired
+    private AsistenciaService asistenciaService;
+
     // 1. Gestión de Materias
     @GetMapping("/materias")
     public ResponseEntity<?> getMateriasAsignadas(@AuthenticationPrincipal Usuario usuario) {
@@ -72,46 +80,46 @@ public class ProfesorApi {
         return ResponseEntity.ok(cursos);
     }
 
-
-
-//    // 4. Gestión de Preguntas
-//    @PostMapping("/preguntas")
-//    public ResponseEntity<Pregunta> crearPregunta(@RequestBody Pregunta pregunta,
-//                                                  @AuthenticationPrincipal Usuario usuario) {
-//        validacionService.validarProfesorActividad(usuario.getId(), pregunta.getActividad().getId());
-//        Pregunta nuevaPregunta = preguntaService.crearPregunta(pregunta);
-//        return ResponseEntity.ok(nuevaPregunta);
-//    }
-//
-//    @PutMapping("/preguntas/{id}")
-//    public ResponseEntity<Pregunta> editarPregunta(@PathVariable Long id,
-//                                                   @RequestBody Pregunta pregunta,
-//                                                   @AuthenticationPrincipal Usuario usuario) {
-//        validacionService.validarProfesorPregunta(usuario.getId(), id);
-//        Pregunta preguntaActualizada = preguntaService.editarPregunta(id, pregunta);
-//        return ResponseEntity.ok(preguntaActualizada);
-//    }
-//
-//    @DeleteMapping("/preguntas/{id}")
-//    public ResponseEntity<Void> eliminarPregunta(@PathVariable Long id,
-//                                                 @AuthenticationPrincipal Usuario usuario) {
-//        validacionService.validarProfesorPregunta(usuario.getId(), id);
-//        preguntaService.eliminarPregunta(id);
-//        return ResponseEntity.noContent().build();
-//    }
-//
-//    @PostMapping("/opciones")
-//    public ResponseEntity<Opcion> crearOpcion(@RequestBody Opcion opcion,
-//                                              @AuthenticationPrincipal Usuario usuario) {
-//        validacionService.validarProfesorOpcion(usuario.getId(), opcion.getPregunta().getId());
-//        Opcion nuevaOpcion = preguntaService.crearOpcion(opcion);
-//        return ResponseEntity.ok(nuevaOpcion);
-//    }
+    // // 4. Gestión de Preguntas
+    // @PostMapping("/preguntas")
+    // public ResponseEntity<Pregunta> crearPregunta(@RequestBody Pregunta pregunta,
+    // @AuthenticationPrincipal Usuario usuario) {
+    // validacionService.validarProfesorActividad(usuario.getId(),
+    // pregunta.getActividad().getId());
+    // Pregunta nuevaPregunta = preguntaService.crearPregunta(pregunta);
+    // return ResponseEntity.ok(nuevaPregunta);
+    // }
+    //
+    // @PutMapping("/preguntas/{id}")
+    // public ResponseEntity<Pregunta> editarPregunta(@PathVariable Long id,
+    // @RequestBody Pregunta pregunta,
+    // @AuthenticationPrincipal Usuario usuario) {
+    // validacionService.validarProfesorPregunta(usuario.getId(), id);
+    // Pregunta preguntaActualizada = preguntaService.editarPregunta(id, pregunta);
+    // return ResponseEntity.ok(preguntaActualizada);
+    // }
+    //
+    // @DeleteMapping("/preguntas/{id}")
+    // public ResponseEntity<Void> eliminarPregunta(@PathVariable Long id,
+    // @AuthenticationPrincipal Usuario usuario) {
+    // validacionService.validarProfesorPregunta(usuario.getId(), id);
+    // preguntaService.eliminarPregunta(id);
+    // return ResponseEntity.noContent().build();
+    // }
+    //
+    // @PostMapping("/opciones")
+    // public ResponseEntity<Opcion> crearOpcion(@RequestBody Opcion opcion,
+    // @AuthenticationPrincipal Usuario usuario) {
+    // validacionService.validarProfesorOpcion(usuario.getId(),
+    // opcion.getPregunta().getId());
+    // Opcion nuevaOpcion = preguntaService.crearOpcion(opcion);
+    // return ResponseEntity.ok(nuevaOpcion);
+    // }
 
     // 5. Revisión de Resultados
     @GetMapping("/respuestas/actividad/{actividadId}")
     public ResponseEntity<List<RespuestaEstudiante>> getRespuestasByActividad(@PathVariable Long actividadId,
-                                                                              @AuthenticationPrincipal Usuario usuario) {
+            @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), actividadId);
         List<RespuestaEstudiante> respuestas = respuestaService.getRespuestasByActividad(actividadId);
         return ResponseEntity.ok(respuestas);
@@ -119,7 +127,7 @@ public class ProfesorApi {
 
     @GetMapping("/respuestas/estudiante/{estudianteId}")
     public ResponseEntity<List<RespuestaEstudiante>> getRespuestasByEstudiante(@PathVariable Long estudianteId,
-                                                                               @AuthenticationPrincipal Usuario usuario) {
+            @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorEstudiante(usuario.getId(), estudianteId);
         List<RespuestaEstudiante> respuestas = respuestaService.getRespuestasByEstudiante(estudianteId);
         return ResponseEntity.ok(respuestas);
@@ -137,7 +145,7 @@ public class ProfesorApi {
     // 6. Gestión de Estudiantes
     @GetMapping("/estudiantes/curso/{cursoId}")
     public ResponseEntity<List<Estudiante>> getEstudiantesByCurso(@PathVariable Long cursoId,
-                                                                  @AuthenticationPrincipal Usuario usuario) {
+            @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorCurso(usuario.getId(), cursoId);
         List<Estudiante> estudiantes = estudianteService.getEstudiantesByCurso(cursoId);
         return ResponseEntity.ok(estudiantes);
@@ -145,7 +153,7 @@ public class ProfesorApi {
 
     @GetMapping(value = "/estudiantes/curso/{cursoId}/export", produces = "text/csv")
     public ResponseEntity<String> exportEstudiantesByCurso(@PathVariable Long cursoId,
-                                                           @AuthenticationPrincipal Usuario usuario) {
+            @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorCurso(usuario.getId(), cursoId);
         String csvData = estudianteService.exportEstudiantesByCursoToCsv(cursoId);
         return ResponseEntity.ok()
@@ -203,7 +211,8 @@ public class ProfesorApi {
         validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
         byte[] pdfReport = respuestaService.generatePromediosPdfReport(cursoId, materiaId);
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=promedios_curso_" + cursoId + "_materia_" + materiaId + ".pdf")
+                .header("Content-Disposition",
+                        "attachment; filename=promedios_curso_" + cursoId + "_materia_" + materiaId + ".pdf")
                 .body(pdfReport);
     }
 
@@ -214,6 +223,7 @@ public class ProfesorApi {
         Map<String, Object> dashboardData = actividadService.getDashboardData(usuario.getId());
         return ResponseEntity.ok(dashboardData);
     }
+
     // En ProfesorApi.java
     @GetMapping("/respuestas/filtrar")
     public ResponseEntity<List<RespuestaEstudiante>> filtrarRespuestas(
@@ -223,9 +233,12 @@ public class ProfesorApi {
             @AuthenticationPrincipal Usuario usuario) {
 
         // Validar acceso a los filtros
-        if (materiaId != null) validacionService.validarProfesorMateria(usuario.getId(), materiaId);
-        if (cursoId != null) validacionService.validarProfesorCurso(usuario.getId(), cursoId);
-        if (actividadId != null) validacionService.validarProfesorActividad(usuario.getId(), actividadId);
+        if (materiaId != null)
+            validacionService.validarProfesorMateria(usuario.getId(), materiaId);
+        if (cursoId != null)
+            validacionService.validarProfesorCurso(usuario.getId(), cursoId);
+        if (actividadId != null)
+            validacionService.validarProfesorActividad(usuario.getId(), actividadId);
 
         List<RespuestaEstudiante> respuestas = respuestaService.filtrarRespuestas(actividadId, cursoId, materiaId);
         return ResponseEntity.ok(respuestas);
@@ -236,7 +249,7 @@ public class ProfesorApi {
             @RequestParam Long cursoId,
             @RequestParam Long actividadId,
             @RequestParam String formato,
-            @RequestHeader("Authorization") String authHeader) {  // Token en header
+            @RequestHeader("Authorization") String authHeader) { // Token en header
 
         // Validar token y permisos...
         byte[] reporte = respuestaService.generarReporteResultados(cursoId, actividadId, formato);
@@ -244,5 +257,45 @@ public class ProfesorApi {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resultados." + formato)
                 .body(reporte);
+    }
+
+    // 8. Gestión de Asistencia
+    @GetMapping("/asistencia")
+    public ResponseEntity<List<com.rep.model.Asistencia>> getAsistencia(
+            @RequestParam Long cursoId,
+            @RequestParam Long materiaId,
+            @RequestParam String fecha,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        List<com.rep.model.Asistencia> asistencia = asistenciaService.getAsistenciaByCursoMateriaFecha(
+                usuario.getId(), cursoId, materiaId, java.time.LocalDate.parse(fecha));
+        return ResponseEntity.ok(asistencia);
+    }
+
+    @PostMapping("/asistencia")
+    public ResponseEntity<List<com.rep.model.Asistencia>> saveAsistencia(
+            @RequestParam Long cursoId,
+            @RequestParam Long materiaId,
+            @RequestParam String fecha,
+            @RequestBody List<com.rep.dto.asistencia.AsistenciaDTO> asistenciaDTOs,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        List<com.rep.model.Asistencia> saved = asistenciaService.saveAsistencias(
+                usuario.getId(), cursoId, materiaId, java.time.LocalDate.parse(fecha), asistenciaDTOs);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/asistencia/fechas")
+    public ResponseEntity<List<java.time.LocalDate>> getFechasAsistencia(
+            @RequestParam Long cursoId,
+            @RequestParam Long materiaId,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        List<java.time.LocalDate> fechas = asistenciaService.getFechasConAsistencia(usuario.getId(), cursoId,
+                materiaId);
+        return ResponseEntity.ok(fechas);
     }
 }

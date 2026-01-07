@@ -88,4 +88,6 @@ logs/
 # Otros
 # =========================
 .env
+# JavaFX SDK
+javafx-sdk-*/
 

@@ -1,33 +1,91 @@
-HELP.md
+# =========================
+# Java
+# =========================
+*.class
+*.log
+*.ctxt
+
+# Paquetes
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# =========================
+# Maven
+# =========================
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.buildNumber
+.mvn/timing.properties
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# =========================
+# Gradle
+# =========================
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# =========================
+# Spring Boot
+# =========================
+*.original
+spring.log
+
+# =========================
+# JavaFX
+# =========================
+*.jmod
+
+# =========================
+# IDEs
+# =========================
+
+# IntelliJ IDEA
+.idea/
 *.iml
+*.iws
 *.ipr
+out/
 
-### NetBeans ###
+# Eclipse / Spring Tool Suite
+.classpath
+.project
+.settings/
+.springBeans
+
+# NetBeans
 /nbproject/private/
+/build/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Otros
+# =========================
+.env
+

@@ -11,4 +11,6 @@ public class ResultadoActividadDTO {
     private Float nota;
     private List<ResultadoPreguntaDTO> resultadosPreguntas;
     private String observaciones;
+    private String nombreEstudiante;
+    private String fechaEntrega;
 }

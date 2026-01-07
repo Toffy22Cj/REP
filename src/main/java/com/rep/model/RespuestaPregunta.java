@@ -2,10 +2,13 @@ package com.rep.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
 @Entity
 @Table(name = "respuestas_pregunta")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class RespuestaPregunta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,6 +16,7 @@ public class RespuestaPregunta {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "respuesta_estudiante_id", nullable = false)
+    @JsonIgnore
     private RespuestaEstudiante respuestaEstudiante;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -24,6 +24,7 @@ import java.util.Collections;
 @Inheritance(strategy = InheritanceType.JOINED)
 @EntityListeners(AuditingEntityListener.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Usuario implements UserDetails {
 
     @Id
@@ -54,7 +55,7 @@ public class Usuario implements UserDetails {
 
     @NotBlank(message = "La contraseña no puede estar vacía")
     @Column(name = "contraseña", nullable = false)
-    @JsonProperty("contraseña")  // Añadir esta anotación
+    @JsonProperty("contraseña") // Añadir esta anotación
     @JsonIgnore
     private String contraseña;
 
@@ -63,13 +64,16 @@ public class Usuario implements UserDetails {
     private Rol rol;
 
     // En Usuario.java
-    @Min(5) @Max(120)
+    @Min(5)
+    @Max(120)
     @Column(nullable = true) // Cambiado a nullable
     private Integer edad;
+
     @Transient
     public Integer getEdadCalculada() {
         return this.edad;
     }
+
     @CreatedDate
     @Column(name = "creado_en", updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -87,9 +91,11 @@ public class Usuario implements UserDetails {
         TI("Tarjeta de Identidad");
 
         private final String descripcion;
+
         TipoIdentificacion(String descripcion) {
             this.descripcion = descripcion;
         }
+
         public String getDescripcion() {
             return descripcion;
         }
@@ -121,6 +127,7 @@ public class Usuario implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new SimpleGrantedAuthority(rol.name())); // Sin "ROLE_"
     }
+
     @JsonIgnore
     @Override
     public String getPassword() {
@@ -155,7 +162,7 @@ public class Usuario implements UserDetails {
         return activo;
     }
 
-    protected void prePersistUsuario() {  // Renombrado y cambiado a protected
+    protected void prePersistUsuario() { // Renombrado y cambiado a protected
         if (this.creadoEn == null) {
             this.creadoEn = LocalDateTime.now();
         }
@@ -164,6 +171,7 @@ public class Usuario implements UserDetails {
         }
 
     }
+
     // En Usuario.java
     @Enumerated(EnumType.STRING)
     @Column(nullable = true) // Puedes cambiar a false si es obligatorio

@@ -5,14 +5,17 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 
 @Getter
 @Setter
-@ToString(exclude = {"pregunta"})
+@ToString(exclude = { "pregunta" })
 @Entity
 @Table(name = "opciones")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Opcion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +23,7 @@ public class Opcion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pregunta_id", nullable = false)
+    @JsonIgnore
     private Pregunta pregunta;
 
     @Column(nullable = false, length = 255) // Añadido length para el texto
@@ -32,10 +36,13 @@ public class Opcion {
     public void marcarComoCorrecta() {
         this.esCorrecta = true;
     }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Opcion)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Opcion))
+            return false;
         Opcion opcion = (Opcion) o;
         return id != null && id.equals(opcion.id);
     }

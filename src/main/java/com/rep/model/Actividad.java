@@ -21,13 +21,15 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 @Getter
 @Setter
-@ToString(exclude = {"profesorMateria", "preguntas"})
+@ToString(exclude = { "profesorMateria", "preguntas" })
 @Entity
 @Slf4j
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
 @Table(name = "actividades")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Actividad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,15 +52,13 @@ public class Actividad {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profesor_materia_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private ProfesorMateria profesorMateria;
 
     @OneToMany(mappedBy = "actividad", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Pregunta> preguntas = new HashSet<>(); // Cambia List por Set
 
-
-
-@CreatedDate
+    @CreatedDate
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
@@ -72,9 +72,11 @@ public class Actividad {
     private LocalTime horaEntrega = LocalTime.of(23, 59); // Hora por defecto: 11:59 PM
 
     public LocalDateTime getFechaHoraEntrega() {
-        if (fechaEntrega == null) return null;
+        if (fechaEntrega == null)
+            return null;
         return LocalDateTime.of(fechaEntrega, horaEntrega);
     }
+
     public Profesor getProfesor() {
         return this.profesorMateria != null ? this.profesorMateria.getProfesor() : null;
     }
@@ -124,10 +126,13 @@ public class Actividad {
         }
         this.profesorMateria.setProfesor(profesor);
     }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Actividad)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Actividad))
+            return false;
         Actividad actividad = (Actividad) o;
         return id != null && id.equals(actividad.id);
     }

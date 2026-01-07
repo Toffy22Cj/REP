@@ -20,9 +20,9 @@ public class PreguntaServiceImpl implements PreguntaService {
     private final RespuestaPreguntaRepository respuestaPreguntaRepository;
 
     public PreguntaServiceImpl(PreguntaRepository preguntaRepository,
-                               OpcionRepository opcionRepository,
-                               ActividadService actividadService,
-                               RespuestaPreguntaRepository respuestaPreguntaRepository) {
+            OpcionRepository opcionRepository,
+            ActividadService actividadService,
+            RespuestaPreguntaRepository respuestaPreguntaRepository) {
         this.preguntaRepository = preguntaRepository;
         this.opcionRepository = opcionRepository;
         this.actividadService = actividadService;
@@ -95,8 +95,7 @@ public class PreguntaServiceImpl implements PreguntaService {
         // Validar si tiene respuestas asociadas
         if (respuestaPreguntaRepository.existsByPreguntaId(id)) {
             throw new OperacionNoPermitidaException(
-                    "No se puede eliminar la pregunta porque tiene respuestas asociadas"
-            );
+                    "No se puede eliminar la pregunta porque tiene respuestas asociadas");
         }
 
         // Eliminar en cascada (configurado en la entidad)
@@ -110,8 +109,7 @@ public class PreguntaServiceImpl implements PreguntaService {
         // Validar tipo de pregunta
         if (pregunta.getTipo() != Pregunta.TipoPregunta.OPCION_MULTIPLE) {
             throw new OperacionNoPermitidaException(
-                    "Solo preguntas de opción múltiple pueden tener opciones"
-            );
+                    "Solo preguntas de opción múltiple pueden tener opciones");
         }
 
         // Validar límite de opciones
@@ -171,8 +169,7 @@ public class PreguntaServiceImpl implements PreguntaService {
     private void validarCambioTipoPregunta(Pregunta pregunta) {
         if (respuestaPreguntaRepository.existsByPreguntaId(pregunta.getId())) {
             throw new OperacionNoPermitidaException(
-                    "No se puede cambiar el tipo de pregunta porque ya tiene respuestas asociadas"
-            );
+                    "No se puede cambiar el tipo de pregunta porque ya tiene respuestas asociadas");
         }
     }
 
@@ -187,7 +184,53 @@ public class PreguntaServiceImpl implements PreguntaService {
     public boolean profesorTieneAccesoAPregunta(Long profesorId, Long preguntaId) {
         return preguntaRepository.existsByIdAndActividad_ProfesorMateria_Profesor_Id(
                 preguntaId,
-                profesorId
-        );
+                profesorId);
+    }
+
+    @Override
+    public Pregunta subirArchivo(Long id, org.springframework.web.multipart.MultipartFile file)
+            throws java.io.IOException {
+        Pregunta pregunta = getPreguntaById(id);
+
+        // Define upload directory
+        String uploadDir = System.getProperty("user.home") + "/.rep/uploads";
+        java.io.File directory = new java.io.File(uploadDir);
+
+        // Create directory if it doesn't exist
+        if (!directory.exists()) {
+            boolean created = directory.mkdirs();
+            if (!created) {
+                throw new java.io.IOException("No se pudo crear el directorio de subida: " + uploadDir);
+            }
+        }
+
+        // Generate unique filename
+        String fileName = id + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        java.io.File destination = new java.io.File(directory, fileName);
+
+        // Save file
+        file.transferTo(destination);
+
+        // Update entity
+        pregunta.setArchivoUrl(destination.getAbsolutePath());
+        pregunta.setArchivoTipo(file.getContentType());
+
+        return preguntaRepository.save(pregunta);
+    }
+
+    @Override
+    public java.io.File obtenerArchivo(Long id) throws java.io.FileNotFoundException {
+        Pregunta pregunta = getPreguntaById(id);
+
+        if (pregunta.getArchivoUrl() == null || pregunta.getArchivoUrl().isEmpty()) {
+            throw new java.io.FileNotFoundException("La pregunta no tiene archivo adjunto");
+        }
+
+        java.io.File file = new java.io.File(pregunta.getArchivoUrl());
+        if (!file.exists()) {
+            throw new java.io.FileNotFoundException("El archivo físico no existe: " + pregunta.getArchivoUrl());
+        }
+
+        return file;
     }
 }

@@ -1,7 +1,7 @@
 package com.rep.model;
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,25 +11,30 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "profesores")
 @PrimaryKeyJoinColumn(name = "id")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Profesor extends Usuario {
-// En Profesor.java
-@Column(name = "edad", nullable = true)
-private Integer edadProfesor;
+    // En Profesor.java
+    @Column(name = "edad", nullable = true)
+    private Integer edadProfesor;
+
     @Column(nullable = true)
     @Override
     public Integer getEdad() {
         return super.getEdad();
     }
+
     public Profesor(Long id) {
         this.setId(id); // Usar setId() heredado de Usuario
     }
 
-    public Profesor() {}
+    public Profesor() {
+    }
+
     @Column(name = "fecha_ingreso")
     private LocalDate fechaIngreso;
 
     public enum EstadoProfesor {
-        activo("activo"),  // Ahora en minúsculas para coincidir con la BD
+        activo("activo"), // Ahora en minúsculas para coincidir con la BD
         retirado("retirado");
 
         private final String descripcion;
@@ -40,7 +45,8 @@ private Integer edadProfesor;
 
         @JsonCreator
         public static EstadoProfesor fromString(String value) {
-            if (value == null) return null;
+            if (value == null)
+                return null;
             for (EstadoProfesor estado : EstadoProfesor.values()) {
                 if (estado.name().equalsIgnoreCase(value)) {
                     return estado;
@@ -58,11 +64,13 @@ private Integer edadProfesor;
             return descripcion;
         }
     }
+
     @Override
     public void setEdad(Integer edad) {
         super.setEdad(edad);
         this.edadProfesor = edad; // Mantener sincronizados ambos campos
     }
+
     // En la entidad Profesor:
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

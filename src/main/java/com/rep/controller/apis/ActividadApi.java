@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/actividades")
@@ -35,7 +36,6 @@ public class ActividadApi {
     private ValidacionService validacionService;
     @Autowired
     ProfesorMateriaRepository profesorMateriaRepository;
-
 
     // 1. Creación de actividades
     @PostMapping
@@ -63,8 +63,7 @@ public class ActividadApi {
                 Map<String, String> errores = result.getFieldErrors().stream()
                         .collect(Collectors.toMap(
                                 FieldError::getField,
-                                FieldError::getDefaultMessage
-                        ));
+                                FieldError::getDefaultMessage));
                 log.warn("Errores de validación: {}", errores);
                 return ResponseEntity.badRequest().body(errores);
             }
@@ -90,8 +89,7 @@ public class ActividadApi {
                     .findByProfesorIdAndMateriaIdAndCursoId(
                             profesor.getId(),
                             actividadDTO.getMateriaId(),
-                            actividadDTO.getCursoId()
-                    );
+                            actividadDTO.getCursoId());
 
             ProfesorMateria pm;
             if (pmOptional.isPresent()) {
@@ -205,8 +203,7 @@ public class ActividadApi {
                 Map<String, String> errores = result.getFieldErrors().stream()
                         .collect(Collectors.toMap(
                                 FieldError::getField,
-                                FieldError::getDefaultMessage
-                        ));
+                                FieldError::getDefaultMessage));
                 return ResponseEntity.badRequest().body(errores);
             }
 
@@ -254,6 +251,7 @@ public class ActividadApi {
                     .body("Error interno al actualizar la actividad: " + e.getMessage());
         }
     }
+
     // 5. Eliminar actividad
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarActividad(
@@ -281,6 +279,7 @@ public class ActividadApi {
         Map<String, Object> dashboardData = actividadService.getDashboardData(usuario.getId());
         return ResponseEntity.ok(dashboardData);
     }
+
     // 8. Clonar actividad
     @PostMapping("/{id}/clonar")
     public ResponseEntity<Actividad> clonarActividad(
@@ -307,5 +306,34 @@ public class ActividadApi {
         return ResponseEntity.ok(dtos);
     }
 
+    // 10. Gestión de Calificaciones (Resultados)
+    @GetMapping("/{id}/resultados")
+    public ResponseEntity<List<com.rep.dto.actividad.ResultadoActividadDTO>> obtenerResultados(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+        // Validar que el profesor sea dueño de la actividad
+        validacionService.validarProfesorActividad(usuario.getId(), id);
+        return ResponseEntity.ok(actividadService.obtenerResultados(id));
+    }
+
+    @GetMapping("/{id}/respuestas/{estudianteId}")
+    public ResponseEntity<com.rep.model.RespuestaEstudiante> obtenerRespuestaEstudiante(
+            @PathVariable Long id,
+            @PathVariable Long estudianteId,
+            @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorActividad(usuario.getId(), id);
+        return ResponseEntity.ok(actividadService.obtenerRespuestaEstudiante(id, estudianteId));
+    }
+
+    @PutMapping("/{id}/notas/{estudianteId}")
+    public ResponseEntity<com.rep.model.RespuestaEstudiante> actualizarNota(
+            @PathVariable Long id,
+            @PathVariable Long estudianteId,
+            @RequestParam Float nota,
+            @RequestParam(required = false) String observaciones,
+            @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorActividad(usuario.getId(), id);
+        return ResponseEntity.ok(actividadService.actualizarNota(id, estudianteId, nota, observaciones));
+    }
 
 }

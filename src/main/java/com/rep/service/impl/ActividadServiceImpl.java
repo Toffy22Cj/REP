@@ -22,22 +22,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 @Slf4j
 @Service
+@org.springframework.transaction.annotation.Transactional
 public class ActividadServiceImpl implements ActividadService {
-
 
     private final ActividadRepository actividadRepository;
     private final RespuestaEstudianteRepository respuestaEstudianteRepository;
     private final ProfesorMateriaRepository profesorMateriaRepository;
 
     public ActividadServiceImpl(ActividadRepository actividadRepository,
-                                RespuestaEstudianteRepository respuestaEstudianteRepository,
-                                ProfesorMateriaRepository profesorMateriaRepository) {
+            RespuestaEstudianteRepository respuestaEstudianteRepository,
+            ProfesorMateriaRepository profesorMateriaRepository) {
         this.actividadRepository = actividadRepository;
         this.respuestaEstudianteRepository = respuestaEstudianteRepository;
         this.profesorMateriaRepository = profesorMateriaRepository;
     }
+
     @Override
     public Actividad crearActividad(Actividad actividad) {
         try {
@@ -49,7 +51,8 @@ public class ActividadServiceImpl implements ActividadService {
             // Validar relación Profesor-Materia
             ProfesorMateria pm = actividad.getProfesorMateria();
             if (pm == null || pm.getId() == null) {
-                throw new IllegalArgumentException("La actividad debe estar asociada a una relación Profesor-Materia válida");
+                throw new IllegalArgumentException(
+                        "La actividad debe estar asociada a una relación Profesor-Materia válida");
             }
 
             // Verificar existencia de la relación
@@ -59,7 +62,8 @@ public class ActividadServiceImpl implements ActividadService {
 
             // Validar coherencia entre la relación y el profesor asignado
             if (!relacionExistente.getProfesor().getId().equals(actividad.getProfesor().getId())) {
-                throw new IllegalArgumentException("El profesor de la actividad no coincide con la relación Profesor-Materia");
+                throw new IllegalArgumentException(
+                        "El profesor de la actividad no coincide con la relación Profesor-Materia");
             }
 
             // Establecer fechas
@@ -99,7 +103,6 @@ public class ActividadServiceImpl implements ActividadService {
         actividadRepository.deleteById(id);
     }
 
-
     @Override
     public List<Actividad> listarActividades(Long materiaId, Long cursoId) {
         if (materiaId != null && cursoId != null) {
@@ -124,10 +127,12 @@ public class ActividadServiceImpl implements ActividadService {
         }
         return actividadRepository.findByProfesorId(profesorId);
     }
+
     @Override
     public Optional<Actividad> getActividadById(Long id) {
         return actividadRepository.findById(id);
     }
+
     @Override
     public List<Object[]> obtenerDistribucionRespuestas(Long preguntaId) {
         // Implementación similar a PreguntaService o ajustada para Actividad
@@ -142,14 +147,14 @@ public class ActividadServiceImpl implements ActividadService {
         boolean tieneAcceso = actividadRepository.existsByIdAndProfesorMateria_Profesor_Id(actividadId, profesorId);
 
         // Opción 2: Más explícita (dos consultas)
-        // boolean tieneAcceso = actividadRepository.findProfesorIdByActividadId(actividadId)
-        //         .map(id -> id.equals(profesorId))
-        //         .orElse(false);
+        // boolean tieneAcceso =
+        // actividadRepository.findProfesorIdByActividadId(actividadId)
+        // .map(id -> id.equals(profesorId))
+        // .orElse(false);
 
         log.debug("Resultado validación: {}", tieneAcceso);
         return tieneAcceso;
     }
-
 
     @Override
     public boolean existeActividad(Long actividadId) {
@@ -167,8 +172,8 @@ public class ActividadServiceImpl implements ActividadService {
         return Map.of(
                 "totalEstudiantes", actividad.getProfesorMateria().getCurso().getEstudiantes().size(),
                 "entregasRealizadas", totalEntregas,
-                "porcentajeEntregas", totalEntregas * 100.0 / actividad.getProfesorMateria().getCurso().getEstudiantes().size()
-        );
+                "porcentajeEntregas",
+                totalEntregas * 100.0 / actividad.getProfesorMateria().getCurso().getEstudiantes().size());
     }
 
     @Override
@@ -176,15 +181,14 @@ public class ActividadServiceImpl implements ActividadService {
         long totalActividades = actividadRepository.countByProfesorMateriaProfesorId(profesorId);
         long actividadesRecientes = actividadRepository.countByProfesorMateriaProfesorIdAndFechaCreacionAfter(
                 profesorId,
-                LocalDateTime.now().minusDays(7)
-        );
+                LocalDateTime.now().minusDays(7));
 
         return Map.of(
                 "totalActividades", totalActividades,
                 "actividadesRecientes", actividadesRecientes,
-                "cursosAsignados", profesorMateriaRepository.countDistinctCursoByProfesorId(profesorId)
-        );
+                "cursosAsignados", profesorMateriaRepository.countDistinctCursoByProfesorId(profesorId));
     }
+
     @Override
     public List<Actividad> buscarPorTituloYProfesor(String titulo, Long profesorId) {
         return actividadRepository.findByTituloAndProfesorId(titulo, profesorId);
@@ -196,10 +200,10 @@ public class ActividadServiceImpl implements ActividadService {
                 .orElseThrow(() -> new EntityNotFoundException("Actividad no encontrada"));
 
         // Verifica que las preguntas y opciones se cargaron
-        if(actividad.getPreguntas() != null) {
+        if (actividad.getPreguntas() != null) {
             log.debug("Actividad tiene {} preguntas", actividad.getPreguntas().size());
             actividad.getPreguntas().forEach(p -> {
-                if(p.getOpciones() != null) {
+                if (p.getOpciones() != null) {
                     log.debug("Pregunta {} tiene {} opciones", p.getId(), p.getOpciones().size());
                 }
             });
@@ -240,6 +244,70 @@ public class ActividadServiceImpl implements ActividadService {
         opcionDto.setTexto(opcion.getTexto());
         opcionDto.setEsCorrecta(opcion.getEsCorrecta());
         return opcionDto;
+    }
+
+    @Override
+    public List<com.rep.dto.actividad.ResultadoActividadDTO> obtenerResultados(Long actividadId) {
+        Actividad actividad = actividadRepository.findById(actividadId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Actividad no encontrada"));
+
+        List<com.rep.model.RespuestaEstudiante> respuestas = respuestaEstudianteRepository
+                .findByActividadId(actividadId);
+
+        // Aquí deberíamos mapear también a aquellos estudiantes que NO han respondido
+        // aún,
+        // pero por ahora devolvemos las respuestas existentes.
+
+        return respuestas.stream().map(respuesta -> {
+            com.rep.dto.actividad.ResultadoActividadDTO dto = new com.rep.dto.actividad.ResultadoActividadDTO();
+            dto.setActividadId(actividadId);
+            dto.setEstudianteId(respuesta.getEstudiante().getId());
+            dto.setNota(respuesta.getNota());
+            dto.setObservaciones(respuesta.getObservaciones());
+            dto.setNombreEstudiante(respuesta.getEstudiante().getNombre());
+            if (respuesta.getFechaEntrega() != null) {
+                dto.setFechaEntrega(respuesta.getFechaEntrega()
+                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            } else {
+                dto.setFechaEntrega("Pendiente");
+            }
+            // No cargamos los detalles de preguntas aquí para no sobrecargar, se cargan en
+            // obtenerRespuestaEstudiante
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public com.rep.model.RespuestaEstudiante obtenerRespuestaEstudiante(Long actividadId, Long estudianteId) {
+        com.rep.model.RespuestaEstudiante respuesta = respuestaEstudianteRepository
+                .findByEstudianteIdAndActividadId(estudianteId, actividadId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Respuesta no encontrada para el estudiante"));
+
+        // Forzar inicialización de lazy loading
+        respuesta.getRespuestasPreguntas().size();
+        respuesta.getRespuestasPreguntas().forEach(rp -> {
+            // Inicializar preguntas y opciones también si es necesario
+            rp.getPregunta().getEnunciado();
+            if (rp.getOpcion() != null)
+                rp.getOpcion().getTexto();
+        });
+
+        return respuesta;
+    }
+
+    @Override
+    public com.rep.model.RespuestaEstudiante actualizarNota(Long actividadId, Long estudianteId, Float nuevaNota,
+            String observaciones) {
+        com.rep.model.RespuestaEstudiante respuesta = respuestaEstudianteRepository
+                .findByEstudianteIdAndActividadId(estudianteId, actividadId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Respuesta no encontrada"));
+
+        respuesta.setNota(nuevaNota);
+        if (observaciones != null) {
+            respuesta.setObservaciones(observaciones);
+        }
+
+        return respuestaEstudianteRepository.save(respuesta);
     }
 
 }

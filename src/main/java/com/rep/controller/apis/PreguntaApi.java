@@ -83,4 +83,40 @@ public class PreguntaApi {
         Opcion opcion = preguntaService.agregarOpcion(preguntaId, request);
         return ResponseEntity.ok(new OpcionResponse(opcion));
     }
+
+    @PostMapping("/{id}/archivo")
+    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
+    public ResponseEntity<PreguntaResponse> subirArchivo(
+            @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @AuthenticationPrincipal Usuario usuario) {
+        try {
+            Pregunta pregunta = preguntaService.subirArchivo(id, file);
+            return ResponseEntity.ok(new PreguntaResponse(pregunta));
+        } catch (java.io.IOException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{id}/archivo")
+    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
+    public ResponseEntity<org.springframework.core.io.Resource> obtenerArchivo(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+        try {
+            java.io.File file = preguntaService.obtenerArchivo(id);
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(file.toURI());
+
+            if (resource.exists() || resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + file.getName() + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (java.io.IOException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

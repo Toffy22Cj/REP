@@ -66,6 +66,14 @@
                         <ComboBox fx:id="tipoComboBox" styleClass="input-field" prefWidth="200"/>
                     </HBox>
 
+                    <!-- File Upload Section -->
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                         <Label text="Archivo Adjunto:" styleClass="input-label"/>
+                         <Button fx:id="btnAdjuntarArchivo" text="Adjuntar" styleClass="small-button" onAction="#adjuntarArchivo"/>
+                         <Hyperlink fx:id="linkArchivo" text="Ver Archivo" onAction="#verArchivo" visible="false"/>
+                         <Label fx:id="lblNombreArchivo" styleClass="status-label"/>
+                    </HBox>
+
                     <!-- Panel de opciones (solo visible para OPCION_MULTIPLE) -->
                     <VBox fx:id="panelOpciones" styleClass="panel-opciones">
                         <Label text="Opciones:" styleClass="input-label"/>

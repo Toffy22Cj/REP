@@ -9,12 +9,23 @@ import java.util.Map;
 
 public interface PreguntaService {
         Pregunta crearPregunta(PreguntaRequest request);
+
         Pregunta getPreguntaById(Long id);
+
         List<Pregunta> getPreguntasByActividad(Long actividadId);
+
         Pregunta actualizarPregunta(Long id, PreguntaRequest request);
+
         void eliminarPregunta(Long id);
+
         Opcion agregarOpcion(Long preguntaId, OpcionRequest request);
+
         List<Opcion> getOpcionesByPreguntaId(Long preguntaId);
+
         boolean profesorTieneAccesoAPregunta(Long profesorId, Long preguntaId);
-//        boolean profesorTieneAccesoAOpcion(Long profesorId, Long opcionId);
-    }
+        // boolean profesorTieneAccesoAOpcion(Long profesorId, Long opcionId);
+
+        Pregunta subirArchivo(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
+
+        java.io.File obtenerArchivo(Long id) throws java.io.FileNotFoundException;
+}

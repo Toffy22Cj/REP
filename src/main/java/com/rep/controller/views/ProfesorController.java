@@ -381,7 +381,6 @@ public class ProfesorController {
         statusActividadLabel.setText(mensaje);
     }
 
-    // Métodos adicionales para otras funcionalidades
     @FXML
     private void verResultadosPorActividad() {
         Actividad actividadSeleccionada = actividadesTable.getSelectionModel().getSelectedItem();
@@ -391,22 +390,22 @@ public class ProfesorController {
         }
 
         try {
-            HttpHeaders headers = createHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            URL fxmlUrl = getClass().getResource("/view/ResultadosActividad.fxml");
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            Parent root = loader.load();
 
-            ResponseEntity<List<RespuestaEstudiante>> response = restTemplate.exchange(
-                    API_actividad_URL + "/respuestas/actividad/" + actividadSeleccionada.getId(),
-                    HttpMethod.GET,
-                    entity,
-                    new ParameterizedTypeReference<List<RespuestaEstudiante>>() {
-                    });
+            ResultadosActividadController controller = loader.getController();
+            controller.setJwtTokenHolder(this.jwtTokenHolder);
+            controller.setActividad(actividadSeleccionada);
 
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                // Aquí puedes mostrar los resultados en una nueva ventana o diálogo
-                mostrarResultados(response.getBody(), actividadSeleccionada.getTitulo());
-            }
+            Stage stage = new Stage();
+            stage.setTitle("Resultados - " + actividadSeleccionada.getTitulo());
+            stage.setScene(new Scene(root, 800, 600));
+            stage.show();
+
         } catch (Exception e) {
-            mostrarError("Error al cargar resultados: " + e.getMessage());
+            e.printStackTrace();
+            mostrarError("Error al abrir resultados: " + e.getMessage());
         }
     }
 
@@ -557,31 +556,6 @@ public class ProfesorController {
             mostrarError("Error inesperado: " + e.getMessage(), Color.RED);
             e.printStackTrace();
         }
-    }
-
-    private void mostrarResultados(List<RespuestaEstudiante> respuestas, String tituloActividad) {
-        // Implementa la lógica para mostrar los resultados
-        // Puedes crear un diálogo o una nueva ventana con una tabla
-        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
-        dialog.setTitle("Resultados de " + tituloActividad);
-        dialog.setHeaderText(null);
-
-        // Crear tabla para mostrar los resultados
-        TableView<RespuestaEstudiante> table = new TableView<>();
-
-        TableColumn<RespuestaEstudiante, String> colEstudiante = new TableColumn<>("Estudiante");
-        colEstudiante.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                cellData.getValue().getEstudiante().getNombre()));
-
-        TableColumn<RespuestaEstudiante, String> colNota = new TableColumn<>("Nota");
-        colNota.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                String.valueOf(cellData.getValue().getNota())));
-
-        table.getColumns().addAll(colEstudiante, colNota);
-        table.setItems(FXCollections.observableArrayList(respuestas));
-
-        dialog.getDialogPane().setContent(table);
-        dialog.showAndWait();
     }
 
     private <T> ResponseEntity<T> executeAuthenticatedRequest(String url, HttpMethod method,

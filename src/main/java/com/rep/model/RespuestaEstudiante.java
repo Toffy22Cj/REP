@@ -3,6 +3,7 @@ package com.rep.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "respuestas_estudiante")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class RespuestaEstudiante {
 
     @Id
@@ -27,7 +29,8 @@ public class RespuestaEstudiante {
     @JoinColumn(name = "actividad_id", nullable = false)
     private Actividad actividad;
 
-    @DecimalMin("0.0") @DecimalMax("5.0")
+    @DecimalMin("0.0")
+    @DecimalMax("5.0")
     @Column
     private Float nota;
 
@@ -40,7 +43,8 @@ public class RespuestaEstudiante {
     @Column(name = "fecha_entrega")
     private LocalDateTime fechaEntrega;
 
-    @Min(1) @Max(300)
+    @Min(1)
+    @Max(300)
     @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
 

@@ -24,6 +24,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URL;
 import java.util.*;
+import javafx.stage.FileChooser;
+import java.io.File;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @Controller
 public class EditorPreguntasController implements Initializable {
@@ -33,28 +38,54 @@ public class EditorPreguntasController implements Initializable {
     // UI Components
     @FXML
     private Spinner<Integer> spinnerLongitud;
-    @FXML private VBox panelOpciones;
-    @FXML private TableView<Pregunta> preguntasTable;
-    @FXML private TableColumn<Pregunta, String> colEnunciado;
-    @FXML private TableColumn<Pregunta, String> colTipo;
-    @FXML private TextArea campoPregunta;
-    @FXML private ComboBox<TipoPregunta> tipoComboBox;
-    @FXML private ListView<String> listaOpciones;
-    @FXML private TextField campoNuevaOpcion;
-    @FXML private CheckBox checkCorrecta;
-    @FXML private Button btnAgregarOpcion;
-    @FXML private Button btnEliminarOpcion;
-    @FXML private Button btnGuardar;
-    @FXML private Button btnAgregarPregunta;
-    @FXML private Button btnEliminarPregunta;
-    @FXML private Label statusLabel;
-    @FXML private RadioButton radioVerdadero;
-    @FXML private RadioButton radioFalso;
+    @FXML
+    private VBox panelOpciones;
+    @FXML
+    private TableView<Pregunta> preguntasTable;
+    @FXML
+    private TableColumn<Pregunta, String> colEnunciado;
+    @FXML
+    private TableColumn<Pregunta, String> colTipo;
+    @FXML
+    private TextArea campoPregunta;
+    @FXML
+    private ComboBox<TipoPregunta> tipoComboBox;
+    @FXML
+    private ListView<String> listaOpciones;
+    @FXML
+    private TextField campoNuevaOpcion;
+    @FXML
+    private CheckBox checkCorrecta;
+    @FXML
+    private Button btnAgregarOpcion;
+    @FXML
+    private Button btnEliminarOpcion;
+    @FXML
+    private Button btnGuardar;
+    @FXML
+    private Button btnAgregarPregunta;
+    @FXML
+    private Button btnEliminarPregunta;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private RadioButton radioVerdadero;
+    @FXML
+    private RadioButton radioFalso;
+    @FXML
+    private Button btnAdjuntarArchivo;
+    @FXML
+    private Hyperlink linkArchivo;
+    @FXML
+    private Label lblNombreArchivo;
+    private File archivoSeleccionado;
     private ToggleGroup toggleGroupVF;
     private ProfesorController profesorController;
+
     public void setProfesorController(ProfesorController profesorController) {
         this.profesorController = profesorController;
     }
+
     // Services and Data
     private final RestTemplate restTemplate = new RestTemplate();
     private JwtTokenHolder jwtTokenHolder;
@@ -76,6 +107,7 @@ public class EditorPreguntasController implements Initializable {
         configurarBotones();
         listaOpciones.setItems(opcionesList);
     }
+
     private void inicializarToggleGroup() {
         toggleGroupVF = new ToggleGroup();
         radioVerdadero.setToggleGroup(toggleGroupVF);
@@ -83,6 +115,7 @@ public class EditorPreguntasController implements Initializable {
         radioFalso.setToggleGroup(toggleGroupVF);
         radioFalso.setUserData(false);
     }
+
     private void configurarBotones() {
         btnGuardar.setOnAction(e -> guardarPregunta());
         btnAgregarPregunta.setOnAction(e -> agregarPregunta());
@@ -108,11 +141,11 @@ public class EditorPreguntasController implements Initializable {
         colTipo.setCellValueFactory(new PropertyValueFactory<>("tipo"));
         preguntasTable.setItems(preguntasList);
         preguntasTable.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldSelection, newSelection) -> cargarPreguntaSeleccionada(newSelection)
-        );
+                (obs, oldSelection, newSelection) -> cargarPreguntaSeleccionada(newSelection));
     }
 
-    @FXML private Label tituloLabel;
+    @FXML
+    private Label tituloLabel;
 
     public void setActividad(Actividad actividad) {
         this.actividad = actividad;
@@ -128,8 +161,8 @@ public class EditorPreguntasController implements Initializable {
                     API_BASE_URL + "/actividad/" + actividad.getId(),
                     HttpMethod.GET,
                     new HttpEntity<>(createHeadersWithToken()),
-                    new ParameterizedTypeReference<List<Pregunta>>() {}
-            );
+                    new ParameterizedTypeReference<List<Pregunta>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 preguntasList.setAll(response.getBody());
@@ -150,6 +183,17 @@ public class EditorPreguntasController implements Initializable {
         campoPregunta.setText(pregunta.getEnunciado());
         tipoComboBox.setValue(pregunta.getTipo());
 
+        // Mostrar archivo si existe
+        if (pregunta.getArchivoUrl() != null && !pregunta.getArchivoUrl().isEmpty()) {
+            linkArchivo.setVisible(true);
+            linkArchivo.setText("Ver Archivo");
+            lblNombreArchivo.setText(new File(pregunta.getArchivoUrl()).getName());
+        } else {
+            linkArchivo.setVisible(false);
+            lblNombreArchivo.setText("");
+        }
+        archivoSeleccionado = null; // Resetear selección local
+
         // Limpiar datos existentes
         opcionesList.clear();
 
@@ -158,7 +202,6 @@ public class EditorPreguntasController implements Initializable {
         if (selectedToggle != null) {
             selectedToggle.setSelected(false);
         }
-
 
         switch (pregunta.getTipo()) {
             case OPCION_MULTIPLE:
@@ -188,9 +231,9 @@ public class EditorPreguntasController implements Initializable {
                 break;
 
             case RESPUESTA_ABIERTA:
-//                if (pregunta.getLongitudMaxima() != null) {
-//                    spinnerLongitud.getValueFactory().setValue(pregunta.getLongitudMaxima());
-//                }
+                // if (pregunta.getLongitudMaxima() != null) {
+                // spinnerLongitud.getValueFactory().setValue(pregunta.getLongitudMaxima());
+                // }
                 break;
         }
 
@@ -250,8 +293,7 @@ public class EditorPreguntasController implements Initializable {
                         API_BASE_URL,
                         HttpMethod.POST,
                         new HttpEntity<>(request, createHeadersWithToken()),
-                        Pregunta.class
-                );
+                        Pregunta.class);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     cargarPreguntas(); // Refresh list
                     mostrarEstado("Pregunta creada exitosamente", Color.GREEN);
@@ -282,8 +324,7 @@ public class EditorPreguntasController implements Initializable {
                         API_BASE_URL + "/" + seleccionada.getId(),
                         HttpMethod.DELETE,
                         new HttpEntity<>(createHeadersWithToken()),
-                        Void.class
-                );
+                        Void.class);
 
                 if (response.getStatusCode().is2xxSuccessful()) {
                     cargarPreguntas();
@@ -297,7 +338,8 @@ public class EditorPreguntasController implements Initializable {
 
     @FXML
     private void guardarPregunta() {
-        if (preguntaActual == null || !validarFormulario()) return;
+        if (preguntaActual == null || !validarFormulario())
+            return;
 
         try {
             PreguntaRequest request = new PreguntaRequest();
@@ -330,7 +372,7 @@ public class EditorPreguntasController implements Initializable {
 
                 case RESPUESTA_ABIERTA:
                     // Configurar la longitud máxima para respuesta abierta
-//                    request.setLongitudMaxima(spinnerLongitud.getValue());
+                    // request.setLongitudMaxima(spinnerLongitud.getValue());
                     break;
             }
 
@@ -338,24 +380,86 @@ public class EditorPreguntasController implements Initializable {
                     API_BASE_URL + "/" + preguntaActual.getId(),
                     HttpMethod.PUT,
                     new HttpEntity<>(request, createHeadersWithToken()),
-                    Pregunta.class
-            );
+                    Pregunta.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
+                // Upload file if selected
+                if (archivoSeleccionado != null) {
+                    subirArchivo(preguntaActual.getId(), archivoSeleccionado);
+                }
+
                 cargarPreguntas();
                 mostrarEstado("Pregunta actualizada correctamente", Color.GREEN);
 
-//                // Si estás usando el controlador de profesor para actualizar una vista
-//                if (profesorController != null) {
-//                    profesorController.actualizarVistaActividades();
-//                }
+                // // Si estás usando el controlador de profesor para actualizar una vista
+                // if (profesorController != null) {
+                // profesorController.actualizarVistaActividades();
+                // }
             }
         } catch (HttpClientErrorException e) {
             mostrarEstado("Error del servidor: " + e.getResponseBodyAsString(), Color.RED);
         } catch (Exception e) {
             mostrarEstado("Error al actualizar: " + e.getMessage(), Color.RED);
+            e.printStackTrace();
         }
     }
+
+    @FXML
+    private void adjuntarArchivo() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Seleccionar Archivo");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Archivos de Imagen", "*.png", "*.jpg", "*.jpeg"),
+                new FileChooser.ExtensionFilter("Documentos PDF", "*.pdf"),
+                new FileChooser.ExtensionFilter("Documentos Word", "*.docx"));
+
+        File file = fileChooser.showOpenDialog(btnAdjuntarArchivo.getScene().getWindow());
+        if (file != null) {
+            archivoSeleccionado = file;
+            lblNombreArchivo.setText(file.getName());
+            mostrarEstado("Archivo seleccionado para subir: " + file.getName(), Color.BLUE);
+        }
+    }
+
+    @FXML
+    private void verArchivo() {
+        if (preguntaActual != null && preguntaActual.getArchivoUrl() != null) {
+            getHostServices().showDocument(new File(preguntaActual.getArchivoUrl()).toURI().toString());
+        }
+    }
+
+    // Método helper para obtener HostServices desde una clase no-Application
+    private javafx.application.HostServices getHostServices() {
+        return (javafx.application.HostServices) btnAdjuntarArchivo.getScene().getWindow().getUserData();
+        // Nota: Esto podría fallar si no se setea userData. Alternativa: ProcessBuilder
+        // o Desktop.getDesktop()
+    }
+
+    private void subirArchivo(Long preguntaId, File file) {
+        try {
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new FileSystemResource(file));
+
+            HttpHeaders headers = createHeadersWithToken();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            restTemplate.exchange(
+                    API_BASE_URL + "/" + preguntaId + "/archivo",
+                    HttpMethod.POST,
+                    requestEntity,
+                    Void.class);
+
+            // Refrescar pregunta localmente para tener la URL
+            // (La llamada a cargarPreguntas() lo hará)
+
+        } catch (Exception e) {
+            mostrarEstado("Error al subir archivo: " + e.getMessage(), Color.RED);
+            e.printStackTrace();
+        }
+    }
+
     private boolean validarFormulario() {
         if (campoPregunta.getText().isEmpty()) {
             mostrarEstado("El enunciado no puede estar vacío", Color.RED);
@@ -407,13 +511,13 @@ public class EditorPreguntasController implements Initializable {
     private void configurarComboboxTipo() {
         tipoComboBox.setItems(FXCollections.observableArrayList(TipoPregunta.values()));
         tipoComboBox.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldVal, newVal) -> actualizarInterfazSegunTipo()
-        );
+                (obs, oldVal, newVal) -> actualizarInterfazSegunTipo());
     }
 
     private void actualizarInterfazSegunTipo() {
         TipoPregunta tipo = tipoComboBox.getValue();
-        if (tipo == null) return;
+        if (tipo == null)
+            return;
 
         boolean esOpcionMultiple = tipo == TipoPregunta.OPCION_MULTIPLE;
 
@@ -475,6 +579,7 @@ public class EditorPreguntasController implements Initializable {
             statusLabel.setText(mensaje);
         }
     }
+
     private void configurarListeners() {
         // Configurar listener para la lista de opciones
         listaOpciones.setItems(opcionesList);
@@ -485,12 +590,10 @@ public class EditorPreguntasController implements Initializable {
 
         // Configurar listener para cambios en el tipo de pregunta
         tipoComboBox.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldVal, newVal) -> actualizarInterfazSegunTipo()
-        );
+                (obs, oldVal, newVal) -> actualizarInterfazSegunTipo());
 
         // Configurar listener para cambios en la selección de la tabla
         preguntasTable.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldSelection, newSelection) -> cargarPreguntaSeleccionada(newSelection)
-        );
+                (obs, oldSelection, newSelection) -> cargarPreguntaSeleccionada(newSelection));
     }
 }

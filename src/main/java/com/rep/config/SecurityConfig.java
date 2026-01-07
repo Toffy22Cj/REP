@@ -27,8 +27,8 @@ public class SecurityConfig {
     private final JwtConfig jwtConfig;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService,
-                          SecretKey secretKey,
-                          JwtConfig jwtConfig) {
+            SecretKey secretKey,
+            JwtConfig jwtConfig) {
         this.userDetailsService = userDetailsService;
         this.secretKey = secretKey;
         this.jwtConfig = jwtConfig;
@@ -44,13 +44,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/registro").permitAll()
+                        .requestMatchers("/error").permitAll() // Permitir ver errores
                         .requestMatchers("/api/profesor/**").hasAuthority("PROFESOR") // Sin ROLE_
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")       // Sin ROLE_
-                        .requestMatchers("/api/actividades/**").hasAuthority("PROFESOR") // Sin ROLE_
-                        .requestMatchers("/api/preguntas/**").hasAuthority("PROFESOR")
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Sin ROLE_
+                        .requestMatchers("/api/actividades/**").hasAnyAuthority("PROFESOR", "ADMIN") // Sin ROLE_
+                        .requestMatchers("/api/preguntas/**").hasAnyAuthority("PROFESOR", "ADMIN")
 
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

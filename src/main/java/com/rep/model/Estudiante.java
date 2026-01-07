@@ -8,11 +8,12 @@ import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
-@EqualsAndHashCode(callSuper = true, exclude = {"curso"}) // Excluir el campo curso
+@EqualsAndHashCode(callSuper = true, exclude = { "curso" }) // Excluir el campo curso
 @Data
 @Entity
 @Table(name = "estudiantes")
 @PrimaryKeyJoinColumn(name = "id")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Estudiante extends Usuario {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,7 +47,7 @@ public class Estudiante extends Usuario {
 
     @PostLoad
     private void postLoad() {
-        if(this.edadEstudiante != null) {
+        if (this.edadEstudiante != null) {
             super.setEdad(this.edadEstudiante);
         }
     }
@@ -61,7 +62,7 @@ public class Estudiante extends Usuario {
             this.setActivo(true);
         }
 
-        if(super.getEdad() != null) {
+        if (super.getEdad() != null) {
             this.edadEstudiante = super.getEdad();
         }
     }

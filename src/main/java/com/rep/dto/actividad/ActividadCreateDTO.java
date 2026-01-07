@@ -15,7 +15,8 @@ public class ActividadCreateDTO {
     @NotNull(message = "El tipo de actividad es obligatorio")
     private TipoActividad tipo;
 
-    private String descripcion;
+    @Size(max = 500, message = "La descripción no puede exceder 500 caracteres")
+    private String descripcion = "";
 
     @NotNull(message = "La fecha de entrega es obligatoria")
     @FutureOrPresent(message = "La fecha de entrega no puede ser en el pasado")
@@ -26,20 +27,14 @@ public class ActividadCreateDTO {
     @Max(value = 300, message = "La duración máxima es 300 minutos (5 horas)")
     private Integer duracionMinutos;
 
-    @NotNull(message = "La relación profesor-materia es obligatoria")
-    private Long profesorMateriaId;
+    // CAMBIOS AQUÍ: Eliminar profesorMateriaId y agregar materiaId y cursoId
+    @NotNull(message = "La materia es obligatoria")
+    private Long materiaId;
 
-    // Getters y Setters
-    public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
-    public TipoActividad getTipo() { return tipo; }
-    public void setTipo(TipoActividad tipo) { this.tipo = tipo; }
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-    public LocalDate getFechaEntrega() { return fechaEntrega; }
-    public void setFechaEntrega(LocalDate fechaEntrega) { this.fechaEntrega = fechaEntrega; }
-    public Integer getDuracionMinutos() { return duracionMinutos; }
-    public void setDuracionMinutos(Integer duracionMinutos) { this.duracionMinutos = duracionMinutos; }
-    public Long getProfesorMateriaId() { return profesorMateriaId; }
-    public void setProfesorMateriaId(Long profesorMateriaId) { this.profesorMateriaId = profesorMateriaId; }
+    @NotNull(message = "El curso es obligatorio")
+    private Long cursoId;
+
+    // El profesorId se obtendrá del token en el backend
+
+    // Getters y Setters (Lombok @Data los genera automáticamente)
 }

@@ -40,7 +40,7 @@ public class Actividad {
     private String titulo;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('examen', 'quiz', 'taller')", nullable = false)
+    @Column(columnDefinition = "ENUM('EXAMEN', 'QUIZ', 'TALLER')", nullable = false)
     private TipoActividad tipo;
 
     private String descripcion;

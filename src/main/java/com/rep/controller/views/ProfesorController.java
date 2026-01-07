@@ -1,5 +1,6 @@
 package com.rep.controller.views;
 
+import com.rep.config.SpringFXMLLoader;
 import javafx.geometry.Rectangle2D;  // Para Rectangle2D
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
@@ -69,7 +70,8 @@ public class ProfesorController {
     @Autowired
     private ProfesorMateriaService profesorMateriaService;
     private ObservableList<Actividad> actividadesList = FXCollections.observableArrayList();
-
+    @Autowired
+    private  SpringFXMLLoader springFXMLLoader;
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -295,7 +297,7 @@ public class ProfesorController {
             // Convertir tipo de actividad
             Actividad.TipoActividad tipo = Actividad.TipoActividad.forValue(tipoStr.toLowerCase());
 
-            // Crear DTO para la nueva actividad
+            // Crear DTO para la nueva actividad CON LOS NUEVOS CAMPOS
             ActividadCreateDTO actividadDTO = new ActividadCreateDTO();
             actividadDTO.setTitulo(titulo);
             actividadDTO.setTipo(tipo);
@@ -303,37 +305,27 @@ public class ProfesorController {
             actividadDTO.setDuracionMinutos(duracion);
             actividadDTO.setDescripcion(""); // Valor por defecto
 
-            // Obtener IDs necesarios
-            Long profesorId = jwtTokenHolder.getUserId();
-            Long materiaId = materia.getId();
-            Long cursoId = cursoDTO.getId();
+            // ENVIAR LOS IDs EN LUGAR DE profesorMateriaId
+            actividadDTO.setMateriaId(materia.getId());
+            actividadDTO.setCursoId(cursoDTO.getId());
 
-            // Verificar relación Profesor-Materia-Curso
-            Optional<ProfesorMateria> existente = profesorMateriaService
-                    .findByProfesorIdAndMateriaIdAndCursoId(profesorId, materiaId, cursoId);
-
-            ProfesorMateria profesorMateria;
-
-            if (existente.isPresent()) {
-                profesorMateria = existente.get();
-            } else {
-                profesorMateria = new ProfesorMateria();
-                profesorMateria.setProfesor(pRepository.findById(profesorId)
-                        .orElseThrow(() -> new RuntimeException("Profesor no encontrado")));
-                profesorMateria.setMateria(new Materia(materiaId));
-                profesorMateria.setCurso(new Curso(cursoId));
-                profesorMateria = profesorMateriaService.guardarProfesorMateria(profesorMateria);
-            }
-
-            actividadDTO.setProfesorMateriaId(profesorMateria.getId());
+            // ELIMINAR esta línea:
+            // actividadDTO.setProfesorMateriaId(profesorMateria.getId());
 
             // Configurar headers
             HttpHeaders headers = createHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
+            // LOG para depuración
+            System.out.println("=== ENVIANDO ACTIVIDAD ===");
+            System.out.println("URL: http://localhost:8080/api/actividades");
+            System.out.println("Título: " + titulo);
+            System.out.println("Materia ID: " + materia.getId());
+            System.out.println("Curso ID: " + cursoDTO.getId());
+
             // Enviar solicitud al servidor
             ResponseEntity<ActividadDTO> response = restTemplate.postForEntity(
-                    API_actividad_URL + "/actividades",
+                    "http://localhost:8080/api/actividades",
                     new HttpEntity<>(actividadDTO, headers),
                     ActividadDTO.class
             );
@@ -351,11 +343,13 @@ public class ProfesorController {
         } catch (NumberFormatException e) {
             mostrarError("La duración debe ser un número válido", Color.RED);
         } catch (IllegalArgumentException e) {
-            mostrarError("Tipo de actividad no válido. Use: Examen, Quiz o Taller", Color.RED);
-        } catch (HttpClientErrorException.Forbidden e) {
-            mostrarError("Acceso denegado: No tiene permisos para crear actividades", Color.RED);
-        } catch (HttpClientErrorException.BadRequest e) {
-            mostrarError("Datos inválidos: " + e.getResponseBodyAsString(), Color.RED);
+            mostrarError("Tipo de actividad no válido. Use: examen, quiz o taller", Color.RED);
+        } catch (HttpClientErrorException e) {
+            // MOSTRAR ERROR DETALLADO
+            System.err.println("=== ERROR HTTP DETALLADO ===");
+            System.err.println("Status: " + e.getStatusCode());
+            System.err.println("Body: " + e.getResponseBodyAsString());
+            mostrarError("Error del servidor: " + e.getResponseBodyAsString(), Color.RED);
         } catch (Exception e) {
             mostrarError("Error al crear actividad: " + e.getMessage(), Color.RED);
             e.printStackTrace();
@@ -639,16 +633,18 @@ public class ProfesorController {
     private void cerrarSesion() {
         try {
             // Limpiar el token
-            jwtTokenHolder.clearToken();
+            if (jwtTokenHolder != null) {
+                jwtTokenHolder.clearToken();
+            }
 
-            // Cargar la pantalla de login
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
-            Parent root = loader.load();
+            // Usar SpringFXMLLoader para cargar la vista de login
+            Parent root = springFXMLLoader.load("/view/Login.fxml");
 
             // Obtener la escena actual y cambiar su contenido
             Stage stage = (Stage) actividadesTable.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Inicio de Sesión");
+            stage.centerOnScreen();
             stage.show();
 
         } catch (Exception e) {
@@ -656,7 +652,6 @@ public class ProfesorController {
             e.printStackTrace();
         }
     }
-
     @FXML
     private void actualizarActividad() {
         // Obtener la actividad seleccionada

@@ -1,6 +1,7 @@
 package com.rep.controller.views;
 
 
+import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.auth.RegistroUsuarioDTO;
 
 import com.rep.dto.profesor.ProfesorMateriaRequest;
@@ -82,13 +83,17 @@ public class AdminPanelController {
     private final UsuarioRegistrationService registrationService;
     private final JwtTokenHolder jwtTokenHolder; // Si necesitas este campo
 
+    private final SpringFXMLLoader springFXMLLoader; // Añade este campo
+
     @Autowired
     public AdminPanelController(AdminApiService adminApiService,
                                 UsuarioRegistrationService registrationService,
-                                JwtTokenHolder jwtTokenHolder) { // Opcional si lo necesitas
+                                JwtTokenHolder jwtTokenHolder,
+                                SpringFXMLLoader springFXMLLoader) { // Añade este parámetro
         this.adminApiService = adminApiService;
         this.registrationService = registrationService;
-        this.jwtTokenHolder = jwtTokenHolder; // Opcional
+        this.jwtTokenHolder = jwtTokenHolder;
+        this.springFXMLLoader = springFXMLLoader; // Asigna
     }
     // ----------- Initialization Methods -----------
     @FXML
@@ -887,11 +892,11 @@ public class AdminPanelController {
                 jwtTokenHolder.clearToken();
             }
 
-            // Cargar la pantalla de login
+            // Usar SpringFXMLLoader para cargar la vista de login
+            Parent root = springFXMLLoader.load("/view/Login.fxml");
+
             Stage stage = (Stage) tabPane.getScene().getWindow();
-            Parent root = FXMLLoader.load(getClass().getResource("/com/rep/controller/views/Login.fxml"));
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
+            stage.setScene(new Scene(root));
             stage.centerOnScreen();
         } catch (Exception e) {
             mostrarAlerta("Error al cerrar sesión: " + e.getMessage(), true);

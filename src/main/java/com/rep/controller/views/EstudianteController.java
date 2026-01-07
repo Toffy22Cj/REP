@@ -1,6 +1,7 @@
 // EstudianteController.java
 package com.rep.controller.views;
 
+import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.actividad.*;
 import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.model.*;
@@ -14,9 +15,12 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,13 +46,15 @@ private final ActividadService actividadService;
     @FXML private Button btnNotificaciones;
     @FXML private Button btnRefrescar;
     @FXML private Button btnCerrarSesion;
+    @FXML private VBox mainContainer;
     @FXML private StackPane contentPane;
-
+private final SpringFXMLLoader springFXMLLoader;
     @Autowired
-    public EstudianteController(EstudianteService estudianteService,
+    public EstudianteController(EstudianteService estudianteService,SpringFXMLLoader springFXMLLoader,
                                 EstudianteApiService estudianteApiService,
                                 JwtTokenHolder jwtTokenHolder,ActividadService actividadService) {
         this.estudianteService = estudianteService;
+        this.springFXMLLoader = springFXMLLoader;
         this.actividadService = actividadService;
         this.estudianteApiService = estudianteApiService;
         setJwtTokenHolder(jwtTokenHolder);
@@ -646,13 +652,52 @@ private final ActividadService actividadService;
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    private Stage obtenerVentanaActual() {
+        // Buscar la ventana desde cualquier nodo de la escena
+        if (mainContainer != null && mainContainer.getScene() != null) {
+            return (Stage) mainContainer.getScene().getWindow();
+        } else if (contentPane != null && contentPane.getScene() != null) {
+            return (Stage) contentPane.getScene().getWindow();
+        } else if (btnCerrarSesion != null && btnCerrarSesion.getScene() != null) {
+            return (Stage) btnCerrarSesion.getScene().getWindow();
+        }
+        throw new IllegalStateException("No se pudo obtener la ventana actual");
+    }
+    private void navegarALogin() {
+        try {
+            // Usar SpringFXMLLoader para cargar la vista de login
+            Parent root = springFXMLLoader.load("/view/Login.fxml");
+
+            // Obtener la ventana actual
+            Stage stage = obtenerVentanaActual();
+
+            // Cambiar la escena
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Inicio de Sesión");
+            stage.centerOnScreen();
+            stage.show();
+
+        } catch (Exception e) {
+            logger.error("Error al navegar a login", e);
+            mostrarAlerta("Error", "No se pudo cargar la pantalla de inicio de sesión");
+        }
+    }
+
     private void cerrarSesion() {
         try {
-            jwtTokenHolder.clearToken();
-            mostrarEstado("Sesión cerrada", Color.GREEN);
+            // Limpiar el token
+            if (jwtTokenHolder != null) {
+                jwtTokenHolder.clearToken();
+            }
+
+            // Navegar de vuelta a login
+            navegarALogin();
+
         } catch (Exception e) {
             logger.error("Error al cerrar sesión", e);
             mostrarAlerta("Error", "No se pudo cerrar la sesión");
         }
     }
+
 }

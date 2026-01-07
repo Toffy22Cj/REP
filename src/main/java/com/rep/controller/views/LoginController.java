@@ -1,5 +1,6 @@
 package com.rep.controller.views;
 
+import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.dto.auth.LoginResponse;
 import com.rep.service.funciones.AdminApiService;
@@ -37,15 +38,20 @@ public class LoginController {
     private JwtTokenHolder jwtTokenHolder;
     @Autowired
     AdminApiService adminApiService;
+    private final SpringFXMLLoader springFXMLLoader;
+
+    @Autowired
     public LoginController(NavigationService navigationService,
                            UsuarioRegistrationService registrationService,
-                           AuthServiceClient authServiceClient ,AdminApiService adminApiService) {
-        this.adminApiService = adminApiService;
+                           AuthServiceClient authServiceClient,
+                           AdminApiService adminApiService,
+                           SpringFXMLLoader springFXMLLoader) { // Añade esto
         this.navigationService = navigationService;
         this.registrationService = registrationService;
         this.authServiceClient = authServiceClient;
+        this.adminApiService = adminApiService;
+        this.springFXMLLoader = springFXMLLoader;
     }
-
     @FXML
     private void handleLogin(ActionEvent event) {
         String identificacion = txtIdentificacion.getText().trim();
@@ -92,23 +98,19 @@ public class LoginController {
 
     private void cargarVistaAdmin(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/VistaAdmin.fxml"));
-            loader.setControllerFactory(param -> {
-                try {
-                    return new AdminPanelController(adminApiService, registrationService, jwtTokenHolder);
-                } catch (Exception e) {
-                    throw new RuntimeException("Error al crear AdminPanelController", e);
-                }
-            });
+            // Usar SpringFXMLLoader para cargar la vista
+            Parent root = springFXMLLoader.load("/view/VistaAdmin.fxml");
 
-            Parent root = loader.load();
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.show();
 
             ((Node) event.getSource()).getScene().getWindow().hide();
         } catch (IOException e) {
-            mostrarError("Error al cargar la vista de administrador");
+            mostrarError("Error al cargar la vista de administrador: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            mostrarError("Error: " + e.getMessage());
             e.printStackTrace();
         }
     }

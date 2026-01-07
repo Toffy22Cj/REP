@@ -2,10 +2,7 @@ package com.rep.controller.apis;
 
 import com.rep.dto.actividad.ActividadCreateDTO;
 import com.rep.dto.actividad.ActividadDTO;
-import com.rep.model.Actividad;
-import com.rep.model.Profesor;
-import com.rep.model.ProfesorMateria;
-import com.rep.model.Usuario;
+import com.rep.model.*;
 import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.service.logica.ActividadService;
 import com.rep.service.logica.ValidacionService;
@@ -21,8 +18,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 @Slf4j
 @RestController
@@ -46,8 +45,15 @@ public class ActividadApi {
             @AuthenticationPrincipal Usuario usuario) {
 
         try {
+            log.info("=== INICIO crearActividad ===");
+            log.info("Usuario: {} (ID: {})", usuario.getUsername(), usuario.getId());
+            log.info("DTO recibido: {}", actividadDTO);
+            log.info("Materia ID: {}", actividadDTO.getMateriaId());
+            log.info("Curso ID: {}", actividadDTO.getCursoId());
+
             // 1. Validar usuario
             if (!(usuario instanceof Profesor)) {
+                log.warn("Usuario no es profesor: {}", usuario.getClass().getSimpleName());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Solo los profesores pueden crear actividades");
             }
@@ -59,6 +65,7 @@ public class ActividadApi {
                                 FieldError::getField,
                                 FieldError::getDefaultMessage
                         ));
+                log.warn("Errores de validación: {}", errores);
                 return ResponseEntity.badRequest().body(errores);
             }
 
@@ -73,18 +80,48 @@ public class ActividadApi {
                         .body("La fecha de entrega no puede ser en el pasado");
             }
 
-            // 4. Verificar existencia de la relación Profesor-Materia
-            ProfesorMateria pm = profesorMateriaRepository.findById(actividadDTO.getProfesorMateriaId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "No se encontró la relación Profesor-Materia con ID: " + actividadDTO.getProfesorMateriaId()));
+            // 4. Buscar o crear la relación Profesor-Materia-Curso
+            Profesor profesor = (Profesor) usuario;
 
-            // 5. Validar que el profesor autenticado es el dueño de la relación
-            if (!pm.getProfesor().getId().equals(usuario.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("No tiene permisos para crear actividades en esta materia-curso");
+            log.info("Buscando relación Profesor-Materia-Curso: Profesor={}, Materia={}, Curso={}",
+                    profesor.getId(), actividadDTO.getMateriaId(), actividadDTO.getCursoId());
+
+            Optional<ProfesorMateria> pmOptional = profesorMateriaRepository
+                    .findByProfesorIdAndMateriaIdAndCursoId(
+                            profesor.getId(),
+                            actividadDTO.getMateriaId(),
+                            actividadDTO.getCursoId()
+                    );
+
+            ProfesorMateria pm;
+            if (pmOptional.isPresent()) {
+                pm = pmOptional.get();
+                log.info("Relación Profesor-Materia encontrada con ID: {}", pm.getId());
+            } else {
+                log.info("Creando nueva relación Profesor-Materia-Curso");
+
+                // Verificar que la materia y curso existen
+                // (Opcional: puedes agregar validaciones aquí)
+
+                // Crear nueva relación
+                pm = new ProfesorMateria();
+                pm.setProfesor(profesor);
+
+                // Crear objetos con solo ID
+                Materia materia = new Materia();
+                materia.setId(actividadDTO.getMateriaId());
+                pm.setMateria(materia);
+
+                Curso curso = new Curso();
+                curso.setId(actividadDTO.getCursoId());
+                pm.setCurso(curso);
+
+                // Guardar la relación
+                pm = profesorMateriaRepository.save(pm);
+                log.info("Nueva relación creada con ID: {}", pm.getId());
             }
 
-            // 6. Crear entidad Actividad
+            // 5. Crear entidad Actividad
             Actividad actividad = new Actividad();
             actividad.setTitulo(actividadDTO.getTitulo());
             actividad.setTipo(actividadDTO.getTipo());
@@ -92,20 +129,20 @@ public class ActividadApi {
             actividad.setFechaEntrega(actividadDTO.getFechaEntrega());
             actividad.setDuracionMinutos(actividadDTO.getDuracionMinutos());
             actividad.setProfesorMateria(pm);
-            actividad.setProfesor((Profesor) usuario);
+            actividad.setProfesor(profesor);
+            actividad.setFechaCreacion(LocalDateTime.now());
+            actividad.setActiva(true);
+            actividad.setPermitirReintentos(false); // O según tu lógica de negocio
 
-            // 7. Guardar actividad
+            // 6. Guardar actividad
+            log.info("Guardando actividad: {}", actividad.getTitulo());
             Actividad nuevaActividad = actividadService.crearActividad(actividad);
+            log.info("Actividad creada con ID: {}", nuevaActividad.getId());
+
             return ResponseEntity.ok(ActividadDTO.fromEntity(nuevaActividad));
 
-        } catch (ResourceNotFoundException e) {
-            log.error("Error al crear actividad: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("Error de validación: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error inesperado al crear actividad", e);
+            log.error("ERROR al crear actividad", e);
             return ResponseEntity.internalServerError()
                     .body("Error interno al crear la actividad: " + e.getMessage());
         }

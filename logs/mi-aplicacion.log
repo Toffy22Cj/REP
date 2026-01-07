@@ -1,39 +1,39 @@
-2025-09-17T23:36:57.616-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.boot.SpringApplication               : Starting application using Java 21.0.8 with PID 69936 (started by carlos in /home/carlos/Proyectos/U/REP)
-2025-09-17T23:36:57.621-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.boot.SpringApplication               : No active profile set, falling back to 1 default profile: "default"
-2025-09-17T23:36:58.757-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-09-17T23:36:58.772-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] o.s.b.a.AutoConfigurationPackages        : @EnableAutoConfiguration was declared on a class in the package 'com.rep'. Automatic @Repository and @Entity scanning is enabled.
-2025-09-17T23:36:58.857-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 93 ms. Found 14 JPA repository interfaces.
-2025-09-17T23:36:59.126-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.cloud.context.scope.GenericScope     : BeanFactory id=c0969ee3-5b99-3f9a-a4fc-c17ec6ea0cb5
-2025-09-17T23:36:59.810-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2025-09-17T23:36:59.819-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2025-09-17T23:36:59.820-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
-2025-09-17T23:36:59.880-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2025-09-17T23:36:59.881-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2221 ms
-2025-09-17T23:37:00.256-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-09-17T23:37:00.301-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
-2025-09-17T23:37:00.334-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2025-09-17T23:37:00.536-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-09-17T23:37:00.557-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2025-09-17T23:37:00.669-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1e8c83a3
-2025-09-17T23:37:00.670-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2025-09-17T23:37:00.699-05:00  WARN 69936 --- [Main] [JavaFX-Launcher] o.h.e.j.e.i.JdbcEnvironmentInitiator     : HHH000339: Could not obtain connection metadata: java.sql.SQLSyntaxErrorException: Unknown column 'RESERVED' in 'WHERE'
-2025-09-17T23:37:00.710-05:00  WARN 69936 --- [Main] [JavaFX-Launcher] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-09-17T23:37:00.711-05:00  WARN 69936 --- [Main] [JavaFX-Launcher] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
-2025-09-17T23:37:01.694-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-09-17T23:37:01.920-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2025-09-17T23:37:02.239-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
-2025-09-17T23:37:02.644-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] c.rep.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
-2025-09-17T23:37:02.645-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] o.s.w.f.ServerHttpObservationFilter      : Filter 'webMvcObservationFilter' configured for use
-2025-09-17T23:37:03.651-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] c.r.s.impl.EstudianteApiServiceImpl      : EstudianteApiServiceImpl inicializado con URL base: http://localhost:8080
-2025-09-17T23:37:03.845-05:00  WARN 69936 --- [Main] [JavaFX-Launcher] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2025-09-17T23:37:04.066-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] s.w.s.m.m.a.RequestMappingHandlerMapping : 67 mappings in 'requestMappingHandlerMapping'
-2025-09-17T23:37:04.188-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**, /swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
-2025-09-17T23:37:04.334-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint(s) beneath base path '/actuator'
-2025-09-17T23:37:04.388-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@20be5a45, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@380789d, org.springframework.security.web.context.SecurityContextHolderFilter@55bc19db, org.springframework.security.web.header.HeaderWriterFilter@710f856e, org.springframework.web.filter.CorsFilter@31c0ea87, org.springframework.security.web.authentication.logout.LogoutFilter@eb91e4b, com.rep.security.JwtAuthenticationFilter@5e957ab3, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5774779e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@78573d6, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@758768e5, org.springframework.security.web.session.SessionManagementFilter@1f73a6ba, org.springframework.security.web.access.ExceptionTranslationFilter@6ad484b9, org.springframework.security.web.access.intercept.AuthorizationFilter@772c710f]
-2025-09-17T23:37:04.500-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
-2025-09-17T23:37:04.537-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
-2025-09-17T23:37:05.019-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
-2025-09-17T23:37:05.046-05:00 DEBUG 69936 --- [Main] [JavaFX-Launcher] .s.b.a.l.ConditionEvaluationReportLogger : 
+2026-01-07T15:12:56.611-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.boot.SpringApplication               : Starting application using Java 21.0.9 with PID 3332 (started by carlos in /home/carlos/Proyectos/REP)
+2026-01-07T15:12:56.625-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.boot.SpringApplication               : No active profile set, falling back to 1 default profile: "default"
+2026-01-07T15:12:58.426-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-07T15:12:58.445-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] o.s.b.a.AutoConfigurationPackages        : @EnableAutoConfiguration was declared on a class in the package 'com.rep'. Automatic @Repository and @Entity scanning is enabled.
+2026-01-07T15:12:58.536-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 101 ms. Found 14 JPA repository interfaces.
+2026-01-07T15:12:58.802-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.cloud.context.scope.GenericScope     : BeanFactory id=1e09ff22-64fd-307c-ab08-cd77338e1394
+2026-01-07T15:12:59.836-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-01-07T15:12:59.851-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-07T15:12:59.852-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2026-01-07T15:12:59.971-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-01-07T15:12:59.971-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3242 ms
+2026-01-07T15:13:00.587-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-07T15:13:00.662-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
+2026-01-07T15:13:00.726-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-01-07T15:13:01.109-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-07T15:13:01.140-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-01-07T15:13:01.296-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1920e7cd
+2026-01-07T15:13:01.297-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-01-07T15:13:01.335-05:00  WARN 3332 --- [Main] [JavaFX-Launcher] o.h.e.j.e.i.JdbcEnvironmentInitiator     : HHH000339: Could not obtain connection metadata: java.sql.SQLSyntaxErrorException: Unknown column 'RESERVED' in 'WHERE'
+2026-01-07T15:13:01.366-05:00  WARN 3332 --- [Main] [JavaFX-Launcher] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-01-07T15:13:01.367-05:00  WARN 3332 --- [Main] [JavaFX-Launcher] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2026-01-07T15:13:02.589-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-07T15:13:02.967-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-07T15:13:03.594-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-07T15:13:04.118-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] c.rep.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-01-07T15:13:04.120-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] o.s.w.f.ServerHttpObservationFilter      : Filter 'webMvcObservationFilter' configured for use
+2026-01-07T15:13:05.596-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] c.r.s.impl.EstudianteApiServiceImpl      : EstudianteApiServiceImpl inicializado con URL base: http://localhost:8080
+2026-01-07T15:13:05.842-05:00  WARN 3332 --- [Main] [JavaFX-Launcher] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-01-07T15:13:06.330-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] s.w.s.m.m.a.RequestMappingHandlerMapping : 67 mappings in 'requestMappingHandlerMapping'
+2026-01-07T15:13:06.535-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**, /swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
+2026-01-07T15:13:06.748-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint(s) beneath base path '/actuator'
+2026-01-07T15:13:06.837-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@779479ed, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@703d283, org.springframework.security.web.context.SecurityContextHolderFilter@3db022ef, org.springframework.security.web.header.HeaderWriterFilter@2307066c, org.springframework.web.filter.CorsFilter@59902840, org.springframework.security.web.authentication.logout.LogoutFilter@53c0fbc, com.rep.security.JwtAuthenticationFilter@43341523, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@3e2c5795, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@5bc6d72a, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@d31afef, org.springframework.security.web.session.SessionManagementFilter@110c2bf9, org.springframework.security.web.access.ExceptionTranslationFilter@2b0a9656, org.springframework.security.web.access.intercept.AuthorizationFilter@3c19955]
+2026-01-07T15:13:07.035-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-01-07T15:13:07.089-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-01-07T15:13:07.674-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2026-01-07T15:13:07.704-05:00 DEBUG 3332 --- [Main] [JavaFX-Launcher] .s.b.a.l.ConditionEvaluationReportLogger : 
 
 
 ============================
@@ -2502,7 +2502,99 @@ Unconditional classes:
 
 
 
-2025-09-17T23:37:05.050-05:00  INFO 69936 --- [Main] [JavaFX-Launcher] o.s.boot.SpringApplication               : Started application in 8.174 seconds (process running for 9.014)
-2025-09-17T23:37:09.772-05:00  INFO 69936 --- [Main] [JavaFX Application Thread] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-09-17T23:37:09.775-05:00  INFO 69936 --- [Main] [JavaFX Application Thread] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2025-09-17T23:37:09.783-05:00  INFO 69936 --- [Main] [JavaFX Application Thread] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-01-07T15:13:07.741-05:00  INFO 3332 --- [Main] [JavaFX-Launcher] o.s.boot.SpringApplication               : Started application in 12.916 seconds (process running for 14.079)
+2026-01-07T15:13:22.317-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : HTTP POST http://localhost:8080/api/auth/login
+2026-01-07T15:13:22.387-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Accept=[application/json, application/*+json]
+2026-01-07T15:13:22.395-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Writing [com.rep.dto.auth.LoginRequest@78713ce4] as "application/json"
+2026-01-07T15:13:22.467-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-07T15:13:22.468-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-07T15:13:22.468-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-01-07T15:13:22.468-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-01-07T15:13:22.469-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2026-01-07T15:13:22.472-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@48e47008
+2026-01-07T15:13:22.473-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@3f2544c9
+2026-01-07T15:13:22.474-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-01-07T15:13:22.475-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 6 ms
+2026-01-07T15:13:22.497-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing POST /api/auth/login
+2026-01-07T15:13:22.519-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-07T15:13:22.524-05:00  WARN 3332 --- [Main] [http-nio-8080-exec-1] o.s.w.s.h.HandlerMappingIntrospector     : Cache miss for REQUEST dispatch to '/api/auth/login' (previous null). Performing MatchableHandlerMapping lookup. This is logged once only at WARN level, and every time at TRACE.
+2026-01-07T15:13:22.537-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured POST /api/auth/login
+2026-01-07T15:13:22.537-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] com.rep.config.SecurityDebugFilter       : === SECURITY DEBUG ===
+2026-01-07T15:13:22.537-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] com.rep.config.SecurityDebugFilter       : Endpoint: POST /api/auth/login
+2026-01-07T15:13:22.537-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] com.rep.config.SecurityDebugFilter       : Authenticated: true
+2026-01-07T15:13:22.538-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] com.rep.config.SecurityDebugFilter       : Principal: anonymousUser
+2026-01-07T15:13:22.538-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-1] com.rep.config.SecurityDebugFilter       : Authorities: [ROLE_ANONYMOUS]
+2026-01-07T15:13:22.540-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-01-07T15:13:22.541-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.rep.controller.apis.AuthController#login(LoginRequest)
+2026-01-07T15:13:22.573-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [com.rep.dto.auth.LoginRequest@825b887]
+2026-01-07T15:13:22.830-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json] and supported [application/json, application/*+json]
+2026-01-07T15:13:22.834-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [LoginResponse(usuario=AuthUsuarioDTO(id=3, nombre=profesor, correo=profesor@gmail.com, identificacio (truncated)...]
+2026-01-07T15:13:22.843-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-07T15:13:22.845-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Response 200 OK
+2026-01-07T15:13:22.846-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Reading to [com.rep.dto.auth.LoginResponse]
+2026-01-07T15:13:22.934-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : HTTP GET http://localhost:8080/api/profesor/materias
+2026-01-07T15:13:22.935-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Accept=[application/json, application/*+json]
+2026-01-07T15:13:22.938-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /api/profesor/materias
+2026-01-07T15:13:22.981-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /api/profesor/materias
+2026-01-07T15:13:22.981-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-2] com.rep.config.SecurityDebugFilter       : === SECURITY DEBUG ===
+2026-01-07T15:13:22.982-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-2] com.rep.config.SecurityDebugFilter       : Endpoint: GET /api/profesor/materias
+2026-01-07T15:13:22.982-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-2] com.rep.config.SecurityDebugFilter       : Authenticated: true
+2026-01-07T15:13:22.982-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-2] com.rep.config.SecurityDebugFilter       : Principal: 12345
+2026-01-07T15:13:22.982-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-2] com.rep.config.SecurityDebugFilter       : Authorities: [PROFESOR]
+2026-01-07T15:13:22.982-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/api/profesor/materias", parameters={}
+2026-01-07T15:13:22.983-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.rep.controller.apis.ProfesorApi#getMateriasAsignadas(Usuario)
+2026-01-07T15:13:23.014-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json] and supported [application/json, application/*+json]
+2026-01-07T15:13:23.015-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[Materia{id=1, nombre='Matematicas'}]]
+2026-01-07T15:13:23.018-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Response 200 OK
+2026-01-07T15:13:23.018-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-07T15:13:23.018-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Reading to [java.util.List<com.rep.model.Materia>]
+2026-01-07T15:13:23.023-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : HTTP GET http://localhost:8080/api/profesor/cursos
+2026-01-07T15:13:23.024-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Accept=[application/json, application/*+json]
+2026-01-07T15:13:23.026-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /api/profesor/cursos
+2026-01-07T15:13:23.039-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /api/profesor/cursos
+2026-01-07T15:13:23.039-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-3] com.rep.config.SecurityDebugFilter       : === SECURITY DEBUG ===
+2026-01-07T15:13:23.040-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-3] com.rep.config.SecurityDebugFilter       : Endpoint: GET /api/profesor/cursos
+2026-01-07T15:13:23.040-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-3] com.rep.config.SecurityDebugFilter       : Authenticated: true
+2026-01-07T15:13:23.040-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-3] com.rep.config.SecurityDebugFilter       : Principal: 12345
+2026-01-07T15:13:23.040-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-3] com.rep.config.SecurityDebugFilter       : Authorities: [PROFESOR]
+2026-01-07T15:13:23.040-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/api/profesor/cursos", parameters={}
+2026-01-07T15:13:23.041-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.rep.controller.apis.ProfesorApi#getCursosByProfesor(Usuario)
+2026-01-07T15:13:23.117-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json] and supported [application/json, application/*+json]
+2026-01-07T15:13:23.119-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[8 - c]]
+2026-01-07T15:13:23.122-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Response 200 OK
+2026-01-07T15:13:23.123-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Reading to [java.util.List<com.rep.dto.curso.CursoDTO>]
+2026-01-07T15:13:23.123-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-07T15:13:28.757-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : HTTP GET http://localhost:8080/api/actividades?materiaId=1
+2026-01-07T15:13:28.758-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Accept=[application/json, application/*+json]
+2026-01-07T15:13:28.763-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /api/actividades?materiaId=1
+2026-01-07T15:13:28.789-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /api/actividades?materiaId=1
+2026-01-07T15:13:28.790-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-4] com.rep.config.SecurityDebugFilter       : === SECURITY DEBUG ===
+2026-01-07T15:13:28.790-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-4] com.rep.config.SecurityDebugFilter       : Endpoint: GET /api/actividades
+2026-01-07T15:13:28.790-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-4] com.rep.config.SecurityDebugFilter       : Authenticated: true
+2026-01-07T15:13:28.790-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-4] com.rep.config.SecurityDebugFilter       : Principal: 12345
+2026-01-07T15:13:28.791-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-4] com.rep.config.SecurityDebugFilter       : Authorities: [PROFESOR]
+2026-01-07T15:13:28.793-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/api/actividades?materiaId=1", parameters={masked}
+2026-01-07T15:13:28.795-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.rep.controller.apis.ActividadApi#listarActividades(Long, Long, Usuario)
+2026-01-07T15:13:28.852-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json] and supported [application/json, application/*+json]
+2026-01-07T15:13:28.859-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[ActividadDTO(id=1, duracionMinutos=70, titulo=prueba, tipo=EXAMEN, descripcion=, fechaEntrega=2026- (truncated)...]
+2026-01-07T15:13:28.877-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Response 200 OK
+2026-01-07T15:13:28.878-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Reading to [java.util.List<com.rep.dto.actividad.ActividadDTO>]
+2026-01-07T15:13:28.880-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-07T15:13:34.089-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : HTTP GET http://localhost:8080/api/respuestas/actividad/3
+2026-01-07T15:13:34.091-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Accept=[application/json, application/*+json]
+2026-01-07T15:13:34.094-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /api/respuestas/actividad/3
+2026-01-07T15:13:34.119-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /api/respuestas/actividad/3
+2026-01-07T15:13:34.119-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-5] com.rep.config.SecurityDebugFilter       : === SECURITY DEBUG ===
+2026-01-07T15:13:34.120-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-5] com.rep.config.SecurityDebugFilter       : Endpoint: GET /api/respuestas/actividad/3
+2026-01-07T15:13:34.120-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-5] com.rep.config.SecurityDebugFilter       : Authenticated: true
+2026-01-07T15:13:34.120-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-5] com.rep.config.SecurityDebugFilter       : Principal: 12345
+2026-01-07T15:13:34.120-05:00  INFO 3332 --- [Main] [http-nio-8080-exec-5] com.rep.config.SecurityDebugFilter       : Authorities: [PROFESOR]
+2026-01-07T15:13:34.120-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : GET "/api/respuestas/actividad/3", parameters={}
+2026-01-07T15:13:34.122-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2026-01-07T15:13:34.125-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.w.s.r.ResourceHttpRequestHandler     : Resource not found
+2026-01-07T15:13:34.129-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource api/respuestas/actividad/3.]
+2026-01-07T15:13:34.129-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 404 NOT_FOUND
+2026-01-07T15:13:34.136-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /error
+2026-01-07T15:13:34.141-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-07T15:13:34.145-05:00 DEBUG 3332 --- [Main] [http-nio-8080-exec-5] o.s.s.w.a.Http403ForbiddenEntryPoint     : Pre-authenticated entry point called. Rejecting access
+2026-01-07T15:13:34.149-05:00 DEBUG 3332 --- [Main] [JavaFX Application Thread] o.s.web.client.RestTemplate              : Response 403 FORBIDDEN

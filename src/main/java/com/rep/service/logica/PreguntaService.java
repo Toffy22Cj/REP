@@ -19,6 +19,9 @@ public interface PreguntaService {
         void eliminarPregunta(Long id);
 
         Opcion agregarOpcion(Long preguntaId, OpcionRequest request);
+        Opcion subirArchivoOpcion(Long opcionId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
+        java.io.File obtenerArchivoOpcion(Long opcionId);
+        Opcion getOpcionById(Long opcionId);
 
         List<Opcion> getOpcionesByPreguntaId(Long preguntaId);
 

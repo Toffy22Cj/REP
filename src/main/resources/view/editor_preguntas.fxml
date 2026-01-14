@@ -32,7 +32,7 @@
                     <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
                 </padding>
                 <Label text="Preguntas de la Actividad" styleClass="section-title"/>
-                <TableView fx:id="preguntasTable" styleClass="preguntas-table">
+                <TableView fx:id="preguntasTable" styleClass="preguntas-table" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colEnunciado" text="Enunciado" prefWidth="300.0"/>
                         <TableColumn fx:id="colTipo" text="Tipo" prefWidth="150.0">
@@ -66,6 +66,11 @@
                         <ComboBox fx:id="tipoComboBox" styleClass="input-field" prefWidth="200"/>
                     </HBox>
 
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="Longitud máxima:" styleClass="input-label"/>
+                        <Spinner fx:id="spinnerLongitud" prefWidth="120.0" visible="false" managed="false"/>
+                    </HBox>
+
                     <!-- File Upload Section -->
                     <HBox alignment="CENTER_LEFT" spacing="10">
                          <Label text="Archivo Adjunto:" styleClass="input-label"/>
@@ -75,9 +80,9 @@
                     </HBox>
 
                     <!-- Panel de opciones (solo visible para OPCION_MULTIPLE) -->
-                    <VBox fx:id="panelOpciones" styleClass="panel-opciones">
+                    <VBox fx:id="panelOpciones" styleClass="panel-opciones" visible="false" managed="false">
                         <Label text="Opciones:" styleClass="input-label"/>
-                        <ListView fx:id="listaOpciones" styleClass="opciones-list" prefHeight="150.0"/>
+                        <ListView fx:id="listaOpciones" styleClass="opciones-list" prefHeight="150.0" VBox.vgrow="ALWAYS"/>
                         <!-- Panel para VERDADERO_FALSO -->
                         <VBox fx:id="panelVerdaderoFalso" styleClass="subpanel" visible="false">
                             <Label text="Seleccione la respuesta correcta:" styleClass="input-label"/>
@@ -87,12 +92,26 @@
                             </HBox>
                         </VBox>
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <TextField fx:id="campoNuevaOpcion" promptText="Nueva opción" styleClass="input-field" prefWidth="200"/>
-                            <CheckBox fx:id="checkCorrecta" text="Correcta" styleClass="correct-checkbox"/>
-                            <Button fx:id="btnAgregarOpcion" text="Agregar" styleClass="small-button" onAction="#agregarOpcion"/>
-                            <Button fx:id="btnEliminarOpcion" text="Eliminar" styleClass="small-button danger-button" onAction="#eliminarOpcion"/>
+                                <TextField fx:id="campoNuevaOpcion" promptText="Nueva opción" styleClass="input-field" prefWidth="200"/>
+                                <CheckBox fx:id="checkCorrecta" text="Correcta" styleClass="correct-checkbox"/>
+                                <!-- NUEVO: Botón para adjuntar archivo a opción -->
+                                <Button fx:id="btnAdjuntarArchivoOpcion" text="📎" styleClass="small-button" onAction="#adjuntarArchivoAOpcion">
+                                    <tooltip>
+                                        <Tooltip text="Adjuntar archivo a esta opción" />
+                                    </tooltip>
+                                </Button>
+                                <Button fx:id="btnAgregarOpcion" text="Agregar" styleClass="small-button" onAction="#agregarOpcion"/>
+                                <Button fx:id="btnEliminarOpcion" text="Eliminar" styleClass="small-button danger-button" onAction="#eliminarOpcion"/>
                         </HBox>
-                    </VBox>
+                        
+                            <!-- NUEVO: Indicador de archivo para opción seleccionada -->
+                            <HBox fx:id="panelArchivoOpcion" alignment="CENTER_LEFT" spacing="10" styleClass="archivo-opcion-panel" visible="false" managed="false">
+                                <Label text="Archivo de opción:" styleClass="input-label"/>
+                                <Label fx:id="lblArchivoOpcion" text="Ningún archivo seleccionado" styleClass="status-label"/>
+                                <Button fx:id="btnEliminarArchivoOpcion" text="Eliminar Archivo" styleClass="small-button danger-button" 
+                                        onAction="#eliminarArchivoOpcion"/>
+                            </HBox>
+                        </VBox>
 
                     <Button fx:id="btnGuardar" text="Guardar Cambios" styleClass="primary-button save-button" onAction="#guardarPregunta"/>
                 </VBox>

@@ -10,16 +10,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/preguntas")
-public class PreguntaApi {
+    public class PreguntaApi {
+    private static final Logger logger = LoggerFactory.getLogger(PreguntaApi.class);
     private final PreguntaService preguntaService;
+    private final com.rep.service.logica.EstudianteService estudianteService;
 
-    public PreguntaApi(PreguntaService preguntaService) {
+    public PreguntaApi(PreguntaService preguntaService, com.rep.service.logica.EstudianteService estudianteService) {
         this.preguntaService = preguntaService;
+        this.estudianteService = estudianteService;
     }
 
     // 1. Crear pregunta (con opciones si es necesario)
@@ -98,15 +103,73 @@ public class PreguntaApi {
         }
     }
 
-    @GetMapping("/{id}/archivo")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
-    public ResponseEntity<org.springframework.core.io.Resource> obtenerArchivo(
-            @PathVariable Long id,
+    // Subir archivo para una opción existente
+    @PostMapping("/{preguntaId}/opciones/{opcionId}/archivo")
+    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #preguntaId)")
+    public ResponseEntity<OpcionResponse> subirArchivoOpcion(
+            @PathVariable Long preguntaId,
+            @PathVariable Long opcionId,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Usuario usuario) {
         try {
-            java.io.File file = preguntaService.obtenerArchivo(id);
-            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(file.toURI());
+            Opcion opcion = preguntaService.subirArchivoOpcion(opcionId, file);
+            return ResponseEntity.ok(new OpcionResponse(opcion));
+        } catch (java.io.IOException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
+    // Subir archivo para una opción recien creada identificada por índice (útil desde el editor cuando se crean múltiples opciones)
+    @PostMapping("/{preguntaId}/opciones/archivo")
+    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #preguntaId)")
+    public ResponseEntity<Void> subirArchivoOpcionPorIndice(
+            @PathVariable Long preguntaId,
+            @RequestParam("opcionIndex") Integer opcionIndex,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @AuthenticationPrincipal Usuario usuario) {
+        try {
+            List<Opcion> opciones = preguntaService.getOpcionesByPreguntaId(preguntaId);
+            if (opcionIndex == null || opcionIndex < 0 || opcionIndex >= opciones.size()) {
+                return ResponseEntity.badRequest().build();
+            }
+            Opcion target = opciones.get(opcionIndex);
+            preguntaService.subirArchivoOpcion(target.getId(), file);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Obtener archivo de una opción
+    @GetMapping("/opciones/{opcionId}/archivo")
+    public ResponseEntity<org.springframework.core.io.Resource> obtenerArchivoOpcion(
+            @PathVariable Long opcionId,
+            @AuthenticationPrincipal Usuario usuario) {
+        try {
+            // Validar acceso: permitir profesor propietario de la pregunta o estudiante del curso
+            if (usuario == null) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+
+            Opcion opcion = preguntaService.getOpcionById(opcionId);
+            Long preguntaId = opcion.getPregunta().getId();
+
+            if (usuario.getRol() == Usuario.Rol.PROFESOR) {
+                if (!preguntaService.profesorTieneAccesoAPregunta(usuario.getId(), preguntaId)) {
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+                }
+            } else if (usuario.getRol() == Usuario.Rol.ESTUDIANTE) {
+                Pregunta pregunta = preguntaService.getPreguntaById(preguntaId);
+                Long actividadId = pregunta.getActividad().getId();
+                if (!estudianteService.puedeRealizarActividad(usuario.getId(), actividadId)) {
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+                }
+            } else {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+
+            java.io.File file = preguntaService.obtenerArchivoOpcion(opcionId);
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(file.toURI());
             if (resource.exists() || resource.isReadable()) {
                 return ResponseEntity.ok()
                         .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
@@ -115,7 +178,69 @@ public class PreguntaApi {
             } else {
                 return ResponseEntity.notFound().build();
             }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/archivo")
+    public ResponseEntity<org.springframework.core.io.Resource> obtenerArchivo(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+        try {
+            logger.info("Solicitud de archivo para pregunta id={} por usuario={}", id, usuario == null ? "ANON" : usuario.getId());
+            // Validaciones: permitir profesor propietario o estudiante que puede realizar la actividad
+            if (usuario == null) {
+                logger.warn("Usuario no autenticado intentando acceder al archivo de pregunta {}", id);
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+
+            if (usuario.getRol() == Usuario.Rol.PROFESOR) {
+                if (!preguntaService.profesorTieneAccesoAPregunta(usuario.getId(), id)) {
+                    logger.warn("Profesor {} no tiene acceso a la pregunta {}", usuario.getId(), id);
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+                }
+            } else if (usuario.getRol() == Usuario.Rol.ESTUDIANTE) {
+                // Permitir descarga si el estudiante pertenece al curso de la actividad
+                Pregunta pregunta = preguntaService.getPreguntaById(id);
+                Long actividadId = pregunta.getActividad().getId();
+                try {
+                    com.rep.model.Estudiante estudiante = estudianteService.getEstudianteById(usuario.getId());
+                    Long cursoActividadId = null;
+                    if (pregunta.getActividad().getProfesorMateria() != null && pregunta.getActividad().getProfesorMateria().getCurso() != null) {
+                        cursoActividadId = pregunta.getActividad().getProfesorMateria().getCurso().getId();
+                    } else if (pregunta.getActividad().getCurso() != null) {
+                        cursoActividadId = pregunta.getActividad().getCurso().getId();
+                    }
+
+                    if (cursoActividadId == null || estudiante.getCurso() == null || !cursoActividadId.equals(estudiante.getCurso().getId())) {
+                        logger.warn("Estudiante {} no pertenece al curso de la actividad {} (pregunta {})", usuario.getId(), actividadId, id);
+                        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+                    }
+                } catch (Exception ex) {
+                    logger.warn("Error validando acceso del estudiante {} a la actividad {}: {}", usuario.getId(), actividadId, ex.getMessage());
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+                }
+            } else {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+
+            java.io.File file = preguntaService.obtenerArchivo(id);
+            logger.info("Archivo encontrado en ruta={}", file.getAbsolutePath());
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(file.toURI());
+
+            if (resource.exists() || resource.isReadable()) {
+                logger.info("Enviando recurso archivo pregunta {} (size={} bytes)", id, file.length());
+                return ResponseEntity.ok()
+                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + file.getName() + "\"")
+                        .body(resource);
+            } else {
+                logger.error("Recurso no legible para archivo pregunta {} ruta={}", id, file.getAbsolutePath());
+                return ResponseEntity.notFound().build();
+            }
         } catch (java.io.IOException e) {
+            logger.error("Error al obtener archivo para pregunta {}: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }

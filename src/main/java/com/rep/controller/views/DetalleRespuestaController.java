@@ -1,8 +1,9 @@
 package com.rep.controller.views;
 
 import com.rep.dto.tokens.JwtTokenHolder;
-import com.rep.model.RespuestaEstudiante;
 import com.rep.model.RespuestaPregunta;
+import com.rep.dto.actividad.RespuestaEstudianteDetalleDTO;
+import com.rep.dto.actividad.RespuestaPreguntaDetalleDTO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -16,6 +17,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import javafx.scene.paint.Color;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.TableCell;
+import java.awt.Desktop;
+import java.io.File;
+import java.nio.file.Paths;
 
 @Controller
 public class DetalleRespuestaController {
@@ -25,13 +31,15 @@ public class DetalleRespuestaController {
     @FXML
     private TextField notaField;
     @FXML
-    private TableView<RespuestaPregunta> respuestasTable;
+    private TableView<RespuestaPreguntaDetalleDTO> respuestasTable;
     @FXML
-    private TableColumn<RespuestaPregunta, String> colPregunta;
+    private TableColumn<RespuestaPreguntaDetalleDTO, String> colPregunta;
     @FXML
-    private TableColumn<RespuestaPregunta, String> colRespuesta;
+    private TableColumn<RespuestaPreguntaDetalleDTO, String> colRespuesta;
     @FXML
-    private TableColumn<RespuestaPregunta, String> colCorrecta;
+    private TableColumn<RespuestaPreguntaDetalleDTO, String> colCorrecta;
+    @FXML
+    private TableColumn<RespuestaPreguntaDetalleDTO, String> colArchivo;
     @FXML
     private TextArea observacionesArea;
     @FXML
@@ -46,11 +54,11 @@ public class DetalleRespuestaController {
     @FXML
     public void initialize() {
         colPregunta.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getPregunta().getEnunciado()));
+            cellData -> new SimpleStringProperty(cellData.getValue().getEnunciado()));
 
         colRespuesta.setCellValueFactory(cellData -> {
-            if (cellData.getValue().getOpcion() != null) {
-                return new SimpleStringProperty(cellData.getValue().getOpcion().getTexto());
+            if (cellData.getValue().getOpcionTexto() != null) {
+                return new SimpleStringProperty(cellData.getValue().getOpcionTexto());
             } else if (cellData.getValue().getRespuestaAbierta() != null) {
                 return new SimpleStringProperty(cellData.getValue().getRespuestaAbierta());
             }
@@ -59,11 +67,36 @@ public class DetalleRespuestaController {
 
         colCorrecta.setCellValueFactory(cellData -> {
             return new SimpleStringProperty(
-                    cellData.getValue().getPregunta().getOpciones().stream()
-                            .filter(op -> op.getEsCorrecta())
-                            .findFirst()
-                            .map(op -> op.getTexto())
-                            .orElse("N/A"));
+                cellData.getValue().getEsCorrecta() != null && cellData.getValue().getEsCorrecta() ? "Sí" : "No");
+        });
+
+        colArchivo.setCellValueFactory(cellData -> {
+            if (cellData.getValue().getNombreArchivo() != null && !cellData.getValue().getNombreArchivo().isEmpty()) {
+                return new SimpleStringProperty(cellData.getValue().getNombreArchivo());
+            }
+            return new SimpleStringProperty("Sin archivo");
+        });
+
+        // Hacer la columna de archivos clickeable para descargar
+        colArchivo.setCellFactory(column -> new TableCell<RespuestaPreguntaDetalleDTO, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.equals("Sin archivo")) {
+                    setText(item);
+                    setGraphic(null);
+                    setStyle("");
+                } else {
+                    Hyperlink link = new Hyperlink(item);
+                    link.setOnAction(e -> {
+                        RespuestaPreguntaDetalleDTO respuesta = getTableView().getItems().get(getIndex());
+                        DetalleRespuestaController.this.descargarArchivo(respuesta.getArchivoAdjunto(),
+                                respuesta.getNombreArchivo());
+                    });
+                    setGraphic(link);
+                    setText(null);
+                }
+            }
         });
     }
 
@@ -80,18 +113,18 @@ public class DetalleRespuestaController {
             headers.set("Authorization", "Bearer " + jwtTokenHolder.getToken());
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<RespuestaEstudiante> response = restTemplate.exchange(
+            ResponseEntity<RespuestaEstudianteDetalleDTO> response = restTemplate.exchange(
                     API_URL + "/" + actividadId + "/respuestas/" + estudianteId,
                     HttpMethod.GET,
                     entity,
-                    RespuestaEstudiante.class // Backend returns detailed entity with answers
+                    RespuestaEstudianteDetalleDTO.class
             );
 
             if (response.getBody() != null) {
-                RespuestaEstudiante re = response.getBody();
-                estudianteLabel.setText("Estudiante: " + re.getEstudiante().getNombre());
-                notaField.setText(String.valueOf(re.getNota()));
-                observacionesArea.setText(re.getObservaciones());
+                RespuestaEstudianteDetalleDTO re = response.getBody();
+                estudianteLabel.setText("Estudiante: " + (re.getNombreEstudiante() != null ? re.getNombreEstudiante() : "-"));
+                notaField.setText(re.getNota() != null ? String.valueOf(re.getNota()) : "");
+                observacionesArea.setText(re.getObservaciones() != null ? re.getObservaciones() : "");
                 if (re.getRespuestasPreguntas() != null) {
                     respuestasTable.setItems(FXCollections.observableArrayList(re.getRespuestasPreguntas()));
                 }
@@ -120,11 +153,11 @@ public class DetalleRespuestaController {
 
             HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
 
-            restTemplate.exchange(
+                restTemplate.exchange(
                     API_URL + "/" + actividadId + "/notas/" + estudianteId,
                     HttpMethod.PUT,
                     entity,
-                    RespuestaEstudiante.class);
+                    Void.class);
 
             mostrarEstado("Calificación guardada correctamente", Color.GREEN);
 
@@ -140,6 +173,31 @@ public class DetalleRespuestaController {
         if (statusLabel != null) {
             statusLabel.setTextFill(color);
             statusLabel.setText(mensaje);
+        }
+    }
+
+    private void descargarArchivo(String rutaArchivo, String nombreArchivo) {
+        if (rutaArchivo == null || rutaArchivo.isEmpty()) {
+            mostrarEstado("No hay archivo adjunto", Color.RED);
+            return;
+        }
+
+        try {
+            File archivo = new File(rutaArchivo);
+            if (archivo.exists()) {
+                // Abrir el archivo con la aplicación predeterminada del sistema
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(archivo);
+                    mostrarEstado("Archivo abierto: " + nombreArchivo, Color.GREEN);
+                } else {
+                    mostrarEstado("No se puede abrir el archivo en este sistema", Color.RED);
+                }
+            } else {
+                mostrarEstado("Archivo no encontrado: " + nombreArchivo, Color.RED);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarEstado("Error al abrir archivo: " + e.getMessage(), Color.RED);
         }
     }
 }

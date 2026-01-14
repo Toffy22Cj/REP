@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -41,16 +42,19 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                    // Permitir que estudiantes (y profesores/admin) descarguen el archivo de una pregunta
+                    .requestMatchers(HttpMethod.GET, "/api/preguntas/*/archivo").hasAnyAuthority("ESTUDIANTE", "PROFESOR", "ADMIN")
+                    // Nota: la regla anterior debe evaluarse antes de la regla general para /api/preguntas/**
                         .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/registro").permitAll()
-                        .requestMatchers("/error").permitAll() // Permitir ver errores
-                        .requestMatchers("/api/profesor/**").hasAuthority("PROFESOR") // Sin ROLE_
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Sin ROLE_
-                        .requestMatchers("/api/actividades/**").hasAnyAuthority("PROFESOR", "ADMIN") // Sin ROLE_
-                        .requestMatchers("/api/preguntas/**").hasAnyAuthority("PROFESOR", "ADMIN")
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/registro").permitAll()
+                    .requestMatchers("/error").permitAll() // Permitir ver errores
+                    .requestMatchers("/api/profesor/**").hasAuthority("PROFESOR") // Sin ROLE_
+                    .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Sin ROLE_
+                    .requestMatchers("/api/actividades/**").hasAnyAuthority("PROFESOR", "ADMIN") // Sin ROLE_
+                    .requestMatchers("/api/preguntas/**").hasAnyAuthority("PROFESOR", "ADMIN")
 
-                        .anyRequest().authenticated())
+                    .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

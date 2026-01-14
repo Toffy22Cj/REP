@@ -14,4 +14,8 @@ public class OpcionRequest {
     @NotNull(message = "El campo 'esCorrecta' es requerido")
     private Boolean esCorrecta;
 
+    // Campos opcionales para archivo asociado a la opción
+    private Boolean tieneArchivo = false;
+    private String nombreArchivo;
+
 }

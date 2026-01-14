@@ -179,7 +179,7 @@ public class AdminPanelController {
         colProfId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProfNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colProfCorreo
-                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIdentificacion()));
+            .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCorreo()));
 
         colProfActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
         colProfActivo.setCellFactory(column -> new TableCell<Usuario, Boolean>() {
@@ -210,7 +210,7 @@ public class AdminPanelController {
         // Estudiantes
         colEstId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colEstNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colEstCorreo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIdentificacion()));
+        colEstCorreo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCorreo()));
         colEstCurso.setCellValueFactory(new PropertyValueFactory<>("cursoNombre"));
         colEstActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
         colEstActivo.setCellFactory(column -> new TableCell<Usuario, Boolean>() {
@@ -730,6 +730,9 @@ public class AdminPanelController {
         ComboBox<String> tipoIdentificacionCombo = new ComboBox<>();
         tipoIdentificacionCombo.getItems().addAll("CC", "TI");
         tipoIdentificacionCombo.setValue("CC");
+        TextField edadField = new TextField();
+        edadField.setPromptText("Edad");
+
         ComboBox<String> cursoCombo = new ComboBox<>();
         cursoCombo.setItems(cursoEstudianteCombo.getItems());
         CheckBox activoCheck = new CheckBox();
@@ -747,10 +750,12 @@ public class AdminPanelController {
         grid.add(identificacionField, 1, 4);
         grid.add(new Label("Tipo ID:"), 0, 5);
         grid.add(tipoIdentificacionCombo, 1, 5);
-        grid.add(new Label("Curso:"), 0, 6);
-        grid.add(cursoCombo, 1, 6);
-        grid.add(new Label("Activo:"), 0, 7);
-        grid.add(activoCheck, 1, 7);
+        grid.add(new Label("Edad:"), 0, 6);
+        grid.add(edadField, 1, 6);
+        grid.add(new Label("Curso:"), 0, 7);
+        grid.add(cursoCombo, 1, 7);
+        grid.add(new Label("Activo:"), 0, 8);
+        grid.add(activoCheck, 1, 8);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -758,7 +763,7 @@ public class AdminPanelController {
             if (dialogButton == registrarButtonType) {
                 if (nombreField.getText().isEmpty() || correoField.getText().isEmpty() ||
                         claveField.getText().isEmpty() || identificacionField.getText().isEmpty() ||
-                        cursoCombo.getValue() == null) {
+                        cursoCombo.getValue() == null || edadField.getText().isEmpty()) {
                     mostrarAlerta("Todos los campos son obligatorios", true);
                     return null;
                 }
@@ -784,6 +789,17 @@ public class AdminPanelController {
                 dto.setContraseña(claveField.getText());
                 dto.setIdentificacion(identificacionField.getText());
                 dto.setTipoIdentificacion(tipoIdentificacionCombo.getValue());
+                try {
+                    int edad = Integer.parseInt(edadField.getText());
+                    if (edad < 5 || edad > 120) {
+                        mostrarAlerta("La edad debe estar entre 5 y 120 años", true);
+                        return null;
+                    }
+                    dto.setEdad(edad);
+                } catch (NumberFormatException ex) {
+                    mostrarAlerta("La edad debe ser un número válido", true);
+                    return null;
+                }
                 dto.setActivo(activoCheck.isSelected());
                 dto.setRol("ESTUDIANTE");
                 dto.setCursoId(cursoSeleccionado.getId());

@@ -229,8 +229,16 @@ public class EstudianteServiceImpl implements EstudianteService {
                     nueva.setEstudiante(estudiante);
                     nueva.setActividad(actividad);
                     nueva.setFechaInicio(LocalDateTime.now());
+                    logger.info("Creando nueva RespuestaEstudiante para estudiante {} actividad {}", estudianteId, actividadId);
                     return nueva;
                 });
+
+        // Si la respuesta existente no tiene asociado el estudiante (inconsistencia en BD), forzarlo
+        if (respuestaEstudiante.getEstudiante() == null) {
+            logger.warn("RespuestaEstudiante id={} sin estudiante. Forzando asociación con estudiante {}",
+                    respuestaEstudiante.getId(), estudianteId);
+            respuestaEstudiante.setEstudiante(estudiante);
+        }
 
         // 4. Procesar respuestas
         Map<Long, Pregunta> preguntasMap = actividad.getPreguntas().stream()
@@ -247,6 +255,11 @@ public class EstudianteServiceImpl implements EstudianteService {
         respuestaEstudiante.setEntregado(true);
         respuestaEstudiante.setFechaEntrega(LocalDateTime.now());
         respuestaEstudiante.setNota(calcularNotaPreliminar(respuestaEstudiante, actividad));
+        logger.info("Guardando RespuestaEstudiante (estudiante={}, actividad={}, entregado={}, nota={})",
+            respuestaEstudiante.getEstudiante() != null ? respuestaEstudiante.getEstudiante().getId() : null,
+            actividadId,
+            respuestaEstudiante.getEntregado(),
+            respuestaEstudiante.getNota());
 
         respuestaEstudianteRepository.save(respuestaEstudiante);
         return convertirAResultadoDTO(respuestaEstudiante, actividad);
@@ -303,8 +316,18 @@ public class EstudianteServiceImpl implements EstudianteService {
                     .orElseThrow(() -> new EntityNotFoundException("Actividad no encontrada"));
 
             // 3. Verificar que el estudiante pertenece al curso de la actividad
-            if (actividad.getCurso() == null || !actividad.getCurso().getId().equals(estudiante.getCurso().getId())) {
-                logger.warn("El estudiante {} no pertenece al curso de la actividad {}", estudianteId, actividadId);
+            // Algunas consultas pueden no inicializar profesorMateria/curso, por eso obtendremos
+            // el curso de forma segura desde profesorMateria si está disponible.
+            Long cursoActividadId = null;
+            if (actividad.getProfesorMateria() != null && actividad.getProfesorMateria().getCurso() != null) {
+                cursoActividadId = actividad.getProfesorMateria().getCurso().getId();
+            } else if (actividad.getCurso() != null) {
+                cursoActividadId = actividad.getCurso().getId();
+            }
+
+            if (cursoActividadId == null || estudiante.getCurso() == null || !cursoActividadId.equals(estudiante.getCurso().getId())) {
+                logger.warn("El estudiante {} no pertenece al curso de la actividad {} (cursoActividadId={})",
+                        estudianteId, actividadId, cursoActividadId);
                 return false;
             }
 

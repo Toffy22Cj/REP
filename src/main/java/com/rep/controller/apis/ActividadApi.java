@@ -317,12 +317,45 @@ public class ActividadApi {
     }
 
     @GetMapping("/{id}/respuestas/{estudianteId}")
-    public ResponseEntity<com.rep.model.RespuestaEstudiante> obtenerRespuestaEstudiante(
+    public ResponseEntity<com.rep.dto.actividad.RespuestaEstudianteDetalleDTO> obtenerRespuestaEstudiante(
             @PathVariable Long id,
             @PathVariable Long estudianteId,
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), id);
-        return ResponseEntity.ok(actividadService.obtenerRespuestaEstudiante(id, estudianteId));
+
+        com.rep.model.RespuestaEstudiante respuesta = actividadService.obtenerRespuestaEstudiante(id, estudianteId);
+
+        // Mapear a DTO seguro para evitar problemas de serialización de proxies
+        com.rep.dto.actividad.RespuestaEstudianteDetalleDTO dto = new com.rep.dto.actividad.RespuestaEstudianteDetalleDTO();
+        dto.setId(respuesta.getId());
+        if (respuesta.getEstudiante() != null) {
+            dto.setEstudianteId(respuesta.getEstudiante().getId());
+            dto.setNombreEstudiante(respuesta.getEstudiante().getNombre());
+        }
+        dto.setNota(respuesta.getNota());
+        dto.setObservaciones(respuesta.getObservaciones());
+        dto.setFechaEntrega(respuesta.getFechaEntrega());
+
+        java.util.List<com.rep.dto.actividad.RespuestaPreguntaDetalleDTO> list = respuesta.getRespuestasPreguntas().stream().map(rp -> {
+            com.rep.dto.actividad.RespuestaPreguntaDetalleDTO rpd = new com.rep.dto.actividad.RespuestaPreguntaDetalleDTO();
+            rpd.setId(rp.getId());
+            if (rp.getPregunta() != null) {
+                rpd.setPreguntaId(rp.getPregunta().getId());
+                rpd.setEnunciado(rp.getPregunta().getEnunciado());
+            }
+            if (rp.getOpcion() != null) {
+                rpd.setOpcionId(rp.getOpcion().getId());
+                rpd.setOpcionTexto(rp.getOpcion().getTexto());
+            }
+            rpd.setRespuestaAbierta(rp.getRespuestaAbierta());
+            rpd.setArchivoAdjunto(rp.getArchivoAdjunto());
+            rpd.setNombreArchivo(rp.getNombreArchivo());
+            rpd.setEsCorrecta(rp.getEsCorrecta());
+            return rpd;
+        }).collect(java.util.stream.Collectors.toList());
+
+        dto.setRespuestasPreguntas(list);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}/notas/{estudianteId}")

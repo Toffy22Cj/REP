@@ -235,6 +235,17 @@ public class ActividadServiceImpl implements ActividadService {
                 .map(this::mapOpcionToDto)
                 .toList());
 
+        // Indicar si hay archivo adjunto (no exponemos la ruta)
+        if (pregunta.getArchivoUrl() != null && !pregunta.getArchivoUrl().isEmpty()) {
+            preguntaDto.setArchivoDisponible(true);
+            java.io.File f = new java.io.File(pregunta.getArchivoUrl());
+            preguntaDto.setNombreArchivo(f.getName());
+            preguntaDto.setArchivoUrl(pregunta.getArchivoUrl());
+        } else {
+            preguntaDto.setArchivoDisponible(false);
+            preguntaDto.setNombreArchivo(null);
+        }
+
         return preguntaDto;
     }
 
@@ -243,6 +254,14 @@ public class ActividadServiceImpl implements ActividadService {
         opcionDto.setId(opcion.getId());
         opcionDto.setTexto(opcion.getTexto());
         opcionDto.setEsCorrecta(opcion.getEsCorrecta());
+        if (opcion.getArchivoUrl() != null && !opcion.getArchivoUrl().isEmpty()) {
+            opcionDto.setArchivoDisponible(true);
+            java.io.File f = new java.io.File(opcion.getArchivoUrl());
+            opcionDto.setNombreArchivo(f.getName());
+            opcionDto.setArchivoUrl(opcion.getArchivoUrl());
+        } else {
+            opcionDto.setArchivoDisponible(false);
+        }
         return opcionDto;
     }
 
@@ -290,6 +309,11 @@ public class ActividadServiceImpl implements ActividadService {
             rp.getPregunta().getEnunciado();
             if (rp.getOpcion() != null)
                 rp.getOpcion().getTexto();
+            // Inicializar campos de archivo adjunto (pueden ser null)
+            if (rp.getArchivoAdjunto() != null)
+                rp.getArchivoAdjunto();
+            if (rp.getNombreArchivo() != null)
+                rp.getNombreArchivo();
         });
 
         return respuesta;

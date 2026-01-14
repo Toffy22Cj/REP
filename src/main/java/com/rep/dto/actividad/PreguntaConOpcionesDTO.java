@@ -17,4 +17,7 @@ public class PreguntaConOpcionesDTO {
     private String enunciado;
     private Pregunta.TipoPregunta tipo;
     private List<OpcionDTO> opciones;
+    private boolean archivoDisponible;
+    private String nombreArchivo;
+    private String archivoUrl;
 }

@@ -7,4 +7,7 @@ public class OpcionDTO {
     private Long id;
     private String texto;
     private Boolean esCorrecta;
+    private boolean archivoDisponible;
+    private String nombreArchivo;
+    private String archivoUrl;
 }

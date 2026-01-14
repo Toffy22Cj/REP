@@ -126,6 +126,48 @@ public class PreguntaServiceImpl implements PreguntaService {
         return opcionRepository.save(opcion);
     }
 
+    @Override
+    public Opcion subirArchivoOpcion(Long opcionId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        Opcion opcion = opcionRepository.findById(opcionId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Opción no encontrada: " + opcionId));
+
+        String uploadDir = System.getProperty("user.home") + "/.rep/uploads";
+        java.io.File directory = new java.io.File(uploadDir);
+        if (!directory.exists()) {
+            boolean created = directory.mkdirs();
+            if (!created) throw new java.io.IOException("No se pudo crear directorio de subida: " + uploadDir);
+        }
+
+        String fileName = "opcion_" + opcionId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        java.io.File destination = new java.io.File(directory, fileName);
+        file.transferTo(destination);
+
+        opcion.setArchivoUrl(destination.getAbsolutePath());
+        opcion.setArchivoTipo(file.getContentType());
+        opcion.setNombreArchivo(file.getOriginalFilename());
+        opcion.setTieneArchivo(true);
+
+        return opcionRepository.save(opcion);
+    }
+
+    @Override
+    public java.io.File obtenerArchivoOpcion(Long opcionId) {
+        Opcion opcion = opcionRepository.findById(opcionId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Opción no encontrada: " + opcionId));
+        if (opcion.getArchivoUrl() == null || opcion.getArchivoUrl().isEmpty()) {
+            throw new RecursoNoEncontradoException("No existe archivo para la opción");
+        }
+        java.io.File file = new java.io.File(opcion.getArchivoUrl());
+        if (!file.exists()) throw new RecursoNoEncontradoException("El archivo físico no existe: " + opcion.getArchivoUrl());
+        return file;
+    }
+
+    @Override
+    public Opcion getOpcionById(Long opcionId) {
+        return opcionRepository.findById(opcionId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Opción no encontrada: " + opcionId));
+    }
+
     // --- Métodos auxiliares ---
 
     private void validarOpciones(List<OpcionRequest> opciones) {

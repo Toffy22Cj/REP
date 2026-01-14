@@ -34,6 +34,12 @@ public class RespuestaPregunta {
     @Column(name = "respuesta_abierta")
     private String respuestaAbierta;
 
+    @Column(name = "archivo_adjunto")
+    private String archivoAdjunto; // Ruta del archivo en el servidor
+
+    @Column(name = "nombre_archivo")
+    private String nombreArchivo; // Nombre original del archivo
+
     @Column(name = "es_correcta")
     private Boolean esCorrecta;
 

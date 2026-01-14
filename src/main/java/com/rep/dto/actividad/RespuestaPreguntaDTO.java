@@ -9,4 +9,6 @@ public class RespuestaPreguntaDTO {
     private Long preguntaId;
     private Long opcionId; // Para opción múltiple/Verdadero-Falso
     private String respuestaAbierta; // Para respuesta abierta
+    private String archivoAdjunto; // Ruta del archivo adjunto
+    private String nombreArchivo; // Nombre original del archivo
 }

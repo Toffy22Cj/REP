@@ -32,6 +32,18 @@ public class Opcion {
     @Column(name = "es_correcta", nullable = false) // Añadido nullable=false
     private Boolean esCorrecta = false;
 
+    @Column(name = "archivo_url")
+    private String archivoUrl;
+
+    @Column(name = "archivo_tipo")
+    private String archivoTipo;
+    
+    @Column(name = "nombre_archivo")
+    private String nombreArchivo;
+
+    @Column(name = "tiene_archivo")
+    private Boolean tieneArchivo = false;
+
     // Método conveniente para marcado como correcta
     public void marcarComoCorrecta() {
         this.esCorrecta = true;

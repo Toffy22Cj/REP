@@ -1,0 +1,258 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Ejecutar cuando se crea un tag como v1.0.0
+  workflow_dispatch:  # Permitir ejecución manual desde GitHub UI
+
+jobs:
+  build:
+    name: Build and Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+      
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'maven'
+        
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION="0.0.0-dev"
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+        
+    - name: Update version in pom.xml
+      run: |
+        mvn versions:set -DnewVersion=${{ steps.get_version.outputs.VERSION }}
+        
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
+      
+    - name: Create version.json
+      run: |
+        cat > version.json << EOF
+        {
+          "version": "${{ steps.get_version.outputs.VERSION }}",
+          "build_date": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+          "commit_sha": "${{ github.sha }}",
+          "repo": "Toffy22Cj/REP",
+          "download_url": "https://github.com/Toffy22Cj/REP/releases/download/v${{ steps.get_version.outputs.VERSION }}/sistema-educativo-v${{ steps.get_version.outputs.VERSION }}.zip"
+        }
+        EOF
+        cat version.json
+        
+    - name: Create standalone package
+      run: |
+        mkdir -p dist/sistema-educativo
+        
+        # Copiar JAR principal
+        cp target/sistema-educativo-standalone.jar dist/sistema-educativo/app.jar
+        
+        # Copiar archivos de configuración
+        cp version.json dist/sistema-educativo/
+        cp README-standalone.txt dist/sistema-educativo/README.txt
+        [ -f LICENSE.txt ] && cp LICENSE.txt dist/sistema-educativo/
+        [ -f colegio.png ] && cp colegio.png dist/sistema-educativo/
+        
+        # Crear directorios
+        mkdir -p dist/sistema-educativo/data
+        mkdir -p dist/sistema-educativo/logs
+        mkdir -p dist/sistema-educativo/backups
+        
+        # Scripts de inicio para Windows
+        cat > dist/sistema-educativo/Iniciar.bat << 'EOF'
+        @echo off
+        cls
+        echo =========================================
+        echo   SISTEMA EDUCATIVO REP v${{ steps.get_version.outputs.VERSION }}
+        echo   Standalone Edition
+        echo =========================================
+        echo.
+        
+        echo Verificando Java...
+        java -version >nul 2>&1
+        if %ERRORLEVEL% NEQ 0 (
+            echo ERROR: Java no esta instalado.
+            echo.
+            echo Descargue Java 17 desde: https://adoptium.net/
+            echo.
+            pause
+            exit /b 1
+        )
+        
+        echo Iniciando aplicacion...
+        echo.
+        java -jar app.jar
+        
+        if %ERRORLEVEL% NEQ 0 (
+            echo.
+            echo La aplicacion termino con errores.
+            echo Revise los logs en: logs/application.log
+            pause
+        )
+        EOF
+        
+        # Script de inicio para Linux/Mac
+        cat > dist/sistema-educativo/iniciar.sh << 'EOF'
+        #!/bin/bash
+        
+        echo "========================================="
+        echo "  SISTEMA EDUCATIVO REP v${{ steps.get_version.outputs.VERSION }}"
+        echo "  Standalone Edition"
+        echo "========================================="
+        echo ""
+        
+        # Verificar Java
+        if ! command -v java &> /dev/null; then
+            echo "ERROR: Java no está instalado."
+            echo ""
+            echo "Instale Java 17:"
+            echo "  Ubuntu/Debian: sudo apt install openjdk-17-jdk"
+            echo "  Fedora: sudo dnf install java-17-openjdk"
+            echo "  macOS: brew install openjdk@17"
+            echo ""
+            echo "O descargue desde: https://adoptium.net/"
+            exit 1
+        fi
+        
+        echo "Iniciando aplicación..."
+        echo ""
+        java -jar app.jar
+        
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "La aplicación terminó con errores (código: $EXIT_CODE)"
+            echo "Revise los logs en: logs/application.log"
+            read -p "Presione Enter para salir..."
+        fi
+        EOF
+        
+        chmod +x dist/sistema-educativo/iniciar.sh
+        
+        # Crear archivo INFO
+        cat > dist/sistema-educativo/INFO.txt << 'EOF'
+        SISTEMA EDUCATIVO REP - Standalone Edition
+        ==========================================
+        
+        Versión: ${{ steps.get_version.outputs.VERSION }}
+        Compilado: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        
+        INICIAR:
+          Windows: Doble clic en Iniciar.bat
+          Linux/Mac: ./iniciar.sh
+        
+        REQUISITOS:
+          - Java 17 o superior
+          - 2 GB RAM (recomendado 4 GB)
+          - 500 MB espacio en disco
+        
+        BASE DE DATOS:
+          - H2 embebida (sin instalación)
+          - Ubicación: ./data/sistema_educativo.mv.db
+          - Consola: http://localhost:18080/h2-console
+          - Usuario: sa | Contraseña: (vacía)
+        
+        SERVICIOS:
+          - API REST: http://localhost:18080/api/
+          - Swagger UI: http://localhost:18080/swagger-ui.html
+          - Health: http://localhost:18080/actuator/health
+        
+        SOPORTE:
+          - GitHub: https://github.com/Toffy22Cj/REP
+          - Issues: https://github.com/Toffy22Cj/REP/issues
+        EOF
+        
+        # Comprimir
+        cd dist
+        zip -r ../sistema-educativo-v${{ steps.get_version.outputs.VERSION }}.zip sistema-educativo/
+        cd ..
+        
+        echo "✅ Paquete creado: sistema-educativo-v${{ steps.get_version.outputs.VERSION }}.zip"
+        ls -lh sistema-educativo-v${{ steps.get_version.outputs.VERSION }}.zip
+        
+    - name: Generate Release Notes
+      id: release_notes
+      run: |
+        # Extraer commits desde el último tag
+        PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        if [ -z "$PREV_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%an)" --no-merges)
+        else
+          COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%an)" --no-merges)
+        fi
+        
+        cat > release_notes.md << EOF
+        ## 📦 Sistema Educativo REP v${{ steps.get_version.outputs.VERSION }}
+        
+        ### 🚀 Instalación
+        
+        1. Descargue \`sistema-educativo-v${{ steps.get_version.outputs.VERSION }}.zip\`
+        2. Extraiga en cualquier carpeta
+        3. Ejecute \`Iniciar.bat\` (Windows) o \`./iniciar.sh\` (Linux/Mac)
+        
+        ### ✨ Cambios en esta versión
+        
+        $COMMITS
+        
+        ### 📋 Requisitos
+        
+        - **Java**: 17 o superior ([Descargar](https://adoptium.net/))
+        - **RAM**: 2 GB mínimo (4 GB recomendado)
+        - **Disco**: 500 MB libres
+        
+        ### 🗄️ Base de Datos
+        
+        Incluye H2 Database embebida - **no necesita instalar MySQL/MariaDB**
+        
+        ### 📚 Documentación
+        
+        - [README](https://github.com/Toffy22Cj/REP/blob/main/README-standalone.txt)
+        - [Guía de Usuario](https://github.com/Toffy22Cj/REP/wiki)
+        
+        ### 🐛 Reportar Problemas
+        
+        [Crear Issue](https://github.com/Toffy22Cj/REP/issues/new)
+        EOF
+        
+        cat release_notes.md
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: Release v${{ steps.get_version.outputs.VERSION }}
+        body_path: release_notes.md
+        files: |
+          sistema-educativo-v${{ steps.get_version.outputs.VERSION }}.zip
+          version.json
+          target/sistema-educativo-standalone.jar
+        draft: false
+        prerelease: false
+        generate_release_notes: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload version.json to repository
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        # Copiar version.json a la raíz del repo
+        cp version.json latest-version.json
+        
+        git add latest-version.json
+        git commit -m "Update latest-version.json for v${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
+        git push origin HEAD:main || echo "Push failed, continuing..."

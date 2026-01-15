@@ -30,9 +30,6 @@ public class Profesor extends Usuario {
     public Profesor() {
     }
 
-    @Column(name = "fecha_ingreso")
-    private LocalDate fechaIngreso;
-
     public enum EstadoProfesor {
         activo("activo"), // Ahora en minúsculas para coincidir con la BD
         retirado("retirado");

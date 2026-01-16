@@ -10,7 +10,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            stylesheets="@/Styles/admin.css"
+            stylesheets="@/styles/admin.css"
             fx:controller="com.rep.controller.views.AdminPanelController">
 
     <!-- Encabezado -->

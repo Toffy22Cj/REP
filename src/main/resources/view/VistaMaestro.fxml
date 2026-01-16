@@ -8,7 +8,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.rep.controller.views.ProfesorController"
-            stylesheets="@../Styles/maestro.css">
+            stylesheets="@/styles/maestro.css">
 
     <top>
         <HBox alignment="CENTER" style="-fx-background-color: #3498db; -fx-padding: 15;">

@@ -19,7 +19,8 @@ import java.util.Map;
 public class AdminApiServiceImpl implements AdminApiService {
 
     private final RestTemplate restTemplate;
-    private final String baseUrl = "http://localhost:8080/api/admin"; // Ajusta la URL según tu configuración
+    @org.springframework.beans.factory.annotation.Value("${app.api.base-url:http://localhost:8080/api}/admin")
+    private String baseUrl;
 
     @Autowired
     private JwtTokenHolder jwtTokenHolder;

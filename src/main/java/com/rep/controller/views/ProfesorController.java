@@ -43,10 +43,13 @@ import java.util.Optional;
 @Controller
 public class ProfesorController {
 
+    @org.springframework.beans.factory.annotation.Value("${app.api.base-url:http://localhost:8080/api}/profesor")
+    private String API_BASE_URL;
+    @org.springframework.beans.factory.annotation.Value("${app.api.base-url:http://localhost:8080/api}")
+    private String API_actividad_URL;
+    @org.springframework.beans.factory.annotation.Value("${app.api.base-url:http://localhost:8080/api}/preguntas")
+    private String API_PREGUNTAS_URL;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String API_BASE_URL = "http://localhost:8080/api/profesor";
-    private final String API_actividad_URL = "http://localhost:8080/api";
-    private final String API_PREGUNTAS_URL = "http://localhost:8080/api/preguntas";
     // Elementos de la UI
     @FXML
     private ComboBox<Materia> materiaComboBox;
@@ -328,14 +331,14 @@ public class ProfesorController {
 
             // LOG para depuración
             System.out.println("=== ENVIANDO ACTIVIDAD ===");
-            System.out.println("URL: http://localhost:8080/api/actividades");
+            System.out.println("URL: " + API_actividad_URL + "/actividades");
             System.out.println("Título: " + titulo);
             System.out.println("Materia ID: " + materia.getId());
             System.out.println("Curso ID: " + cursoDTO.getId());
 
             // Enviar solicitud al servidor
             ResponseEntity<ActividadDTO> response = restTemplate.postForEntity(
-                    "http://localhost:8080/api/actividades",
+                    API_actividad_URL + "/actividades",
                     new HttpEntity<>(actividadDTO, headers),
                     ActividadDTO.class);
 

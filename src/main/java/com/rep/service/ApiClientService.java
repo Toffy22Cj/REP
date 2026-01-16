@@ -14,7 +14,8 @@ import java.util.List;
 public class ApiClientService {
     private final RestTemplate restTemplate;
     private final JwtTokenHolder jwtTokenHolder;
-    private final String API_BASE_URL = "http://localhost:8080/api";
+    @org.springframework.beans.factory.annotation.Value("${app.api.base-url:http://localhost:8080/api}")
+    private String API_BASE_URL;
 
     @Autowired
     public ApiClientService(RestTemplate restTemplate, JwtTokenHolder jwtTokenHolder) {
@@ -48,19 +49,17 @@ public class ApiClientService {
 
     // Métodos privados para ejecutar las solicitudes
     private <T> ResponseEntity<T> executeRequest(String endpoint, HttpMethod method,
-                                                 Object requestBody, Class<T> responseType) {
+            Object requestBody, Class<T> responseType) {
         try {
             HttpHeaders headers = createHeaders();
-            HttpEntity<?> entity = requestBody != null ?
-                    new HttpEntity<>(requestBody, headers) :
-                    new HttpEntity<>(headers);
+            HttpEntity<?> entity = requestBody != null ? new HttpEntity<>(requestBody, headers)
+                    : new HttpEntity<>(headers);
 
             return restTemplate.exchange(
                     API_BASE_URL + endpoint,
                     method,
                     entity,
-                    responseType
-            );
+                    responseType);
         } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {
@@ -69,19 +68,17 @@ public class ApiClientService {
     }
 
     private <T> ResponseEntity<T> executeRequest(String endpoint, HttpMethod method,
-                                                 Object requestBody, ParameterizedTypeReference<T> responseType) {
+            Object requestBody, ParameterizedTypeReference<T> responseType) {
         try {
             HttpHeaders headers = createHeaders();
-            HttpEntity<?> entity = requestBody != null ?
-                    new HttpEntity<>(requestBody, headers) :
-                    new HttpEntity<>(headers);
+            HttpEntity<?> entity = requestBody != null ? new HttpEntity<>(requestBody, headers)
+                    : new HttpEntity<>(headers);
 
             return restTemplate.exchange(
                     API_BASE_URL + endpoint,
                     method,
                     entity,
-                    responseType
-            );
+                    responseType);
         } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {

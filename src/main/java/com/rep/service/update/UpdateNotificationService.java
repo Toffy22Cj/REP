@@ -35,6 +35,9 @@ public class UpdateNotificationService {
     private static final long CHECK_INTERVAL_DAYS = 7;
     private static final long ONE_DAY_MS = TimeUnit.DAYS.toMillis(1);
 
+    @org.springframework.beans.factory.annotation.Value("${app.update-check.enabled:true}")
+    private boolean enabled;
+
     // Estado
     private volatile boolean updateAvailable = false;
     private volatile String latestVersion = "";
@@ -44,7 +47,10 @@ public class UpdateNotificationService {
 
     @PostConstruct
     public void init() {
-        logger.info("Inicializando servicio de actualizaciones");
+        if (!enabled) {
+            logger.info("El servicio de actualizaciones está deshabilitado");
+            return;
+        }
 
         // Cargar última vez que se verificó
         loadUpdateInfo();
@@ -54,8 +60,8 @@ public class UpdateNotificationService {
             logger.info("Verificando actualizaciones en segundo plano...");
             checkForUpdatesInBackground();
         } else {
-            long daysUntilNextCheck = (CHECK_INTERVAL_DAYS * ONE_DAY_MS -
-                    (System.currentTimeMillis() - lastCheckTime)) / ONE_DAY_MS;
+            long lastPlusInterval = lastCheckTime + (CHECK_INTERVAL_DAYS * ONE_DAY_MS);
+            long daysUntilNextCheck = Math.max(0, (lastPlusInterval - System.currentTimeMillis()) / ONE_DAY_MS);
             logger.info("Próxima verificación de actualizaciones en {} días", daysUntilNextCheck);
         }
     }
@@ -65,7 +71,7 @@ public class UpdateNotificationService {
      */
     @Scheduled(fixedDelay = 24 * 60 * 60 * 1000, initialDelay = 60 * 1000)
     public void scheduledUpdateCheck() {
-        if (shouldCheckForUpdates()) {
+        if (enabled && shouldCheckForUpdates()) {
             logger.debug("Ejecutando verificación programada de actualizaciones");
             checkForUpdatesInBackground();
         }

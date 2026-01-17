@@ -1,6 +1,5 @@
 package com.rep.controller.views;
 
-import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.auth.RegistroUsuarioDTO;
 
 import com.rep.dto.profesor.ProfesorMateriaRequest;
@@ -8,20 +7,18 @@ import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.model.*;
 
 import com.rep.service.funciones.AdminApiService;
+import com.rep.service.fx.NavigationService;
 import com.rep.service.logica.UsuarioRegistrationService;
+import com.rep.updater.UpdateChecker;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -110,6 +107,10 @@ public class AdminPanelController {
     private TableColumn<Usuario, Boolean> colEstActivo;
     @FXML
     private TextField searchEstudianteField;
+    @FXML
+    private Label statusEstudianteLabel;
+    @FXML
+    private Label statusAsignacionLabel;
 
     // Asignaciones section
     @FXML
@@ -120,52 +121,82 @@ public class AdminPanelController {
     private TableColumn<ProfesorMateria, String> colAsignacionCurso;
     @FXML
     private TabPane tabPane;
+    @FXML
+    private Label statusLabel;
     // ----------- Services -----------
+    private final NavigationService navigationService;
     private final AdminApiService adminApiService;
+    private final JwtTokenHolder jwtTokenHolder;
     private final UsuarioRegistrationService registrationService;
-    private final JwtTokenHolder jwtTokenHolder; // Si necesitas este campo
-
-    private final SpringFXMLLoader springFXMLLoader; // Añade este campo
+    private final UpdateChecker updateChecker;
 
     @Autowired
     public AdminPanelController(AdminApiService adminApiService,
-            UsuarioRegistrationService registrationService,
             JwtTokenHolder jwtTokenHolder,
-            SpringFXMLLoader springFXMLLoader) { // Añade este parámetro
+            NavigationService navigationService,
+            UsuarioRegistrationService registrationService,
+            UpdateChecker updateChecker) {
         this.adminApiService = adminApiService;
-        this.registrationService = registrationService;
         this.jwtTokenHolder = jwtTokenHolder;
-        this.springFXMLLoader = springFXMLLoader; // Asigna
+        this.navigationService = navigationService;
+        this.registrationService = registrationService;
+        this.updateChecker = updateChecker;
     }
 
     // ----------- Initialization Methods -----------
     @FXML
     public void initialize() {
-        configurarColumnasTablas();
-        configurarTablaAsignaciones();
+        resetView();
+        configurarColumnas();
+        cargarDatos();
 
-        cargarCursos();
-        cargarMaterias();
-        cargarProfesores();
-        cargarEstudiantes();
-        cargarDatosParaAsignacion();
-
-        configurarListenersParaEdicion();
-
-        profesorAsignarCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                Usuario profesor = profesoresTable.getItems().stream()
-                        .filter(p -> p.getNombre().equals(newVal))
-                        .findFirst()
-                        .orElse(null);
-                if (profesor != null) {
-                    cargarAsignacionesProfesor(profesor.getId());
+        // Auto-seleccionar pestaña de actualizaciones si hay una disponible
+        if (updateChecker != null && updateChecker.isUpdateAvailable()) {
+            Platform.runLater(() -> {
+                int lastIndex = tabPane.getTabs().size() - 1;
+                if (lastIndex >= 0) {
+                    tabPane.getSelectionModel().select(lastIndex);
                 }
-            }
-        });
+            });
+        }
     }
 
-    private void configurarColumnasTablas() {
+    private void resetView() {
+        if (statusLabel != null)
+            statusLabel.setText("Admin activo");
+
+        // Clear sectional labels if they exist
+        if (statusMateriaLabel != null)
+            statusMateriaLabel.setText("");
+        if (statusCursoLabel != null)
+            statusCursoLabel.setText("");
+        if (statusAsignacionLabel != null)
+            statusAsignacionLabel.setText("");
+        if (statusEstudianteLabel != null)
+            statusEstudianteLabel.setText("");
+
+        // Clear input fields
+        if (materiaTextField != null)
+            materiaTextField.clear();
+        if (gradoCursoField != null)
+            gradoCursoField.clear();
+        if (grupoCursoField != null)
+            grupoCursoField.clear();
+        if (nombreProfesorField != null)
+            nombreProfesorField.clear();
+        if (correoProfesorField != null)
+            correoProfesorField.clear();
+        if (claveProfesorField != null)
+            claveProfesorField.clear();
+        if (nombreEstudianteField != null)
+            nombreEstudianteField.clear();
+        if (correoEstudianteField != null)
+            correoEstudianteField.clear();
+        if (claveEstudianteField != null)
+            claveEstudianteField.clear();
+    }
+
+    private void configurarColumnas() {
         // Materias
         colMateriaId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colMateriaNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -179,7 +210,7 @@ public class AdminPanelController {
         colProfId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProfNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colProfCorreo
-            .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCorreo()));
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCorreo()));
 
         colProfActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
         colProfActivo.setCellFactory(column -> new TableCell<Usuario, Boolean>() {
@@ -238,13 +269,6 @@ public class AdminPanelController {
         });
     }
 
-    private void configurarTablaAsignaciones() {
-        colAsignacionMateria.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getMateria().getNombre()));
-        colAsignacionCurso.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getCurso().getNombreCompleto()));
-    }
-
     private void configurarListenersParaEdicion() {
         // Materias
         materiasTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -278,6 +302,14 @@ public class AdminPanelController {
                 claveEstudianteField.clear();
             }
         });
+    }
+
+    private void cargarDatos() {
+        cargarCursos();
+        cargarMaterias();
+        cargarProfesores();
+        cargarEstudiantes();
+        cargarDatosParaAsignacion();
     }
 
     // ----------- Materias Methods -----------
@@ -996,23 +1028,6 @@ public class AdminPanelController {
         }
     }
 
-    // ----------- Utility Methods -----------
-    private void mostrarAlerta(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarAlertaError(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
     private void limpiarCampos() {
         nombreProfesorField.clear();
         correoProfesorField.clear();
@@ -1047,22 +1062,10 @@ public class AdminPanelController {
 
     @FXML
     private void cerrarSesion() {
-        try {
-            // Limpiar el token JWT si es necesario
-            if (jwtTokenHolder != null) {
-                jwtTokenHolder.clearToken();
-            }
-
-            // Usar SpringFXMLLoader para cargar la vista de login
-            Parent root = springFXMLLoader.load("/view/Login.fxml");
-
-            Stage stage = (Stage) tabPane.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.centerOnScreen();
-        } catch (Exception e) {
-            mostrarAlerta("Error al cerrar sesión: " + e.getMessage(), true);
-            e.printStackTrace();
+        if (jwtTokenHolder != null) {
+            jwtTokenHolder.clearToken();
         }
+        navigationService.navigateTo("/view/Login.fxml");
     }
 
     @FXML

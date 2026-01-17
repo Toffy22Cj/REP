@@ -9,7 +9,6 @@
 <?import java.lang.String?>
 <VBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
-      stylesheets="@/styles/login.css"
       styleClass="login-container"
       fx:controller="com.rep.controller.views.RegistroController"
       alignment="CENTER"
@@ -98,6 +97,8 @@
 
         <ProgressIndicator fx:id="progressIndicator" visible="false"
                            styleClass="progress-indicator"/>
+        
+        <Hyperlink text="¿Ya tienes cuenta? Inicia sesión aquí" onAction="#volverLogin" />
     </VBox>
 
     <!-- Mensajes -->

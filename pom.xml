@@ -180,6 +180,13 @@
     <version>5.2.5</version>
 </dependency>
 
+<!-- ===== JSON for Updater ===== -->
+<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20231013</version>
+</dependency>
+
     </dependencies>
 
     <!-- ================= BUILD ================= -->
@@ -230,7 +237,40 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.rep.StandaloneLauncher</mainClass>
+                    <finalName>sistema-educativo-full</finalName>
                 </configuration>
+            </plugin>
+
+            <!-- ===== MULTI-JAR GENERATION ===== -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <!-- JAR del AutoUpdater -->
+                    <execution>
+                        <id>updater-app</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>updater</classifier>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.rep.updater.AutoUpdater</mainClass>
+                                </manifest>
+                            </archive>
+                            <includes>
+                                <include>com/rep/updater/**</include>
+                                <!-- Incluir dependencias necesarias si se empaquetan juntas, 
+                                     o asegurar que org.json esté en el classpath. 
+                                     Para simplicidad, incluimos el código del updater. -->
+                            </includes>
+                            <finalName>AutoUpdater</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- ===== JAVAFX ===== -->

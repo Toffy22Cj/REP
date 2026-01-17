@@ -57,4 +57,17 @@ public class SpringFXMLLoader {
         loader.setControllerFactory(context::getBean);
         return loader.load();
     }
+
+    public FXMLLoader getLoader(String fxmlPath) throws IOException {
+        if (!fxmlPath.startsWith("/")) {
+            fxmlPath = "/" + fxmlPath;
+        }
+        URL fxmlUrl = getClass().getResource(fxmlPath);
+        if (fxmlUrl == null) {
+            throw new IOException("Archivo FXML no encontrado: " + fxmlPath);
+        }
+        FXMLLoader loader = new FXMLLoader(fxmlUrl);
+        loader.setControllerFactory(context::getBean);
+        return loader;
+    }
 }

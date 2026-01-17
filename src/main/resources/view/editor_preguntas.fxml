@@ -8,7 +8,6 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.rep.controller.views.EditorPreguntasController"
-            stylesheets="@/styles/preguntas.css"
             styleClass="editor-root">
 
     <!-- TOP: Encabezado -->

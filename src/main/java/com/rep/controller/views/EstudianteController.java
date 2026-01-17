@@ -1,26 +1,27 @@
 // EstudianteController.java
 package com.rep.controller.views;
 
-import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.actividad.*;
 import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.model.*;
 import com.rep.service.funciones.EstudianteApiService;
 import com.rep.service.logica.ActividadService;
 import com.rep.service.logica.EstudianteService;
+import com.rep.service.fx.NavigationService;
+import com.rep.updater.UpdateChecker;
+import com.rep.config.SpringFXMLLoader;
 import jakarta.persistence.EntityNotFoundException;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,16 +66,21 @@ public class EstudianteController extends BaseTokenController {
     private VBox mainContainer;
     @FXML
     private StackPane contentPane;
-    private final SpringFXMLLoader springFXMLLoader;
+    private final NavigationService navigationService;
+    @Autowired
+    private UpdateChecker updateChecker;
+    @Autowired
+    private SpringFXMLLoader springFXMLLoader;
 
     @Autowired
-    public EstudianteController(EstudianteService estudianteService, SpringFXMLLoader springFXMLLoader,
+    public EstudianteController(EstudianteService estudianteService,
             EstudianteApiService estudianteApiService,
-            JwtTokenHolder jwtTokenHolder, ActividadService actividadService) {
+            JwtTokenHolder jwtTokenHolder, ActividadService actividadService,
+            NavigationService navigationService) {
         this.estudianteService = estudianteService;
-        this.springFXMLLoader = springFXMLLoader;
         this.actividadService = actividadService;
         this.estudianteApiService = estudianteApiService;
+        this.navigationService = navigationService;
         setJwtTokenHolder(jwtTokenHolder);
     }
 
@@ -96,7 +102,14 @@ public class EstudianteController extends BaseTokenController {
         configurarAccionesBotones();
 
         if (jwtTokenHolder != null && jwtTokenHolder.getToken() != null) {
+            resetView();
             Platform.runLater(this::cargarDatosIniciales);
+
+            // Verificar actualizaciones
+            if (updateChecker != null && updateChecker.isUpdateAvailable()) {
+                mostrarEstado("🔄 Actualización disponible: " + updateChecker.getLatestVersion(), Color.GREEN);
+                Platform.runLater(this::mostrarPanelActualizaciones);
+            }
         } else {
             logger.warn("Token no disponible al inicializar, esperando inyección...");
             mostrarEstado("Cargando sesión...", Color.ORANGE);
@@ -369,7 +382,7 @@ public class EstudianteController extends BaseTokenController {
             VBox contenidoPregunta = new VBox(8);
 
             // **AGREGAR: Mostrar archivo adjunto del profesor SI EXISTE**
-            if (pregunta.isArchivoDisponible() && pregunta.getNombreArchivo() != null 
+            if (pregunta.isArchivoDisponible() && pregunta.getNombreArchivo() != null
                     && !pregunta.getNombreArchivo().isEmpty()) {
 
                 mostrarVistaPreviaArchivo(pregunta, contenidoPregunta);
@@ -383,7 +396,8 @@ public class EstudianteController extends BaseTokenController {
 
                 // Botón para que el estudiante adjunte su archivo
                 Button btnAdjuntar = new Button("Adjuntar Archivo");
-                btnAdjuntar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10;");
+                btnAdjuntar.setStyle(
+                        "-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10;");
                 Label lblArchivoEstudiante = new Label("");
                 lblArchivoEstudiante.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
 
@@ -422,8 +436,10 @@ public class EstudianteController extends BaseTokenController {
                         // Si la opción tiene archivo, mostrar botón/ver miniatura
                         if (opcion.isArchivoDisponible()) {
                             Button btnVerOpt = new Button("Ver");
-                            btnVerOpt.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 11px;");
-                            btnVerOpt.setOnAction(e -> descargarArchivoOpcion(opcion.getId(), opcion.getNombreArchivo()));
+                            btnVerOpt.setStyle(
+                                    "-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 11px;");
+                            btnVerOpt.setOnAction(
+                                    e -> descargarArchivoOpcion(opcion.getId(), opcion.getNombreArchivo()));
                             opcionRow.getChildren().add(btnVerOpt);
                         }
 
@@ -442,7 +458,8 @@ public class EstudianteController extends BaseTokenController {
 
         // Botón de enviar
         Button btnEnviar = new Button("Enviar respuestas");
-        btnEnviar.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;");
+        btnEnviar.setStyle(
+                "-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;");
         btnEnviar.setOnAction(e -> manejarEnvioRespuestas(actividad, formularioContainer));
 
         HBox botonera = new HBox(btnEnviar);
@@ -488,7 +505,9 @@ public class EstudianteController extends BaseTokenController {
 
                 org.springframework.web.client.ResponseExtractor<Void> responseExtractor = response -> {
                     try (java.io.InputStream is = response.getBody();
-                         java.io.OutputStream os = java.nio.file.Files.newOutputStream(filePath, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING)) {
+                            java.io.OutputStream os = java.nio.file.Files.newOutputStream(filePath,
+                                    java.nio.file.StandardOpenOption.CREATE,
+                                    java.nio.file.StandardOpenOption.TRUNCATE_EXISTING)) {
 
                         byte[] buffer = new byte[8192];
                         int read;
@@ -496,7 +515,10 @@ public class EstudianteController extends BaseTokenController {
                         while ((read = is.read(buffer)) != -1) {
                             total += read;
                             if (total > MAX_BYTES) {
-                                try { java.nio.file.Files.deleteIfExists(filePath); } catch (Exception ignored) {}
+                                try {
+                                    java.nio.file.Files.deleteIfExists(filePath);
+                                } catch (Exception ignored) {
+                                }
                                 throw new RuntimeException("Archivo supera el tamaño máximo permitido de 20 MB");
                             }
                             os.write(buffer, 0, read);
@@ -507,7 +529,8 @@ public class EstudianteController extends BaseTokenController {
                 };
 
                 try {
-                    restTemplate.execute(url, org.springframework.http.HttpMethod.GET, requestCallback, responseExtractor);
+                    restTemplate.execute(url, org.springframework.http.HttpMethod.GET, requestCallback,
+                            responseExtractor);
 
                     long size = java.nio.file.Files.size(filePath);
 
@@ -516,7 +539,8 @@ public class EstudianteController extends BaseTokenController {
                             if (size > AUTO_OPEN_LIMIT) {
                                 mostrarAlerta("Archivo descargado",
                                         "El archivo se ha descargado en: " + filePath.toString()
-                                                + "\n(Archivo grande: " + (size / 1024 / 1024) + " MB). Ábrelo manualmente.");
+                                                + "\n(Archivo grande: " + (size / 1024 / 1024)
+                                                + " MB). Ábrelo manualmente.");
                                 mostrarEstado("Archivo descargado (archivo grande)", Color.GREEN);
                                 return;
                             }
@@ -551,78 +575,78 @@ public class EstudianteController extends BaseTokenController {
         VBox archivoBox = new VBox(8);
         archivoBox.setPadding(new Insets(10));
         archivoBox.setStyle("-fx-background-color: #f0f8ff; -fx-border-color: #d6eaf8; -fx-border-radius: 5;");
-        
+
         Label lblTitulo = new Label("📎 Archivo adjunto del profesor:");
         lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #2c3e50;");
-        
-        if (nombreArchivo.endsWith(".png") || nombreArchivo.endsWith(".jpg") || 
-            nombreArchivo.endsWith(".jpeg") || nombreArchivo.endsWith(".gif") || 
-            nombreArchivo.endsWith(".bmp")) {
+
+        if (nombreArchivo.endsWith(".png") || nombreArchivo.endsWith(".jpg") ||
+                nombreArchivo.endsWith(".jpeg") || nombreArchivo.endsWith(".gif") ||
+                nombreArchivo.endsWith(".bmp")) {
             HBox imagenBox = new HBox(10);
             imagenBox.setAlignment(Pos.CENTER_LEFT);
-            
+
             Label lblTipo = new Label("🖼️ Imagen: ");
             lblTipo.setStyle("-fx-font-size: 12px;");
-            
+
             Button btnVerImagen = new Button("Ver imagen completa");
             btnVerImagen.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 11px;");
             btnVerImagen.setOnAction(e -> descargarYMostrarImagen(pregunta.getId(), pregunta.getNombreArchivo()));
-            
+
             Label miniatura = new Label("[Vista previa de imagen]");
             miniatura.setStyle("-fx-padding: 5; -fx-background-color: #e8f4f8; -fx-border-color: #3498db;");
-            
+
             imagenBox.getChildren().addAll(lblTipo, btnVerImagen);
             archivoBox.getChildren().addAll(lblTitulo, imagenBox);
         } else if (nombreArchivo.endsWith(".pdf")) {
             HBox pdfBox = new HBox(10);
             pdfBox.setAlignment(Pos.CENTER_LEFT);
-            
+
             Label lblTipo = new Label("📄 Documento PDF: " + pregunta.getNombreArchivo());
             lblTipo.setStyle("-fx-font-size: 12px;");
-            
+
             Button btnVerPdf = new Button("Abrir PDF");
             btnVerPdf.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 11px;");
             btnVerPdf.setOnAction(e -> descargarArchivoPregunta(pregunta.getId(), pregunta.getNombreArchivo()));
-            
+
             Label iconoPdf = new Label("📄");
             iconoPdf.setStyle("-fx-font-size: 24px; -fx-padding: 0 10 0 0;");
-            
+
             pdfBox.getChildren().addAll(iconoPdf, lblTipo, btnVerPdf);
             archivoBox.getChildren().addAll(lblTitulo, pdfBox);
         } else if (nombreArchivo.endsWith(".doc") || nombreArchivo.endsWith(".docx")) {
             HBox wordBox = new HBox(10);
             wordBox.setAlignment(Pos.CENTER_LEFT);
-            
+
             Label lblTipo = new Label("📝 Documento Word: " + pregunta.getNombreArchivo());
             lblTipo.setStyle("-fx-font-size: 12px;");
-            
+
             Button btnVerWord = new Button("Descargar");
             btnVerWord.setStyle("-fx-background-color: #2c3e50; -fx-text-fill: white; -fx-font-size: 11px;");
             btnVerWord.setOnAction(e -> descargarArchivoPregunta(pregunta.getId(), pregunta.getNombreArchivo()));
-            
+
             Label iconoWord = new Label("📝");
             iconoWord.setStyle("-fx-font-size: 24px; -fx-padding: 0 10 0 0;");
-            
+
             wordBox.getChildren().addAll(iconoWord, lblTipo, btnVerWord);
             archivoBox.getChildren().addAll(lblTitulo, wordBox);
         } else {
             HBox otroBox = new HBox(10);
             otroBox.setAlignment(Pos.CENTER_LEFT);
-            
+
             Label lblTipo = new Label("📎 Archivo: " + pregunta.getNombreArchivo());
             lblTipo.setStyle("-fx-font-size: 12px;");
-            
+
             Button btnDescargar = new Button("Descargar");
             btnDescargar.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-size: 11px;");
             btnDescargar.setOnAction(e -> descargarArchivoPregunta(pregunta.getId(), pregunta.getNombreArchivo()));
-            
+
             Label iconoGen = new Label("📎");
             iconoGen.setStyle("-fx-font-size: 24px; -fx-padding: 0 10 0 0;");
-            
+
             otroBox.getChildren().addAll(iconoGen, lblTipo, btnDescargar);
             archivoBox.getChildren().addAll(lblTitulo, otroBox);
         }
-        
+
         contenedor.getChildren().add(archivoBox);
     }
 
@@ -630,62 +654,63 @@ public class EstudianteController extends BaseTokenController {
         new Thread(() -> {
             try {
                 Platform.runLater(() -> mostrarEstado("Cargando imagen...", Color.BLUE));
-                
+
                 org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
                 org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                 headers.set("Authorization", "Bearer " + obtenerToken());
                 org.springframework.http.HttpEntity<Void> request = new org.springframework.http.HttpEntity<>(headers);
-                
+
                 org.springframework.http.ResponseEntity<byte[]> response = restTemplate.exchange(
                         "http://localhost:8080/api/preguntas/" + preguntaId + "/archivo",
                         org.springframework.http.HttpMethod.GET,
                         request,
                         byte[].class);
-                
+
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                     java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("imagen_", "_" + nombreArchivo);
                     java.nio.file.Files.write(tempFile, response.getBody());
-                    
+
                     Platform.runLater(() -> {
                         try {
                             Dialog<Void> dialog = new Dialog<>();
                             dialog.setTitle("Imagen: " + nombreArchivo);
-                            
+
                             javafx.scene.image.Image image = new javafx.scene.image.Image(
-                                new java.io.FileInputStream(tempFile.toFile()));
+                                    new java.io.FileInputStream(tempFile.toFile()));
                             javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(image);
-                            
+
                             if (image.getWidth() > 800 || image.getHeight() > 600) {
                                 imageView.setFitWidth(800);
                                 imageView.setFitHeight(600);
                                 imageView.setPreserveRatio(true);
                             }
                             imageView.setSmooth(true);
-                            
+
                             ButtonType btnDescargar = new ButtonType("Guardar como...", ButtonBar.ButtonData.OK_DONE);
                             ButtonType btnCerrar = new ButtonType("Cerrar", ButtonBar.ButtonData.CANCEL_CLOSE);
                             dialog.getDialogPane().getButtonTypes().addAll(btnDescargar, btnCerrar);
-                            
+
                             VBox content = new VBox(10);
                             content.setPadding(new Insets(10));
                             content.getChildren().add(imageView);
                             dialog.getDialogPane().setContent(content);
-                            
+
                             dialog.setResultConverter(buttonType -> {
                                 if (buttonType == btnDescargar) {
                                     FileChooser fileChooser = new FileChooser();
                                     fileChooser.setTitle("Guardar imagen como");
                                     fileChooser.setInitialFileName(nombreArchivo);
                                     fileChooser.getExtensionFilters().addAll(
-                                        new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg"),
-                                        new FileChooser.ExtensionFilter("Todos los archivos", "*.*"));
-                                    
+                                            new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg"),
+                                            new FileChooser.ExtensionFilter("Todos los archivos", "*.*"));
+
                                     File destino = fileChooser.showSaveDialog(contentPane.getScene().getWindow());
                                     if (destino != null) {
                                         try {
-                                            java.nio.file.Files.copy(tempFile, destino.toPath(), 
-                                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                                            mostrarAlerta("Imagen guardada", "La imagen se guardó en: " + destino.getAbsolutePath());
+                                            java.nio.file.Files.copy(tempFile, destino.toPath(),
+                                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                            mostrarAlerta("Imagen guardada",
+                                                    "La imagen se guardó en: " + destino.getAbsolutePath());
                                         } catch (Exception ex) {
                                             mostrarError("Error al guardar imagen: " + ex.getMessage());
                                         }
@@ -693,7 +718,7 @@ public class EstudianteController extends BaseTokenController {
                                 }
                                 return null;
                             });
-                            
+
                             dialog.showAndWait();
                         } catch (Exception ex) {
                             logger.error("Error al mostrar imagen", ex);
@@ -712,7 +737,8 @@ public class EstudianteController extends BaseTokenController {
         }, "cargar-imagen-thread").start();
     }
 
-    // Abre o muestra archivo según su tipo (imágenes --> diálogo, otros --> programa externo)
+    // Abre o muestra archivo según su tipo (imágenes --> diálogo, otros -->
+    // programa externo)
     private void abrirArchivoSegunTipo(File archivo, String nombreArchivo) {
         try {
             String nombreLower = nombreArchivo.toLowerCase();
@@ -825,7 +851,8 @@ public class EstudianteController extends BaseTokenController {
         new Thread(() -> {
             try {
                 if (!archivo.exists() || !archivo.canRead()) {
-                    Platform.runLater(() -> mostrarError("El archivo no existe o no se puede leer: " + archivo.getAbsolutePath()));
+                    Platform.runLater(() -> mostrarError(
+                            "El archivo no existe o no se puede leer: " + archivo.getAbsolutePath()));
                     return;
                 }
 
@@ -833,7 +860,8 @@ public class EstudianteController extends BaseTokenController {
                     java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
                     if (desktop.isSupported(java.awt.Desktop.Action.OPEN)) {
                         desktop.open(archivo);
-                        Platform.runLater(() -> mostrarAlerta("Archivo abierto", "El archivo se abrió con el programa predeterminado: " + archivo.getName()));
+                        Platform.runLater(() -> mostrarAlerta("Archivo abierto",
+                                "El archivo se abrió con el programa predeterminado: " + archivo.getName()));
                         return;
                     }
                 }
@@ -842,18 +870,19 @@ public class EstudianteController extends BaseTokenController {
                 String[] command;
 
                 if (os.contains("win")) {
-                    command = new String[] {"cmd", "/c", "start", "\"\"", archivo.getAbsolutePath()};
+                    command = new String[] { "cmd", "/c", "start", "\"\"", archivo.getAbsolutePath() };
                 } else if (os.contains("mac")) {
-                    command = new String[] {"open", archivo.getAbsolutePath()};
+                    command = new String[] { "open", archivo.getAbsolutePath() };
                 } else {
-                    command = new String[] {"xdg-open", archivo.getAbsolutePath()};
+                    command = new String[] { "xdg-open", archivo.getAbsolutePath() };
                 }
 
                 ProcessBuilder pb = new ProcessBuilder(command);
                 pb.redirectErrorStream(true);
                 Process process = pb.start();
 
-                try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()))) {
+                try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(process.getInputStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         logger.debug("Proceso ejecutado: " + line);
@@ -862,14 +891,18 @@ public class EstudianteController extends BaseTokenController {
 
                 int exitCode = process.waitFor();
                 if (exitCode == 0) {
-                    Platform.runLater(() -> mostrarAlerta("Archivo abierto", "Comando ejecutado exitosamente para abrir: " + archivo.getName()));
+                    Platform.runLater(() -> mostrarAlerta("Archivo abierto",
+                            "Comando ejecutado exitosamente para abrir: " + archivo.getName()));
                 } else {
                     throw new RuntimeException("Comando falló con código: " + exitCode);
                 }
 
             } catch (Exception e) {
                 logger.error("Error al abrir archivo con programa externo", e);
-                Platform.runLater(() -> mostrarAlerta("Archivo descargado", "Archivo guardado en: " + archivo.getAbsolutePath() + "\nNo se pudo abrir automáticamente. Puede abrirlo manualmente." + "\nError: " + e.getMessage()));
+                Platform.runLater(() -> mostrarAlerta("Archivo descargado",
+                        "Archivo guardado en: " + archivo.getAbsolutePath()
+                                + "\nNo se pudo abrir automáticamente. Puede abrirlo manualmente." + "\nError: "
+                                + e.getMessage()));
             }
         }, "abrir-archivo-externo").start();
     }
@@ -893,7 +926,7 @@ public class EstudianteController extends BaseTokenController {
                 org.springframework.http.HttpEntity<Void> request = new org.springframework.http.HttpEntity<>(headers);
 
                 org.springframework.http.ResponseEntity<byte[]> response = restTemplate.exchange(
-                    "http://localhost:8080/api/preguntas/opciones/" + opcionId + "/archivo",
+                        "http://localhost:8080/api/preguntas/opciones/" + opcionId + "/archivo",
                         org.springframework.http.HttpMethod.GET,
                         request,
                         byte[].class);
@@ -906,7 +939,8 @@ public class EstudianteController extends BaseTokenController {
                         File destino = fileChooser.showSaveDialog(contentPane.getScene().getWindow());
                         if (destino != null) {
                             try {
-                                java.nio.file.Files.write(destino.toPath(), response.getBody(), java.nio.file.StandardOpenOption.CREATE);
+                                java.nio.file.Files.write(destino.toPath(), response.getBody(),
+                                        java.nio.file.StandardOpenOption.CREATE);
                                 mostrarAlerta("Archivo guardado", "Archivo guardado en: " + destino.getAbsolutePath());
                                 mostrarEstado("Archivo descargado", Color.GREEN);
                             } catch (Exception ex) {
@@ -943,7 +977,8 @@ public class EstudianteController extends BaseTokenController {
 
                 org.springframework.web.client.ResponseExtractor<Void> extractor = response -> {
                     try (java.io.InputStream is = response.getBody();
-                         java.io.OutputStream os = java.nio.file.Files.newOutputStream(tempFile, java.nio.file.StandardOpenOption.WRITE)) {
+                            java.io.OutputStream os = java.nio.file.Files.newOutputStream(tempFile,
+                                    java.nio.file.StandardOpenOption.WRITE)) {
                         byte[] buffer = new byte[8192];
                         int read;
                         long total = 0;
@@ -953,7 +988,8 @@ public class EstudianteController extends BaseTokenController {
                             if (total > MAX_DOWNLOAD) {
                                 os.close();
                                 java.nio.file.Files.deleteIfExists(tempFile);
-                                throw new RuntimeException("El archivo excede el límite máximo de descarga de " + (MAX_DOWNLOAD / (1024*1024)) + " MB");
+                                throw new RuntimeException("El archivo excede el límite máximo de descarga de "
+                                        + (MAX_DOWNLOAD / (1024 * 1024)) + " MB");
                             }
                         }
                         os.flush();
@@ -970,8 +1006,10 @@ public class EstudianteController extends BaseTokenController {
 
                 Platform.runLater(() -> {
                     try {
-                        if ((nombreArchivo.toLowerCase().endsWith(".png") || nombreArchivo.toLowerCase().endsWith(".jpg") ||
-                                nombreArchivo.toLowerCase().endsWith(".jpeg") || nombreArchivo.toLowerCase().endsWith(".gif")) && size <= MAX_DOWNLOAD) {
+                        if ((nombreArchivo.toLowerCase().endsWith(".png")
+                                || nombreArchivo.toLowerCase().endsWith(".jpg") ||
+                                nombreArchivo.toLowerCase().endsWith(".jpeg")
+                                || nombreArchivo.toLowerCase().endsWith(".gif")) && size <= MAX_DOWNLOAD) {
                             // Mostrar imagen en diálogo
                             try {
                                 mostrarImagenEnDialogo(tempFile.toFile(), nombreArchivo);
@@ -1008,19 +1046,19 @@ public class EstudianteController extends BaseTokenController {
                 break;
             }
         }
-        
+
         String nombreArchivo = archivo.getName().toLowerCase();
         VBox archivoBox = new VBox(8);
         archivoBox.setPadding(new Insets(10));
         archivoBox.setStyle("-fx-background-color: #f0fff0; -fx-border-color: #d4efdf; -fx-border-radius: 5; " +
-                           "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
         archivoBox.getProperties().put("archivo-estudiante", true);
-        
+
         Label lblTitulo = new Label("📎 Tu archivo adjunto:");
         lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #27ae60;");
-        
-        if (nombreArchivo.endsWith(".png") || nombreArchivo.endsWith(".jpg") || 
-            nombreArchivo.endsWith(".jpeg") || nombreArchivo.endsWith(".gif")) {
+
+        if (nombreArchivo.endsWith(".png") || nombreArchivo.endsWith(".jpg") ||
+                nombreArchivo.endsWith(".jpeg") || nombreArchivo.endsWith(".gif")) {
             try {
                 javafx.scene.image.Image image = new javafx.scene.image.Image(new FileInputStream(archivo));
                 javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(image);
@@ -1053,22 +1091,28 @@ public class EstudianteController extends BaseTokenController {
             }
         } else {
             String icono = "📎";
-            if (nombreArchivo.endsWith(".pdf")) icono = "📄";
-            else if (nombreArchivo.endsWith(".doc") || nombreArchivo.endsWith(".docx")) icono = "📝";
-            else if (nombreArchivo.endsWith(".txt")) icono = "📋";
-            
+            if (nombreArchivo.endsWith(".pdf"))
+                icono = "📄";
+            else if (nombreArchivo.endsWith(".doc") || nombreArchivo.endsWith(".docx"))
+                icono = "📝";
+            else if (nombreArchivo.endsWith(".txt"))
+                icono = "📋";
+
             Label lblInfo = new Label(icono + " " + archivo.getName());
             lblInfo.setStyle("-fx-font-size: 12px;");
             long tamañoBytes = archivo.length();
             String tamaño = "";
-            if (tamañoBytes < 1024) tamaño = tamañoBytes + " B";
-            else if (tamañoBytes < 1024 * 1024) tamaño = String.format("%.1f KB", tamañoBytes / 1024.0);
-            else tamaño = String.format("%.1f MB", tamañoBytes / (1024.0 * 1024.0));
+            if (tamañoBytes < 1024)
+                tamaño = tamañoBytes + " B";
+            else if (tamañoBytes < 1024 * 1024)
+                tamaño = String.format("%.1f KB", tamañoBytes / 1024.0);
+            else
+                tamaño = String.format("%.1f MB", tamañoBytes / (1024.0 * 1024.0));
             Label lblTamaño = new Label("Tamaño: " + tamaño);
             lblTamaño.setStyle("-fx-font-size: 11px; -fx-text-fill: #7f8c8d;");
             archivoBox.getChildren().addAll(lblTitulo, lblInfo, lblTamaño);
         }
-        
+
         int insertIndex = contenedor.getChildren().size();
         for (int i = 0; i < contenedor.getChildren().size(); i++) {
             if (contenedor.getChildren().get(i) instanceof TextArea) {
@@ -1376,52 +1420,35 @@ public class EstudianteController extends BaseTokenController {
         alert.showAndWait();
     }
 
-    private Stage obtenerVentanaActual() {
-        // Buscar la ventana desde cualquier nodo de la escena
-        if (mainContainer != null && mainContainer.getScene() != null) {
-            return (Stage) mainContainer.getScene().getWindow();
-        } else if (contentPane != null && contentPane.getScene() != null) {
-            return (Stage) contentPane.getScene().getWindow();
-        } else if (btnCerrarSesion != null && btnCerrarSesion.getScene() != null) {
-            return (Stage) btnCerrarSesion.getScene().getWindow();
-        }
-        throw new IllegalStateException("No se pudo obtener la ventana actual");
+    private void resetView() {
+        if (lblNombreEstudiante != null)
+            lblNombreEstudiante.setText("Cargando...");
+        if (lblEstado != null)
+            lblEstado.setText("");
+        if (contentPane != null)
+            contentPane.getChildren().clear();
     }
 
     private void navegarALogin() {
-        try {
-            // Usar SpringFXMLLoader para cargar la vista de login
-            Parent root = springFXMLLoader.load("/view/Login.fxml");
-
-            // Obtener la ventana actual
-            Stage stage = obtenerVentanaActual();
-
-            // Cambiar la escena
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Inicio de Sesión");
-            stage.centerOnScreen();
-            stage.show();
-
-        } catch (Exception e) {
-            logger.error("Error al navegar a login", e);
-            mostrarAlerta("Error", "No se pudo cargar la pantalla de inicio de sesión");
-        }
+        navigationService.navigateTo("/view/Login.fxml");
     }
 
     private void cerrarSesion() {
+        if (jwtTokenHolder != null) {
+            jwtTokenHolder.clearToken();
+        }
+        navegarALogin();
+    }
+
+    @FXML
+    private void mostrarPanelActualizaciones() {
         try {
-            // Limpiar el token
-            if (jwtTokenHolder != null) {
-                jwtTokenHolder.clearToken();
-            }
-
-            // Navegar de vuelta a login
-            navegarALogin();
-
-        } catch (Exception e) {
-            logger.error("Error al cerrar sesión", e);
-            mostrarAlerta("Error", "No se pudo cerrar la sesión");
+            FXMLLoader loader = springFXMLLoader.getLoader("/view/update-panel.fxml");
+            Node node = loader.load();
+            contentPane.getChildren().setAll(node);
+        } catch (IOException e) {
+            logger.error("Error al mostrar el panel de actualizaciones", e);
+            mostrarEstado("Error al cargar actualizaciones", Color.RED);
         }
     }
 

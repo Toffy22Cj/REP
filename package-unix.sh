@@ -76,22 +76,35 @@ fi
 
 # Seleccionar el JAR principal (preferencia por standalone)
 SOURCE_JAR=""
-for jar in $JAR_FILES; do
-    case ${jar:t} in
-        *standalone*|*app*|*REP*|*main*)
+# 1. Prioridad: sistema-educativo-full.jar (nombre oficial en pom.xml)
+if [[ -f "target/sistema-educativo-full.jar" ]]; then
+    SOURCE_JAR="target/sistema-educativo-full.jar"
+else
+    # 2. Fallback: cualquier jar que no sea el updater
+    for jar in $JAR_FILES; do
+        if [[ ! $jar == *AutoUpdater* ]]; then
             SOURCE_JAR=$jar
             break
-            ;;
-    esac
-done
-
-# Si no se encontró específico, usar el primero
-if [[ -z $SOURCE_JAR ]]; then
-    SOURCE_JAR=$JAR_FILES[1]
+        fi
+    done
 fi
 
-cp "$SOURCE_JAR" "dist/Sistema Educativo REP/app.jar"
-print -P "   ${GREEN}✓${NC} JAR copiado: app.jar (de: ${SOURCE_JAR:t})"
+if [[ -n $SOURCE_JAR ]]; then
+    cp "$SOURCE_JAR" "dist/Sistema Educativo REP/app.jar"
+    print -P "   ${GREEN}✓${NC} JAR copiado: app.jar (de: ${SOURCE_JAR:t})"
+else
+    print -P "${RED}ERROR: No se pudo identificar el JAR principal en target/${NC}"
+    exit 1
+fi
+
+# Copiar el AutoUpdater si existe
+if [[ -f "target/AutoUpdater-updater.jar" ]]; then
+    cp "target/AutoUpdater-updater.jar" "dist/Sistema Educativo REP/AutoUpdater.jar"
+    print -P "   ${GREEN}✓${NC} JAR copiado: AutoUpdater.jar"
+elif [[ -f "target/AutoUpdater.jar" ]]; then
+    cp "target/AutoUpdater.jar" "dist/Sistema Educativo REP/AutoUpdater.jar"
+    print -P "   ${GREEN}✓${NC} JAR copiado: AutoUpdater.jar"
+fi
 
 # Copiar archivos opcionales
 [[ -f "README.md" ]] && cp "README.md" "dist/Sistema Educativo REP/" && print -P "   ${GREEN}✓${NC} README copiado"

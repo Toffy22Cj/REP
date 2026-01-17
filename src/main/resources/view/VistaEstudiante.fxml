@@ -32,6 +32,7 @@
                 <Button text="Actividades" fx:id="btnActividades" maxWidth="Infinity" />
                 <Button text="Resolver Actividad" fx:id="btnResolverActividad" maxWidth="Infinity" />
                 <Button text="Notificaciones" fx:id="btnNotificaciones" maxWidth="Infinity" />
+                <Button text="Actualizaciones" fx:id="btnActualizaciones" maxWidth="Infinity" onAction="#mostrarPanelActualizaciones" />
             </children>
             <padding>
                 <Insets top="20" right="10" bottom="20" left="10" />
@@ -47,7 +48,4 @@
         </StackPane>
     </center>
 
-    <stylesheets>
-        <URL value="@/styles/estudiante.css"/>
-    </stylesheets>
 </BorderPane>

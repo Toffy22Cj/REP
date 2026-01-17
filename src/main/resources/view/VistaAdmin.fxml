@@ -10,7 +10,6 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            stylesheets="@/styles/admin.css"
             fx:controller="com.rep.controller.views.AdminPanelController">
 
     <!-- Encabezado -->
@@ -165,6 +164,11 @@
                             </columns>
                         </TableView>
                     </VBox>
+                </Tab>
+
+                <!-- Pestaña de Actualizaciones -->
+                <Tab text="Actualizaciones" styleClass="admin-tab">
+                    <fx:include source="update-panel.fxml"/>
                 </Tab>
             </TabPane>
         </StackPane>

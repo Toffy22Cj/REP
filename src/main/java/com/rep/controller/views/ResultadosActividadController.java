@@ -1,5 +1,8 @@
 package com.rep.controller.views;
 
+import com.rep.config.SpringFXMLLoader;
+import com.rep.service.fx.NavigationService;
+
 import com.rep.dto.actividad.ResultadoActividadDTO;
 import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.model.Actividad;
@@ -16,6 +19,12 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.util.List;
 
@@ -39,6 +48,16 @@ public class ResultadosActividadController {
     private JwtTokenHolder jwtTokenHolder;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String API_URL = "http://localhost:8080/api/actividades"; // Ajustar si es necesario
+
+    private final SpringFXMLLoader springFXMLLoader;
+    private final NavigationService navigationService;
+
+    @Autowired
+    public ResultadosActividadController(SpringFXMLLoader springFXMLLoader,
+            NavigationService navigationService) {
+        this.springFXMLLoader = springFXMLLoader;
+        this.navigationService = navigationService;
+    }
 
     @FXML
     public void initialize() {
@@ -139,16 +158,21 @@ public class ResultadosActividadController {
 
     private void verDetalleRespuesta(ResultadoActividadDTO dto) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                    getClass().getResource("/view/DetalleRespuesta.fxml"));
-            javafx.scene.Parent root = loader.load();
+            FXMLLoader loader = springFXMLLoader.getLoader("/view/DetalleRespuesta.fxml");
+            Parent root = loader.load();
 
             DetalleRespuestaController controller = loader.getController();
             controller.setDatos(actividad.getId(), dto.getEstudianteId(), jwtTokenHolder);
 
-            javafx.stage.Stage stage = new javafx.stage.Stage();
+            Stage stage = new Stage();
             stage.setTitle("Detalle Respuesta");
-            stage.setScene(new javafx.scene.Scene(root, 700, 500));
+            Scene scene = new Scene(root, 700, 500);
+            stage.setScene(scene);
+
+            navigationService.applyStylesheets(scene, "/view/DetalleRespuesta.fxml");
+
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(resultadosTable.getScene().getWindow());
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

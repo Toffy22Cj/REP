@@ -127,7 +127,7 @@
 }
 
 /* === Estilos específicos para registro === */
-..input-label {
+.input-label {
      -fx-text-fill: #558b2f;         /* Verde oscuro */
      -fx-font-weight: bold;
      -fx-font-size: 14px;

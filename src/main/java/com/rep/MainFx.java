@@ -11,7 +11,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class MainFx extends Application {
     private ConfigurableApplicationContext context;
-    private ConfigurableApplicationContext springContext;
     private static Stage primaryStageHolder;
 
     public static void main(String[] args) {
@@ -36,9 +35,12 @@ public class MainFx extends Application {
             navigationService.setPrimaryStage(primaryStage);
 
             // Configuración inicial del Stage
-            primaryStage.setTitle("Mi Aplicación");
+            primaryStage.setTitle("REP - Red de Estudiantes y Profesores");
             primaryStage.setMinWidth(800);
             primaryStage.setMinHeight(600);
+            primaryStage.setWidth(800);
+            primaryStage.setHeight(600);
+            primaryStage.centerOnScreen();
 
             // Cargar vista inicial
             navigationService.navigateTo("/view/Login.fxml");
@@ -66,8 +68,8 @@ public class MainFx extends Application {
 
     @Override
     public void stop() {
-        if (springContext != null) {
-            springContext.close();
+        if (context != null) {
+            context.close();
         }
         Platform.exit();
     }

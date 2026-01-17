@@ -7,15 +7,18 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.rep.controller.views.ProfesorController"
-            stylesheets="@/styles/maestro.css">
+            fx:controller="com.rep.controller.views.ProfesorController">
 
     <top>
         <HBox alignment="CENTER" style="-fx-background-color: #3498db; -fx-padding: 15;">
             <Label text="Panel del Profesor" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"/>
             <Pane HBox.hgrow="ALWAYS"/>
-            <Button text="Cerrar Sesión" onAction="#cerrarSesion"
-                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            <HBox spacing="10">
+                <Button text="🔄 Actualizaciones" onAction="#mostrarPanelActualizaciones"
+                        style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Cerrar Sesión" onAction="#cerrarSesion"
+                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
         </HBox>
     </top>
 

@@ -1,19 +1,21 @@
 package com.rep.controller.views;
 
 import com.rep.config.SpringFXMLLoader;
-import javafx.geometry.Rectangle2D; // Para Rectangle2D
+import javafx.application.Platform;
+import javafx.geometry.Rectangle2D;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
+import java.net.URL;
 import com.rep.dto.actividad.ActividadCreateDTO;
 import com.rep.dto.actividad.ActividadDTO;
-import com.rep.dto.actividad.PreguntaPlantillaDTO;
 import com.rep.dto.curso.CursoDTO;
 import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.model.*;
 import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.repositories.ProfesorRepository;
+import com.rep.service.fx.NavigationService;
 import com.rep.service.logica.ProfesorMateriaService;
-import io.jsonwebtoken.io.IOException;
+import com.rep.updater.UpdateChecker;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -31,10 +33,11 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.InputStream;
-import java.net.URL;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +45,8 @@ import java.util.Optional;
 
 @Controller
 public class ProfesorController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProfesorController.class);
 
     @org.springframework.beans.factory.annotation.Value("${app.api.base-url:http://localhost:8080/api}/profesor")
     private String API_BASE_URL;
@@ -85,9 +90,13 @@ public class ProfesorController {
     private ProfesorMateriaRepository profesorMateriaRepository;
     @Autowired
     private ProfesorMateriaService profesorMateriaService;
+    @Autowired
+    private NavigationService navigationService;
     private ObservableList<Actividad> actividadesList = FXCollections.observableArrayList();
     @Autowired
     private SpringFXMLLoader springFXMLLoader;
+    @Autowired
+    private UpdateChecker updateChecker;
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -116,7 +125,41 @@ public class ProfesorController {
 
     @FXML
     public void initialize() {
+        resetView();
+        configurarTablaActividades();
+        cargarMaterias();
+        cargarCursos();
+        configurarListeners();
+        filtrarActividades();
 
+        // Verificar actualizaciones al inicio
+        if (updateChecker != null && updateChecker.isUpdateAvailable()) {
+            statusActividadLabel.setText("🔄 Actualización disponible: " + updateChecker.getLatestVersion());
+            statusActividadLabel.setTextFill(Color.GREEN);
+            Platform.runLater(this::mostrarPanelActualizaciones);
+        }
+    }
+
+    private void resetView() {
+        if (statusActividadLabel != null)
+            statusActividadLabel.setText("Sesión de Profesor");
+        if (tituloTextField != null)
+            tituloTextField.clear();
+        if (fechaEntregaPicker != null)
+            fechaEntregaPicker.setValue(null);
+        if (duracionTextField != null)
+            duracionTextField.clear();
+        if (tipoActividadComboBox != null)
+            tipoActividadComboBox.getSelectionModel().clearSelection();
+        if (materiaComboBox != null)
+            materiaComboBox.getSelectionModel().clearSelection();
+        if (cursoComboBox != null)
+            cursoComboBox.getSelectionModel().clearSelection();
+        if (actividadesList != null)
+            actividadesList.clear();
+    }
+
+    private void configurarListeners() {
         actividadesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 // Rellenar formulario con los datos de la actividad seleccionada
@@ -127,18 +170,6 @@ public class ProfesorController {
             }
         });
 
-        // Configurar combobox de tipos de actividad
-        tipoActividadComboBox.setItems(FXCollections.observableArrayList(
-                "examen", "quiz", "taller" // Valores en minúsculas para coincidir con la BD
-        ));
-        // Configurar tabla de actividades
-        configurarTablaActividades();
-
-        // Cargar datos iniciales
-        cargarMaterias();
-        cargarCursos();
-
-        // Configurar listeners
         materiaComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 filtrarActividades();
@@ -163,6 +194,10 @@ public class ProfesorController {
 
         actividadesTable.setItems(actividadesList);
 
+        // Configurar combobox de tipos de actividad
+        tipoActividadComboBox.setItems(FXCollections.observableArrayList(
+                "examen", "quiz", "taller" // Valores en minúsculas para coincidir con la BD
+        ));
     }
 
     private void cargarMaterias() {
@@ -391,21 +426,28 @@ public class ProfesorController {
             mostrarError("Seleccione una actividad para ver los resultados", Color.RED);
             return;
         }
+        mostrarResultados(actividadSeleccionada);
+    }
 
+    private void mostrarResultados(Actividad actividad) {
         try {
-            URL fxmlUrl = getClass().getResource("/view/ResultadosActividad.fxml");
-            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            FXMLLoader loader = springFXMLLoader.getLoader("/view/ResultadosActividad.fxml");
             Parent root = loader.load();
 
             ResultadosActividadController controller = loader.getController();
-            controller.setJwtTokenHolder(this.jwtTokenHolder);
-            controller.setActividad(actividadSeleccionada);
+            controller.setActividad(actividad);
+            controller.setJwtTokenHolder(jwtTokenHolder);
 
             Stage stage = new Stage();
-            stage.setTitle("Resultados - " + actividadSeleccionada.getTitulo());
-            stage.setScene(new Scene(root, 800, 600));
-            stage.show();
+            stage.setTitle("Resultados: " + actividad.getTitulo());
+            Scene scene = new Scene(root, 900, 600);
+            stage.setScene(scene);
 
+            navigationService.applyStylesheets(scene, "/view/ResultadosActividad.fxml");
+
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(actividadesTable.getScene().getWindow());
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
             mostrarError("Error al abrir resultados: " + e.getMessage());
@@ -481,12 +523,7 @@ public class ProfesorController {
 
         try {
             // Cargar el FXML con verificación de existencia
-            URL fxmlUrl = getClass().getResource("/view/editor_preguntas.fxml");
-            if (fxmlUrl == null) {
-                throw new IllegalStateException("No se encontró el archivo FXML: editor_preguntas.fxml");
-            }
-
-            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            FXMLLoader loader = springFXMLLoader.getLoader("/view/editor_preguntas.fxml");
             Parent root = loader.load();
 
             // Configurar el controlador con validación
@@ -515,14 +552,7 @@ public class ProfesorController {
                     Math.min(850, screenBounds.getHeight() * 0.85));
 
             // Aplicar CSS si existe
-            try {
-                URL cssUrl = getClass().getResource("/css/editor_preguntas.css");
-                if (cssUrl != null) {
-                    scene.getStylesheets().add(cssUrl.toExternalForm());
-                }
-            } catch (Exception e) {
-                System.err.println("No se pudo cargar el CSS: " + e.getMessage());
-            }
+            navigationService.applyStylesheets(scene, "/view/editor_preguntas.fxml");
 
             dialog.setScene(scene);
             dialog.initModality(Modality.APPLICATION_MODAL);
@@ -614,26 +644,10 @@ public class ProfesorController {
 
     @FXML
     private void cerrarSesion() {
-        try {
-            // Limpiar el token
-            if (jwtTokenHolder != null) {
-                jwtTokenHolder.clearToken();
-            }
-
-            // Usar SpringFXMLLoader para cargar la vista de login
-            Parent root = springFXMLLoader.load("/view/Login.fxml");
-
-            // Obtener la escena actual y cambiar su contenido
-            Stage stage = (Stage) actividadesTable.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Inicio de Sesión");
-            stage.centerOnScreen();
-            stage.show();
-
-        } catch (Exception e) {
-            mostrarError("Error al cerrar sesión: " + e.getMessage(), Color.RED);
-            e.printStackTrace();
+        if (jwtTokenHolder != null) {
+            jwtTokenHolder.clearToken();
         }
+        navigationService.navigateTo("/view/Login.fxml");
     }
 
     @FXML
@@ -793,6 +807,28 @@ public class ProfesorController {
         } catch (Exception e) {
             mostrarError("Error al abrir asistencia: " + e.getMessage(), Color.RED);
             e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void mostrarPanelActualizaciones() {
+        try {
+            Stage stage = new Stage();
+            stage.setResizable(false);
+            stage.setTitle("Actualizaciones de Sistema");
+            stage.initModality(Modality.APPLICATION_MODAL);
+
+            FXMLLoader loader = springFXMLLoader.getLoader("/view/update-panel.fxml");
+            Parent root = loader.load();
+
+            Scene scene = new Scene(root);
+            navigationService.applyStylesheets(scene, "/view/update-panel.fxml");
+
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            logger.error("Error al mostrar el panel de actualizaciones", e);
+            mostrarError("No se pudo cargar el panel de actualizaciones", Color.RED);
         }
     }
 }

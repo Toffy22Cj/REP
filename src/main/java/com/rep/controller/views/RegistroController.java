@@ -5,6 +5,7 @@ import com.rep.model.Curso;
 import com.rep.model.Usuario;
 import com.rep.service.ApiClientService;
 import com.rep.service.funciones.RegistrationServiceClient;
+import com.rep.service.fx.NavigationService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -17,32 +18,67 @@ import java.util.stream.Collectors;
 
 @Controller
 public class RegistroController {
-    @FXML private TextField nombre;
-    @FXML private TextField correo;
-    @FXML private TextField identificacion;
-    @FXML private ComboBox<String> tipoIdentificacion;
-    @FXML private PasswordField contraseña;
-    @FXML private PasswordField confirmarContrasena;
-    @FXML private TextField edad;
-    @FXML private ComboBox<String> curso;
-    @FXML private HBox cursoBox;
-    @FXML private ComboBox<String> sexo;
+    @FXML
+    private TextField nombre;
+    @FXML
+    private TextField correo;
+    @FXML
+    private TextField identificacion;
+    @FXML
+    private ComboBox<String> tipoIdentificacion;
+    @FXML
+    private PasswordField contraseña;
+    @FXML
+    private PasswordField confirmarContrasena;
+    @FXML
+    private TextField edad;
+    @FXML
+    private ComboBox<String> curso;
+    @FXML
+    private HBox cursoBox;
+    @FXML
+    private ComboBox<String> sexo;
     private final RegistrationServiceClient registrationService;
     private final ApiClientService apiClient;
+    private final NavigationService navigationService;
 
     public RegistroController(RegistrationServiceClient registrationService,
-                              ApiClientService apiClient) {
+            ApiClientService apiClient,
+            NavigationService navigationService) {
         this.registrationService = registrationService;
         this.apiClient = apiClient;
+        this.navigationService = navigationService;
     }
 
     @FXML
     public void initialize() {
+        resetView();
         cargarCursosDisponibles();
         sexo.getItems().addAll(
                 Usuario.Sexo.MASCULINO.getDescripcion(),
                 Usuario.Sexo.FEMENINO.getDescripcion(),
                 Usuario.Sexo.OTRO.getDescripcion());
+    }
+
+    private void resetView() {
+        if (nombre != null)
+            nombre.clear();
+        if (correo != null)
+            correo.clear();
+        if (identificacion != null)
+            identificacion.clear();
+        if (contraseña != null)
+            contraseña.clear();
+        if (confirmarContrasena != null)
+            confirmarContrasena.clear();
+        if (edad != null)
+            edad.clear();
+        // Clear combo boxes or other fields if necessary
+    }
+
+    @FXML
+    private void volverLogin() {
+        navigationService.navigateTo("/view/Login.fxml");
     }
 
     @FXML
@@ -68,9 +104,9 @@ public class RegistroController {
             curso.getItems().clear();
 
             ResponseEntity<List<Curso>> response = apiClient.get(
-                    "/public/cursos",  // Nuevo endpoint público
-                    new ParameterizedTypeReference<List<Curso>>() {}
-            );
+                    "/public/cursos", // Nuevo endpoint público
+                    new ParameterizedTypeReference<List<Curso>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 List<Curso> cursosOrdenados = response.getBody().stream()
@@ -102,9 +138,9 @@ public class RegistroController {
     private Long obtenerIdCursoPorNombre(String nombreMostrado) {
         try {
             ResponseEntity<List<Curso>> response = apiClient.get(
-                    "/public/cursos",  // Usar el nuevo endpoint público
-                    new ParameterizedTypeReference<List<Curso>>() {}
-            );
+                    "/public/cursos", // Usar el nuevo endpoint público
+                    new ParameterizedTypeReference<List<Curso>>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 String[] partes = nombreMostrado.split("° ");
@@ -133,7 +169,6 @@ public class RegistroController {
             mostrarAlertaError("Sexo requerido", "Debe seleccionar un sexo");
             return false;
         }
-
 
         if (!contraseña.getText().equals(confirmarContrasena.getText())) {
             mostrarAlertaError("Contraseñas no coinciden", "Las contraseñas ingresadas deben ser iguales");
@@ -183,9 +218,8 @@ public class RegistroController {
             mostrarAlertaExito("Registro exitoso", "Estudiante registrado correctamente");
             limpiarFormulario();
         } else {
-            String mensajeError = response.getBody() != null ?
-                    response.getBody().toString() :
-                    "Error en el servidor (Código: " + response.getStatusCodeValue() + ")";
+            String mensajeError = response.getBody() != null ? response.getBody().toString()
+                    : "Error en el servidor (Código: " + response.getStatusCodeValue() + ")";
 
             if (mensajeError.contains("El correo electrónico ya está registrado")) {
                 mensajeError = "El correo electrónico ya está en uso";

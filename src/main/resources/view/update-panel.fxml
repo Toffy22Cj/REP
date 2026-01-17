@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17" 
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.rep.controller.views.UpdatePanelController"
+      spacing="15" 
+      style="-fx-padding: 30; -fx-background-color: white; -fx-background-radius: 10;">
+    
+    <Label text="🔄 Sistema de Actualizaciones" 
+           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    
+    <Separator/>
+    
+    <GridPane hgap="20" vgap="15">
+        <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="150" prefWidth="200" />
+            <ColumnConstraints hgrow="ALWAYS" minWidth="100" />
+        </columnConstraints>
+        
+        <Label text="Versión actual:" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+        <Label fx:id="currentVersionLabel" text="Cargando..." 
+               style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" 
+               GridPane.columnIndex="1"/>
+        
+        <Label text="Última versión disponible:" style="-fx-font-weight: bold; -fx-font-size: 14px;" 
+               GridPane.rowIndex="1"/>
+        <Label fx:id="latestVersionLabel" text="Buscando..." 
+               style="-fx-text-fill: #2980b9; -fx-font-weight: bold; -fx-font-size: 14px;" 
+               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    </GridPane>
+    
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label fx:id="updateStatusLabel" text="Estado desconocido" 
+               style="-fx-font-size: 13px; -fx-font-style: italic;"/>
+        <ProgressIndicator fx:id="updateProgress" visible="false" prefHeight="20" prefWidth="20"/>
+    </HBox>
+    
+    <VBox spacing="8" VBox.vgrow="ALWAYS">
+        <Label text="Notas de la versión:" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+        <TextArea fx:id="releaseNotesArea" 
+                  editable="false" 
+                  wrapText="true"
+                  prefRowCount="6"
+                  style="-fx-background-color: #f9f9f9; -fx-font-family: 'Consolas'; -fx-font-size: 12px;"
+                  VBox.vgrow="ALWAYS"/>
+    </VBox>
+    
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button fx:id="checkBtn" text="🔍 Buscar" 
+                onAction="#onCheckForUpdates"
+                style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 5;"/>
+        <Button fx:id="installBtn" text="⬇️ Instalar" 
+                onAction="#onInstallUpdate"
+                disable="true"
+                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 5;"/>
+    </HBox>
+    
+    <Label text="ℹ️ Las actualizaciones se verifican automáticamente cada 24 horas."
+           style="-fx-font-size: 11px; -fx-text-fill: #95a5a6;"/>
+    
+</VBox>

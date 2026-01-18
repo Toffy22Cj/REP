@@ -18,6 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.net.URL;
 import java.nio.file.Paths;
+
 @SpringBootApplication
 @EnableJpaAuditing
 public class Main extends Application {
@@ -60,6 +61,13 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
+			// Get NavigationService from context
+			com.rep.service.fx.NavigationService navigationService = springContext
+					.getBean(com.rep.service.fx.NavigationService.class);
+
+			// Initialize NavigationService with the primary stage
+			navigationService.setPrimaryStage(primaryStage);
+
 			// Carga el FXML usando el class loader de Spring
 			Resource resource = new ClassPathResource("/view/Login.fxml");
 			URL fxmlUrl = resource.getURL();
@@ -79,6 +87,13 @@ public class Main extends Application {
 			primaryStage.setScene(scene);
 			primaryStage.setTitle("Mi Aplicación");
 			primaryStage.show();
+
+			// Also register the scene with ThemeManager via NavigationService or directly
+			// if needed
+			// But NavigationService.navigateTo handles this usually.
+			// Since we manually loaded, we might need to manually trigger scene
+			// registration if we want theme switching to work immediately.
+			// However, fixing the missing stage is the priority.
 
 		} catch (Exception e) {
 			System.err.println("Error crítico al cargar FXML:");

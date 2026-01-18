@@ -1,10 +1,7 @@
 package com.rep.controller.views;
 
-import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.auth.RegistroUsuarioDTO;
-
 import com.rep.dto.profesor.ProfesorMateriaRequest;
-import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.model.*;
 
 import com.rep.service.funciones.AdminApiService;
@@ -14,14 +11,10 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -123,24 +116,18 @@ public class AdminPanelController {
     // ----------- Services -----------
     private final AdminApiService adminApiService;
     private final UsuarioRegistrationService registrationService;
-    private final JwtTokenHolder jwtTokenHolder; // Si necesitas este campo
-
-    private final SpringFXMLLoader springFXMLLoader; // Añade este campo
 
     @Autowired
     public AdminPanelController(AdminApiService adminApiService,
-            UsuarioRegistrationService registrationService,
-            JwtTokenHolder jwtTokenHolder,
-            SpringFXMLLoader springFXMLLoader) { // Añade este parámetro
+            UsuarioRegistrationService registrationService) {
         this.adminApiService = adminApiService;
         this.registrationService = registrationService;
-        this.jwtTokenHolder = jwtTokenHolder;
-        this.springFXMLLoader = springFXMLLoader; // Asigna
     }
 
     // ----------- Initialization Methods -----------
     @FXML
     public void initialize() {
+        resetView();
         configurarColumnasTablas();
         configurarTablaAsignaciones();
 
@@ -179,7 +166,7 @@ public class AdminPanelController {
         colProfId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProfNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colProfCorreo
-            .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCorreo()));
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCorreo()));
 
         colProfActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
         colProfActivo.setCellFactory(column -> new TableCell<Usuario, Boolean>() {
@@ -997,21 +984,6 @@ public class AdminPanelController {
     }
 
     // ----------- Utility Methods -----------
-    private void mostrarAlerta(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarAlertaError(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
 
     private void limpiarCampos() {
         nombreProfesorField.clear();
@@ -1045,43 +1017,15 @@ public class AdminPanelController {
     }
     // Añade estos métodos a tu controlador existente
 
-    @FXML
-    private void cerrarSesion() {
-        try {
-            // Limpiar el token JWT si es necesario
-            if (jwtTokenHolder != null) {
-                jwtTokenHolder.clearToken();
-            }
-
-            // Usar SpringFXMLLoader para cargar la vista de login
-            Parent root = springFXMLLoader.load("/view/Login.fxml");
-
-            Stage stage = (Stage) tabPane.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.centerOnScreen();
-        } catch (Exception e) {
-            mostrarAlerta("Error al cerrar sesión: " + e.getMessage(), true);
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void showMaterias() {
-        tabPane.getSelectionModel().select(0);
-    }
-
-    @FXML
-    private void showCursos() {
-        tabPane.getSelectionModel().select(1);
-    }
-
-    @FXML
-    private void showProfesores() {
-        tabPane.getSelectionModel().select(2);
-    }
-
-    @FXML
-    private void showEstudiantes() {
-        tabPane.getSelectionModel().select(3);
+    private void resetView() {
+        materiaTextField.clear();
+        gradoCursoField.clear();
+        grupoCursoField.clear();
+        nombreProfesorField.clear();
+        correoProfesorField.clear();
+        nombreEstudianteField.clear();
+        correoEstudianteField.clear();
+        searchProfesorField.clear();
+        searchEstudianteField.clear();
     }
 }

@@ -113,6 +113,7 @@ public class ProfesorController {
 
     @FXML
     public void initialize() {
+        resetView();
 
         actividadesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
@@ -609,28 +610,14 @@ public class ProfesorController {
         }
     }
 
-    @FXML
-    private void cerrarSesion() {
-        try {
-            // Limpiar el token
-            if (jwtTokenHolder != null) {
-                jwtTokenHolder.clearToken();
-            }
-
-            // Usar SpringFXMLLoader para cargar la vista de login
-            Parent root = springFXMLLoader.load("/view/Login.fxml");
-
-            // Obtener la escena actual y cambiar su contenido
-            Stage stage = (Stage) actividadesTable.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Inicio de Sesión");
-            stage.centerOnScreen();
-            stage.show();
-
-        } catch (Exception e) {
-            mostrarError("Error al cerrar sesión: " + e.getMessage(), Color.RED);
-            e.printStackTrace();
-        }
+    private void resetView() {
+        tituloTextField.clear();
+        fechaEntregaPicker.setValue(null);
+        duracionTextField.clear();
+        materiaComboBox.getSelectionModel().clearSelection();
+        cursoComboBox.getSelectionModel().clearSelection();
+        tipoActividadComboBox.getSelectionModel().clearSelection();
+        actividadesList.clear();
     }
 
     @FXML

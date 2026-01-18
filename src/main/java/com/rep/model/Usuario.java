@@ -139,6 +139,11 @@ public class Usuario implements UserDetails {
         return this.identificacion;
     }
 
+    @Transient
+    public String getCursoNombre() {
+        return "N/A";
+    }
+
     @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {

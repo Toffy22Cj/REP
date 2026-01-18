@@ -1,57 +1,57 @@
 package com.rep.controller.views;
 
-import com.rep.config.SpringFXMLLoader;
 import com.rep.dto.tokens.JwtTokenHolder;
 import com.rep.dto.auth.LoginResponse;
-import com.rep.service.funciones.AdminApiService;
 import com.rep.service.funciones.AuthServiceClient;
 import com.rep.service.fx.NavigationService;
-import com.rep.service.logica.UsuarioRegistrationService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import java.io.IOException;
 import java.util.Optional;
 
 @Controller
 public class LoginController {
-    @FXML private TextField txtIdentificacion;
-    @FXML private PasswordField txtPassword;
-    @FXML private Label lblMensaje;
-    @FXML private Button btnRegistro;
-    @FXML private Button btnLogin;
-    @FXML private ProgressIndicator progressIndicator;
+    @FXML
+    private TextField txtIdentificacion;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private Label lblMensaje;
+    @FXML
+    private Button btnRegistro;
+    @FXML
+    private Button btnLogin;
+    @FXML
+    private ProgressIndicator progressIndicator;
 
     private final NavigationService navigationService;
-    private final UsuarioRegistrationService registrationService;
     private final AuthServiceClient authServiceClient;
 
     @Autowired
     private JwtTokenHolder jwtTokenHolder;
-    @Autowired
-    AdminApiService adminApiService;
-    private final SpringFXMLLoader springFXMLLoader;
 
     @Autowired
     public LoginController(NavigationService navigationService,
-                           UsuarioRegistrationService registrationService,
-                           AuthServiceClient authServiceClient,
-                           AdminApiService adminApiService,
-                           SpringFXMLLoader springFXMLLoader) { // Añade esto
+            AuthServiceClient authServiceClient) {
         this.navigationService = navigationService;
-        this.registrationService = registrationService;
         this.authServiceClient = authServiceClient;
-        this.adminApiService = adminApiService;
-        this.springFXMLLoader = springFXMLLoader;
     }
+
+    @FXML
+    public void initialize() {
+        resetView();
+    }
+
+    private void resetView() {
+        txtIdentificacion.clear();
+        txtPassword.clear();
+        lblMensaje.setText("");
+        progressIndicator.setVisible(false);
+    }
+
     @FXML
     private void handleLogin(ActionEvent event) {
         String identificacion = txtIdentificacion.getText().trim();
@@ -72,15 +72,15 @@ public class LoginController {
                 LoginResponse loginResponse = response.get();
                 jwtTokenHolder.setToken(loginResponse.getToken());
 
-                switch(loginResponse.getUsuario().getRol()) {
+                switch (loginResponse.getUsuario().getRol()) {
                     case ADMIN:
-                        cargarVistaAdmin(event);
+                        navigationService.navigateToContent("/view/VistaAdmin.fxml", "Panel de Administración");
                         break;
                     case PROFESOR:
-                        navigationService.navigateTo("/view/VistaMaestro.fxml");
+                        navigationService.navigateToContent("/view/VistaMaestro.fxml", "Panel de Docente");
                         break;
                     case ESTUDIANTE:
-                        navigationService.navigateTo("/view/VistaEstudiante.fxml");
+                        navigationService.navigateToContent("/view/VistaEstudiante.fxml", "Área de Estudiante");
                         break;
                 }
             } else {
@@ -93,25 +93,6 @@ public class LoginController {
         } finally {
             progressIndicator.setVisible(false);
             btnLogin.setDisable(false);
-        }
-    }
-
-    private void cargarVistaAdmin(ActionEvent event) {
-        try {
-            // Usar SpringFXMLLoader para cargar la vista
-            Parent root = springFXMLLoader.load("/view/VistaAdmin.fxml");
-
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.show();
-
-            ((Node) event.getSource()).getScene().getWindow().hide();
-        } catch (IOException e) {
-            mostrarError("Error al cargar la vista de administrador: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            mostrarError("Error: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

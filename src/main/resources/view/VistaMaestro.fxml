@@ -5,84 +5,71 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.rep.controller.views.ProfesorController"
-            stylesheets="@../Styles/maestro.css">
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.rep.controller.views.ProfesorController"
+       stylesheets="@../Styles/maestro.css"
+      spacing="20"
+      styleClass="tab-content">
 
-    <top>
-        <HBox alignment="CENTER" style="-fx-background-color: #3498db; -fx-padding: 15;">
-            <Label text="Panel del Profesor" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"/>
-            <Pane HBox.hgrow="ALWAYS"/>
-            <Button text="Cerrar Sesión" onAction="#cerrarSesion"
-                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;"/>
-        </HBox>
-    </top>
-
-    <center>
-        <VBox spacing="15" style="-fx-padding: 15;">
-            <!-- Selección de materia y curso -->
-            <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: #f8f9fa; -fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5;">
-                <Label text="Materia:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <ComboBox fx:id="materiaComboBox" prefWidth="250" style="-fx-font-size: 14px;"/>
-                <Label text="Curso:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <ComboBox fx:id="cursoComboBox" prefWidth="250" style="-fx-font-size: 14px;"/>
-            </HBox>
-
-            <!-- Crear nueva actividad -->
-            <TitledPane text="Crear Nueva Actividad" style="-fx-font-weight: bold;" animated="false">
-                <content>
-                    <VBox spacing="10" style="-fx-padding: 15;">
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Tipo:" style="-fx-font-weight: bold; -fx-min-width: 80;"/>
-                            <ComboBox fx:id="tipoActividadComboBox" prefWidth="200" style="-fx-font-size: 14px;"/>
-                            <Label text="Título:" style="-fx-font-weight: bold; -fx-min-width: 80;"/>
-                            <TextField fx:id="tituloTextField" promptText="Ej: Quiz #1" prefWidth="200" style="-fx-font-size: 14px;"/>
-                        </HBox>
-
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Fecha Entrega:" style="-fx-font-weight: bold; -fx-min-width: 80;"/>
-                            <DatePicker fx:id="fechaEntregaPicker" style="-fx-font-size: 14px;"/>
-                            <Label text="Duración (min):" style="-fx-font-weight: bold; -fx-min-width: 80;"/>
-                            <TextField fx:id="duracionTextField" prefWidth="100" style="-fx-font-size: 14px;"/>
-                        </HBox>
-
-                        <Button fx:id="crearActividadButton" text="Crear Actividad"
-                                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 8 15;"/>
-                        <Label fx:id="statusActividadLabel" style="-fx-font-weight: bold; -fx-text-fill: #e74c3c;"/>
-                    </VBox>
-                </content>
-            </TitledPane>
-
-            <!-- Listar actividades -->
-            <TitledPane text="Actividades Creadas" style="-fx-font-weight: bold;" animated="false" expanded="true">
-                <content>
-                    <VBox>
-                        <TableView fx:id="actividadesTable" style="-fx-font-size: 14px;">
-                            <columns>
-                                <TableColumn fx:id="colTitulo" text="Título" prefWidth="200"/>
-                                <TableColumn fx:id="colTipo" text="Tipo" prefWidth="120"/>
-                                <TableColumn fx:id="colFecha" text="Fecha Entrega" prefWidth="150"/>
-                                <TableColumn fx:id="colDuracion" text="Duración (min)" prefWidth="100"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </content>
-            </TitledPane>
-
-            <!-- Botones de acción -->
-            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0;">
-                <Button text="Ver Resultados"
-                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15;"
-                        onAction="#verResultadosPorActividad"/>
-                <Button text="Actualizar Actividad" onAction="#actualizarActividad" />
-                <Button text="Editar Preguntas"
-                        style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15;"
-                        onAction="#mostrarEditorPreguntas"/>
-                <Button text="Gestionar Asistencia"
-                        style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15;"
-                        onAction="#abrirAsistencia"/>
-            </HBox>
+    <!-- Selección de materia y curso -->
+    <HBox spacing="15" alignment="CENTER_LEFT" styleClass="surface" style="-fx-padding: 20;">
+        <VBox spacing="5" HBox.hgrow="ALWAYS">
+            <Label text="Materia" styleClass="subtitle"/>
+            <ComboBox fx:id="materiaComboBox" maxWidth="Infinity" promptText="Seleccione Materia"/>
         </VBox>
-    </center>
-</BorderPane>
+        <VBox spacing="5" HBox.hgrow="ALWAYS">
+            <Label text="Curso" styleClass="subtitle"/>
+            <ComboBox fx:id="cursoComboBox" maxWidth="Infinity" promptText="Seleccione Curso"/>
+        </VBox>
+    </HBox>
+
+    <!-- Crear nueva actividad -->
+    <TitledPane text="➕ Nueva Actividad" animated="false">
+        <VBox spacing="15" style="-fx-padding: 20;">
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Tipo" styleClass="subtitle"/>
+                    <ComboBox fx:id="tipoActividadComboBox" maxWidth="Infinity"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Título de la Actividad" styleClass="subtitle"/>
+                    <TextField fx:id="tituloTextField" promptText="Ej: Examen Final"/>
+                </VBox>
+            </HBox>
+
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Fecha Límite" styleClass="subtitle"/>
+                    <DatePicker fx:id="fechaEntregaPicker" maxWidth="Infinity"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Duración (minutos)" styleClass="subtitle"/>
+                    <TextField fx:id="duracionTextField" promptText="60"/>
+                </VBox>
+            </HBox>
+
+            <Button fx:id="crearActividadButton" text="Crear Actividad" styleClass="btn-primary" maxWidth="200"/>
+            <Label fx:id="statusActividadLabel" styleClass="message-label"/>
+        </VBox>
+    </TitledPane>
+
+    <!-- Contenido Principal -->
+    <VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="surface" style="-fx-padding: 20;">
+        <Label text="📋 Actividades Vigentes" styleClass="subtitle" style="-fx-font-weight: bold;"/>
+        <TableView fx:id="actividadesTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colTitulo" text="Título" prefWidth="250"/>
+                <TableColumn fx:id="colTipo" text="Tipo" prefWidth="150"/>
+                <TableColumn fx:id="colFecha" text="Entrega" prefWidth="180"/>
+                <TableColumn fx:id="colDuracion" text="Duración" prefWidth="100"/>
+            </columns>
+        </TableView>
+
+        <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+            <Button text="Resultados" onAction="#verResultadosPorActividad" styleClass="button"/>
+            <Button text="Editar Preguntas" onAction="#mostrarEditorPreguntas" styleClass="button" style="-fx-background-color: #8b5cf6; -fx-text-fill: white;"/>
+            <Button text="Asistencia" onAction="#abrirAsistencia" styleClass="button" style="-fx-background-color: #f59e0b; -fx-text-fill: white;"/>
+        </HBox>
+    </VBox>
+</VBox>

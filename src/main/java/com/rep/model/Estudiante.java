@@ -28,6 +28,12 @@ public class Estudiante extends Usuario {
     @Column(name = "edad", nullable = false)
     private Integer edadEstudiante;
 
+    @Override
+    @Transient
+    public String getCursoNombre() {
+        return (curso != null) ? curso.getNombreCompleto() : "Sin Curso";
+    }
+
     public enum EstadoEstudiante {
         activo("Activo"),
         retirado("Retirado"),

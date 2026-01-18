@@ -54,7 +54,7 @@
     -fx-background-color: #dcf0e0;
     -fx-background-radius: 10 10 0 0;
     -fx-text-fill: #4e8a63;
-    -fx-font-weight: semi-bold;
+    -fx-font-weight: bold;
 }
 
 .admin-tab:selected {

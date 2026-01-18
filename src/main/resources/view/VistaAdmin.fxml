@@ -8,165 +8,126 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.effect.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            stylesheets="@/Styles/admin.css"
-            fx:controller="com.rep.controller.views.AdminPanelController">
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      stylesheets="@../Styles/admin.css"
+      styleClass="tab-content"
+      fx:controller="com.rep.controller.views.AdminPanelController"
+      spacing="20">
 
-    <!-- Encabezado -->
-    <top>
-        <HBox styleClass="header-box" alignment="CENTER" spacing="20">
-            <ImageView fitWidth="40" fitHeight="40">
-                <image>
-                    <Image url="@/images/administracion.png"/>
-                </image>
-            </ImageView>
-            <Label styleClass="header-title" text="Panel de Administración Educativa"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Cerrar Sesión" styleClass="logout-button" onAction="#cerrarSesion"/>
-        </HBox>
-    </top>
+    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <!-- Pestaña de Materias -->
+        <Tab text="Materias">
+            <VBox spacing="15" styleClass="tab-content">
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="materiaTextField" styleClass="admin-input" promptText="Nombre de la materia"/>
+                    <Button onAction="#registrarMateria" styleClass="admin-action-button" text="Registrar"/>
+                    <Button onAction="#actualizarMateria" styleClass="admin-action-button" text="Actualizar"/>
+                    <Button onAction="#eliminarMateria" styleClass="admin-delete-button" text="Eliminar"/>
+                </HBox>
+                <Label fx:id="statusMateriaLabel" styleClass="status-label"/>
+                <TableView fx:id="materiasTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colMateriaId" text="ID"/>
+                        <TableColumn fx:id="colMateriaNombre" text="Nombre"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
 
-    <!-- Menú lateral -->
-    <left>
-        <VBox styleClass="sidebar" spacing="15" prefWidth="200">
-            <Button styleClass="menu-button" text="📊 Dashboard"/>
-            <Button styleClass="menu-button" text="📚 Materias" onAction="#showMaterias"/>
-            <Button styleClass="menu-button" text="🏫 Cursos" onAction="#showCursos"/>
-            <Button styleClass="menu-button" text="👨‍🏫 Profesores" onAction="#showProfesores"/>
-            <Button styleClass="menu-button" text="👦 Estudiantes" onAction="#showEstudiantes"/>
-            <Button styleClass="menu-button" text="⚙️ Configuración"/>
-        </VBox>
-    </left>
+        <!-- Pestaña de Cursos -->
+        <Tab text="Cursos">
+            <VBox spacing="15" styleClass="tab-content">
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="gradoCursoField" styleClass="admin-input-short" promptText="Grado"/>
+                    <TextField fx:id="grupoCursoField" styleClass="admin-input-short" promptText="Grupo"/>
+                    <Button onAction="#crearCurso" styleClass="admin-action-button" text="Registrar"/>
+                    <Button onAction="#actualizarCurso" styleClass="admin-action-button" text="Actualizar"/>
+                    <Button onAction="#eliminarCurso" styleClass="admin-delete-button" text="Eliminar"/>
+                </HBox>
+                <Label fx:id="statusCursoLabel" styleClass="status-label"/>
+                <TableView fx:id="cursosTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colCursoNombre" text="Nombre"/>
+                        <TableColumn fx:id="colCursoGrado" text="Grado"/>
+                        <TableColumn fx:id="colCursoGrupo" text="Grupo"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
 
-    <!-- Contenido principal -->
-    <center>
-        <StackPane>
-            <TabPane fx:id="tabPane" styleClass="admin-tab-pane" tabClosingPolicy="UNAVAILABLE">
+        <!-- Pestaña de Profesores -->
+        <Tab text="Profesores">
+            <VBox spacing="15" styleClass="tab-content">
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="nombreProfesorField" styleClass="admin-input" promptText="Nombre completo"/>
+                    <TextField fx:id="correoProfesorField" styleClass="admin-input" promptText="Correo"/>
+                    <PasswordField fx:id="claveProfesorField" styleClass="admin-input" promptText="Contraseña"/>
+                    <Button onAction="#registrarProfesor" styleClass="admin-action-button" text="Registrar"/>
+                    <Button onAction="#actualizarProfesor" styleClass="admin-action-button" text="Actualizar"/>
+                    <Button onAction="#eliminarProfesor" styleClass="admin-delete-button" text="Eliminar"/>
+                </HBox>
+                
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                     <TextField fx:id="searchProfesorField" promptText="🔍 Buscar profesor..." HBox.hgrow="ALWAYS"/>
+                </HBox>
 
-                <!-- Pestaña de Materias -->
-                <Tab text="Materias" styleClass="admin-tab">
-                    <VBox spacing="15" styleClass="tab-content">
-                        <HBox spacing="15" alignment="CENTER_LEFT">
-                            <TextField fx:id="materiaTextField" styleClass="admin-input" promptText="Nombre de la materia"/>
-                            <Button onAction="#registrarMateria" styleClass="admin-action-button" text="Registrar"/>
-                            <Button onAction="#actualizarMateria" styleClass="admin-action-button" text="Actualizar"/>
-                            <Button onAction="#eliminarMateria" styleClass="admin-delete-button" text="Eliminar"/>
-                        </HBox>
+                <VBox spacing="10" styleClass="section-box">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <ComboBox fx:id="profesorAsignarCombo" promptText="Profesor"/>
+                        <ComboBox fx:id="materiaAsignarCombo" promptText="Materia"/>
+                        <ComboBox fx:id="cursoAsignarCombo" promptText="Curso"/>
+                        <Button onAction="#asignarMateriaProfesor" styleClass="admin-action-button" text="Asignar"/>
+                    </HBox>
+                    <TableView fx:id="asignacionesTable" prefHeight="150">
+                        <columns>
+                            <TableColumn fx:id="colAsignacionMateria" text="Materia Asignada"/>
+                            <TableColumn fx:id="colAsignacionCurso" text="Curso Asignado"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Seleccione un profesor para ver sus asignaciones"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
 
-                        <Label fx:id="statusMateriaLabel" styleClass="status-label"/>
+                <TableView fx:id="profesoresTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colProfId" text="ID"/>
+                        <TableColumn fx:id="colProfNombre" text="Nombre"/>
+                        <TableColumn fx:id="colProfCorreo" text="Correo"/>
+                        <TableColumn fx:id="colProfActivo" text="Activo"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
 
-                        <TableView fx:id="materiasTable" styleClass="admin-table">
-                            <columns>
-                                <TableColumn fx:id="colMateriaId" text="ID" styleClass="table-column"/>
-                                <TableColumn fx:id="colMateriaNombre" text="Nombre" styleClass="table-column"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
+        <!-- Pestaña de Estudiantes -->
+        <Tab text="Estudiantes">
+            <VBox spacing="15" styleClass="tab-content">
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <TextField fx:id="nombreEstudianteField" styleClass="admin-input" promptText="Nombre completo"/>
+                    <TextField fx:id="correoEstudianteField" styleClass="admin-input" promptText="Correo"/>
+                    <PasswordField fx:id="claveEstudianteField" styleClass="admin-input" promptText="Contraseña"/>
+                    <ComboBox fx:id="cursoEstudianteCombo" promptText="Curso"/>
+                    <Button onAction="#registrarEstudiante" styleClass="admin-action-button" text="Registrar"/>
+                    <Button onAction="#actualizarEstudiante" styleClass="admin-action-button" text="Actualizar"/>
+                    <Button onAction="#eliminarEstudiante" styleClass="admin-delete-button" text="Eliminar"/>
+                </HBox>
 
-                <!-- Pestaña de Cursos -->
-                <Tab text="Cursos" styleClass="admin-tab">
-                    <VBox spacing="15" styleClass="tab-content">
-                        <HBox spacing="15" alignment="CENTER_LEFT">
-                            <TextField fx:id="gradoCursoField" styleClass="admin-input-short" promptText="Grado"/>
-                            <TextField fx:id="grupoCursoField" styleClass="admin-input-short" promptText="Grupo"/>
-                            <Button onAction="#crearCurso" styleClass="admin-action-button" text="Registrar"/>
-                            <Button onAction="#actualizarCurso" styleClass="admin-action-button" text="Actualizar"/>
-                            <Button onAction="#eliminarCurso" styleClass="admin-delete-button" text="Eliminar"/>
-                        </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                     <TextField fx:id="searchEstudianteField" promptText="🔍 Buscar estudiante..." HBox.hgrow="ALWAYS"/>
+                </HBox>
 
-                        <Label fx:id="statusCursoLabel" styleClass="status-label"/>
-
-                        <TableView fx:id="cursosTable" styleClass="admin-table">
-                            <columns>
-                                <TableColumn fx:id="colCursoNombre" text="Nombre" styleClass="table-column"/>
-                                <TableColumn fx:id="colCursoGrado" text="Grado" styleClass="table-column"/>
-                                <TableColumn fx:id="colCursoGrupo" text="Grupo" styleClass="table-column"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Pestaña de Profesores -->
-                <Tab text="Profesores" styleClass="admin-tab">
-                    <VBox spacing="15" styleClass="tab-content">
-                        <HBox spacing="15" alignment="CENTER_LEFT">
-                            <TextField fx:id="nombreProfesorField" styleClass="admin-input" promptText="Nombre completo"/>
-                            <TextField fx:id="correoProfesorField" styleClass="admin-input" promptText="Correo"/>
-                            <PasswordField fx:id="claveProfesorField" styleClass="admin-input" promptText="Contraseña"/>
-                            <Button onAction="#registrarProfesor" styleClass="admin-action-button" text="Registrar"/>
-                            <Button onAction="#actualizarProfesor" styleClass="admin-action-button" text="Actualizar"/>
-                            <Button onAction="#eliminarProfesor" styleClass="admin-delete-button" text="Eliminar"/>
-                        </HBox>
-                        
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                             <Label text="🔍" styleClass="search-icon"/>
-                             <TextField fx:id="searchProfesorField" promptText="Buscar profesor..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
-                        </HBox>
-
-                        <VBox spacing="10" styleClass="section-box">
-                            <HBox spacing="15" alignment="CENTER_LEFT">
-                                <ComboBox fx:id="profesorAsignarCombo" styleClass="admin-combo" promptText="Profesor"/>
-                                <ComboBox fx:id="materiaAsignarCombo" styleClass="admin-combo" promptText="Materia"/>
-                                <ComboBox fx:id="cursoAsignarCombo" styleClass="admin-combo" promptText="Curso"/>
-                                <Button onAction="#asignarMateriaProfesor" styleClass="admin-action-button" text="Asignar"/>
-                                <Button onAction="#eliminarAsignacion" styleClass="admin-delete-button" text="Eliminar Asignación"/>
-                            </HBox>
-                        </VBox>
-
-                        <Label fx:id="statusAsignacionLabel" styleClass="status-label"/>
-
-                        <TableView fx:id="asignacionesTable" styleClass="admin-table">
-                            <columns>
-                                <TableColumn fx:id="colAsignacionMateria" text="Materia" styleClass="table-column"/>
-                                <TableColumn fx:id="colAsignacionCurso" text="Curso" styleClass="table-column"/>
-                            </columns>
-                        </TableView>
-
-                        <TableView fx:id="profesoresTable" styleClass="admin-table">
-                            <columns>
-                                <TableColumn fx:id="colProfId" text="ID" styleClass="table-column"/>
-                                <TableColumn fx:id="colProfNombre" text="Nombre" styleClass="table-column"/>
-                                <TableColumn fx:id="colProfCorreo" text="Correo" styleClass="table-column"/>
-                                <TableColumn fx:id="colProfActivo" text="Activo" styleClass="table-column"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Pestaña de Estudiantes -->
-                <Tab text="Estudiantes" styleClass="admin-tab">
-                    <VBox spacing="15" styleClass="tab-content">
-                        <HBox spacing="15" alignment="CENTER_LEFT">
-                            <TextField fx:id="nombreEstudianteField" styleClass="admin-input" promptText="Nombre completo"/>
-                            <TextField fx:id="correoEstudianteField" styleClass="admin-input" promptText="Correo"/>
-                            <PasswordField fx:id="claveEstudianteField" styleClass="admin-input" promptText="Contraseña"/>
-                            <ComboBox fx:id="cursoEstudianteCombo" styleClass="admin-combo" promptText="Curso"/>
-                            <Button onAction="#registrarEstudiante" styleClass="admin-action-button" text="Registrar"/>
-                            <Button onAction="#actualizarEstudiante" styleClass="admin-action-button" text="Actualizar"/>
-                            <Button onAction="#eliminarEstudiante" styleClass="admin-delete-button" text="Eliminar"/>
-                        </HBox>
-
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                             <Label text="🔍" styleClass="search-icon"/>
-                             <TextField fx:id="searchEstudianteField" promptText="Buscar estudiante..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
-                        </HBox>
-
-                        <Label fx:id="statusEstudianteLabel" styleClass="status-label"/>
-
-                        <TableView fx:id="estudiantesTable" styleClass="admin-table">
-                            <columns>
-                                <TableColumn fx:id="colEstId" text="ID" styleClass="table-column"/>
-                                <TableColumn fx:id="colEstNombre" text="Nombre" styleClass="table-column"/>
-                                <TableColumn fx:id="colEstCorreo" text="Correo" styleClass="table-column"/>
-                                <TableColumn fx:id="colEstCurso" text="Curso" styleClass="table-column"/>
-                                <TableColumn fx:id="colEstActivo" text="Activo" styleClass="table-column"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-            </TabPane>
-        </StackPane>
-    </center>
-</BorderPane>
+                <TableView fx:id="estudiantesTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colEstId" text="ID"/>
+                        <TableColumn fx:id="colEstNombre" text="Nombre"/>
+                        <TableColumn fx:id="colEstCorreo" text="Correo"/>
+                        <TableColumn fx:id="colEstCurso" text="Curso"/>
+                        <TableColumn fx:id="colEstActivo" text="Activo"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+    </TabPane>
+</VBox>

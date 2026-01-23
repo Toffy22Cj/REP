@@ -1429,15 +1429,11 @@ public class EstudianteController extends BaseTokenController {
             contentPane.getChildren().clear();
     }
 
-    private void navegarALogin() {
-        navigationService.navigateTo("/view/Login.fxml");
-    }
-
     private void cerrarSesion() {
         if (jwtTokenHolder != null) {
             jwtTokenHolder.clearToken();
         }
-        navegarALogin();
+        navigationService.logout();
     }
 
     @FXML

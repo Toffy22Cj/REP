@@ -1,0 +1,62 @@
+/* Main Theme (Light) - Premium & Playful */
+.root {
+    -fx-font-family: 'Segoe UI', 'Roboto', sans-serif;
+    -fx-base: #ffffff;
+    -fx-background-color: #f8f9fa;
+    -fx-accent: #3498db;
+    -fx-focus-color: #3498db;
+    -fx-faint-focus-color: #3498db22;
+    
+    /* Global Text Colors */
+    -fx-text-fill: #2c3e50;
+    -fx-prompt-text-fill: #95a5a6;
+    
+    /* Custom Palette */
+    -color-primary: #3498db;
+    -color-secondary: #2ecc71;
+    -color-danger: #e74c3c;
+    -color-warning: #f1c40f;
+    -color-success: #2ecc71;
+    -color-text: #2c3e50;
+    -color-bg: #f8f9fa;
+    -color-surface: #ffffff;
+}
+
+/* Common Components */
+.button {
+    -fx-background-radius: 5;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 3, 0, 0, 1);
+}
+
+.button:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 5, 0, 0, 2);
+}
+
+.text-field, .password-field, .combo-box, .date-picker {
+    -fx-background-radius: 5;
+    -fx-padding: 8;
+    -fx-background-color: white;
+    -fx-border-color: #dfe6e9;
+    -fx-border-radius: 5;
+}
+
+.text-field:focused, .password-field:focused, .combo-box:focused, .date-picker:focused {
+    -fx-border-color: -fx-focus-color;
+    -fx-background-color: white;
+}
+
+.label {
+    -fx-text-fill: -color-text;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #bdc3c7;
+    -fx-background-radius: 10;
+}

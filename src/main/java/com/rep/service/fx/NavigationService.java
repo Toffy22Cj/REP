@@ -20,8 +20,17 @@ import java.io.IOException;
 public class NavigationService {
 
     private final SpringFXMLLoader fxmlLoader;
+    private final ThemeManager themeManager;
     private Stage primaryStage;
     private final Map<String, String> STYLESHEET_MAP = new HashMap<>();
+
+    @Autowired
+    public NavigationService(SpringFXMLLoader fxmlLoader, ThemeManager themeManager) {
+        this.fxmlLoader = fxmlLoader;
+        this.themeManager = themeManager;
+        initializeStylesheetMap();
+    }
+
     private static final Map<String, double[]> VIEW_SIZES = Map.of(
             "/view/Login.fxml", new double[] { 800, 600 },
             "/view/Registro.fxml", new double[] { 800, 600 },
@@ -30,12 +39,6 @@ public class NavigationService {
             "/view/VistaEstudiante.fxml", new double[] { 1000, 700 },
             "/view/editor_preguntas.fxml", new double[] { 1200, 850 },
             "/view/asistencia.fxml", new double[] { 900, 650 });
-
-    @Autowired
-    public NavigationService(SpringFXMLLoader fxmlLoader) {
-        this.fxmlLoader = fxmlLoader;
-        initializeStylesheetMap();
-    }
 
     private void initializeStylesheetMap() {
         STYLESHEET_MAP.put("/view/Login.fxml", "/styles/login.css");
@@ -89,6 +92,9 @@ public class NavigationService {
                 // Cargar CSS programáticamente para asegurar compatibilidad con JAR
                 applyStylesheets(scene, fxmlPath);
 
+                // Aplicar tema global
+                themeManager.registerScene(scene);
+
                 System.out.println("🚀 Navegación exitosa a: " + fxmlPath);
 
             } catch (IOException e) {
@@ -102,21 +108,31 @@ public class NavigationService {
         if (scene == null)
             return;
 
+        scene.getStylesheets().clear();
+
+        // 1. CSS Base (SIEMPRE cargar main.css)
+        // Usamos getClass().getResource() que suele manejar mejor los protocolos en
+        // Spring Boot
+        URL baseCss = getClass().getResource("/styles/main.css");
+        if (baseCss != null) {
+            scene.getStylesheets().add(baseCss.toExternalForm());
+        } else {
+            System.err.println("⚠️ advertencia: styles/main.css no encontrado");
+        }
+
+        // 2. CSS Específico de la vista
         String cssPath = STYLESHEET_MAP.get(fxmlPath);
         if (cssPath != null) {
-            try {
-                URL cssUrl = getClass().getResource(cssPath);
-                if (cssUrl != null) {
-                    scene.getStylesheets().clear();
-                    scene.getStylesheets().add(cssUrl.toExternalForm());
-                    // También agregar CSS base si existe
-                    URL baseCss = getClass().getResource("/styles/base.css");
-                    if (baseCss != null) {
-                        scene.getStylesheets().add(baseCss.toExternalForm());
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("❌ Error al aplicar CSS: " + e.getMessage());
+            // Asegurar slash inicial para getClass().getResource()
+            if (!cssPath.startsWith("/")) {
+                cssPath = "/" + cssPath;
+            }
+
+            URL cssUrl = getClass().getResource(cssPath);
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            } else {
+                System.err.println("⚠️ CSS específico no encontrado: " + cssPath);
             }
         }
     }
@@ -127,6 +143,23 @@ public class NavigationService {
             alert.setTitle("Error");
             alert.setContentText(message);
             alert.showAndWait();
+        });
+    }
+
+    public void logout() {
+        Platform.runLater(() -> {
+            try {
+                Stage stage = (primaryStage != null) ? primaryStage : MainFx.getPrimaryStage();
+                if (stage != null && stage.getScene() != null) {
+                    // Limpieza crítica para evitar duplicación visual
+                    stage.getScene().setRoot(new javafx.scene.layout.Pane());
+                }
+                navigateTo("/view/Login.fxml");
+            } catch (Exception e) {
+                System.err.println("Error durante logout: " + e.getMessage());
+                // Fallback
+                navigateTo("/view/Login.fxml");
+            }
         });
     }
 }

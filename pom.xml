@@ -215,7 +215,6 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -231,21 +230,45 @@
                 </configuration>
             </plugin>
 
-            <!-- ===== SPRING BOOT ===== -->
+            <!-- ===== THIN JAR CONFIGURATION (Option B) ===== -->
+            
+            <!-- 1. Copy dependencies to target/lib -->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>com.rep.StandaloneLauncher</mainClass>
-                    <finalName>sistema-educativo-full</finalName>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
-            <!-- ===== MULTI-JAR GENERATION ===== -->
+            <!-- 2. Configure JAR Manifest for Thin JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.3.0</version>
+                <configuration>
+                    <finalName>app</finalName>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.rep.StandaloneLauncher</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
                 <executions>
                     <!-- JAR del AutoUpdater -->
                     <execution>
@@ -263,14 +286,20 @@
                             </archive>
                             <includes>
                                 <include>com/rep/updater/**</include>
-                                <!-- Incluir dependencias necesarias si se empaquetan juntas, 
-                                     o asegurar que org.json esté en el classpath. 
-                                     Para simplicidad, incluimos el código del updater. -->
                             </includes>
                             <finalName>AutoUpdater</finalName>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- 3. DISABLE Spring Boot Fat Jar Repackaging -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
 
             <!-- ===== JAVAFX ===== -->

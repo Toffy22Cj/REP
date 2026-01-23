@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.shape.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" 
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:id="rootPane"
+            styleClass="main-container"
+            fx:controller="com.rep.controller.views.BaseLayoutController">
+            
+    <left>
+        <VBox styleClass="sidebar">
+            <VBox styleClass="sidebar-brand" alignment="CENTER">
+                <ImageView fitWidth="80" fitHeight="80" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../images/colegio.png"/>
+                </ImageView>
+                <Text text="REP STANDALONE" styleClass="text-light" style="-fx-font-weight: bold; -fx-font-size: 16;">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                </Text>
+            </VBox>
+            
+            <Separator opacity="0.1"/>
+            
+            <VBox spacing="5" VBox.vgrow="ALWAYS">
+                <Button fx:id="btnDashboard" text="🏠 Dashboard" styleClass="sidebar-item, sidebar-item-active" maxWidth="Infinity" onAction="#onDashboard"/>
+                <Button fx:id="btnCourses" text="📚 Mis Cursos" styleClass="sidebar-item" maxWidth="Infinity" onAction="#onCourses"/>
+                <Button fx:id="btnAttendance" text="📅 Asistencia" styleClass="sidebar-item" maxWidth="Infinity" onAction="#onAttendance"/>
+                <Button fx:id="btnReports" text="📊 Reportes" styleClass="sidebar-item" maxWidth="Infinity" onAction="#onReports"/>
+                <Region VBox.vgrow="ALWAYS"/>
+                <Button fx:id="btnSettings" text="⚙️ Configuración" styleClass="sidebar-item" maxWidth="Infinity" onAction="#onSettings"/>
+                <Button fx:id="btnLogout" text="🚪 Cerrar Sesión" styleClass="sidebar-item" style="-fx-text-fill: #fca5a5;" maxWidth="Infinity" onAction="#handleLogout"/>
+            </VBox>
+        </VBox>
+    </left>
+    
+    <center>
+        <VBox>
+            <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="20">
+                <Label fx:id="lblPageTitle" text="Dashboard" styleClass="title-1"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <HBox alignment="CENTER" spacing="15">
+                    <Button text="🌓" onAction="#toggleTheme" styleClass="button" style="-fx-background-color: transparent; -fx-font-size: 18;"/>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="lblUserName" text="Cargando Usuario..." style="-fx-font-weight: bold;"/>
+                        <Label fx:id="lblUserRole" text="Rol" styleClass="subtitle" style="-fx-font-size: 12;"/>
+                    </VBox>
+                    <Circle fx:id="userAvatar" radius="20" fill="#3b82f6"/>
+                </HBox>
+            </HBox>
+            
+            <StackPane fx:id="contentArea" VBox.vgrow="ALWAYS" style="-fx-padding: 30;">
+                <!-- Dynamically loaded content goes here -->
+            </StackPane>
+        </VBox>
+    </center>
+    
+</BorderPane>

@@ -647,7 +647,7 @@ public class ProfesorController {
         if (jwtTokenHolder != null) {
             jwtTokenHolder.clearToken();
         }
-        navigationService.navigateTo("/view/Login.fxml");
+        navigationService.logout();
     }
 
     @FXML

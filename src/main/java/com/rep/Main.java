@@ -18,6 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.net.URL;
 import java.nio.file.Paths;
+
 @SpringBootApplication
 @EnableJpaAuditing
 public class Main extends Application {
@@ -44,7 +45,7 @@ public class Main extends Application {
 			URL fxmlUrl = getClass().getResource("/view/Login.fxml");
 			if (fxmlUrl == null) {
 				System.err.println("No se encontró el archivo FXML. Buscando en:");
-				System.err.println(Paths.get("src/main/resources/view/Login.fxml").toAbsolutePath());
+
 				throw new RuntimeException("Archivo FXML no encontrado");
 			}
 			System.out.println("Archivo FXML encontrado en: " + fxmlUrl);
@@ -71,7 +72,7 @@ public class Main extends Application {
 			Scene scene = new Scene(root, 800, 600);
 
 			// Opcional: Carga CSS si lo necesitas
-			URL cssUrl = getClass().getResource("/styles/editor.css");
+			URL cssUrl = Thread.currentThread().getContextClassLoader().getResource("styles/editor.css");
 			if (cssUrl != null) {
 				scene.getStylesheets().add(cssUrl.toExternalForm());
 			}

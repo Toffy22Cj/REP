@@ -31,11 +31,14 @@ public class EstudianteServiceImpl implements EstudianteService {
     private final ActividadRepository actividadRepository;
     private final MateriaRepository materiaRepository;
     private final RespuestaEstudianteRepository respuestaEstudianteRepository;
-    private final PreguntaRepository preguntaRepository ;
+    private final PreguntaRepository preguntaRepository;
     private final OpcionRepository opcionRepository;
     private final RespuestaPreguntaRepository respuestaPreguntaRepository;
     private final CorreccionService correccionService;
-    public EstudianteServiceImpl(CorreccionService correccionService,RespuestaPreguntaRepository respuestaPreguntaRepository,OpcionRepository opcionRepository,PreguntaRepository preguntaRepository,
+
+    public EstudianteServiceImpl(CorreccionService correccionService,
+            RespuestaPreguntaRepository respuestaPreguntaRepository, OpcionRepository opcionRepository,
+            PreguntaRepository preguntaRepository,
             EstudianteRepository estudianteRepository,
             ProfesorMateriaRepository profesorMateriaRepository,
             CalificacionRepository calificacionRepository,
@@ -43,8 +46,7 @@ public class EstudianteServiceImpl implements EstudianteService {
             RecursoRepository recursoRepository,
             ActividadRepository actividadRepository,
             MateriaRepository materiaRepository,
-            RespuestaEstudianteRepository respuestaEstudianteRepository
-    ) {
+            RespuestaEstudianteRepository respuestaEstudianteRepository) {
         this.correccionService = correccionService;
         this.respuestaPreguntaRepository = respuestaPreguntaRepository;
         this.opcionRepository = opcionRepository;
@@ -58,6 +60,7 @@ public class EstudianteServiceImpl implements EstudianteService {
         this.respuestaEstudianteRepository = respuestaEstudianteRepository;
         this.preguntaRepository = preguntaRepository;
     }
+
     @Override
     public List<Estudiante> getEstudiantesByCurso(Long cursoId) {
         return estudianteRepository.findByCursoId(cursoId);
@@ -97,6 +100,7 @@ public class EstudianteServiceImpl implements EstudianteService {
     public boolean existeEstudiante(Long id) {
         return estudianteRepository.existsById(id);
     }
+
     @Override
     public boolean profesorTieneAccesoAEstudiante(Long profesorId, Long estudianteId) {
         // 1. Obtener el estudiante
@@ -106,8 +110,7 @@ public class EstudianteServiceImpl implements EstudianteService {
         // 2. Verificar si el profesor tiene acceso al curso del estudiante
         return profesorMateriaRepository.existsByProfesorIdAndCursoId(
                 profesorId,
-                estudiante.getCurso().getId()
-        );
+                estudiante.getCurso().getId());
     }
 
     @Override
@@ -119,7 +122,8 @@ public class EstudianteServiceImpl implements EstudianteService {
     }
 
     @Override
-    public Calificacion agregarCalificacion(Long estudianteId, Long actividadId, Double puntuacion, String comentarios) {
+    public Calificacion agregarCalificacion(Long estudianteId, Long actividadId, Double puntuacion,
+            String comentarios) {
         Estudiante estudiante = estudianteRepository.findById(estudianteId)
                 .orElseThrow(() -> new EntityNotFoundException("Estudiante no encontrado"));
 
@@ -143,15 +147,16 @@ public class EstudianteServiceImpl implements EstudianteService {
         return calificacionRepository.calcularPromedioByEstudianteId(estudianteId);
     }
 
-//    @Override
-//    public List<Notificacion> getNotificacionesByEstudiante(Long estudianteId, boolean soloNoLeidas) {
-//        if (!estudianteRepository.existsById(estudianteId)) {
-//            throw new EntityNotFoundException("Estudiante no encontrado");
-//        }
-//        return soloNoLeidas ?
-//                notificacionRepository.findByEstudianteIdAndLeidaFalse(estudianteId) :
-//          notificacionRepository.findByEstudianteId(estudianteId);
-//    }
+    // @Override
+    // public List<Notificacion> getNotificacionesByEstudiante(Long estudianteId,
+    // boolean soloNoLeidas) {
+    // if (!estudianteRepository.existsById(estudianteId)) {
+    // throw new EntityNotFoundException("Estudiante no encontrado");
+    // }
+    // return soloNoLeidas ?
+    // notificacionRepository.findByEstudianteIdAndLeidaFalse(estudianteId) :
+    // notificacionRepository.findByEstudianteId(estudianteId);
+    // }
 
     @Override
     public void marcarNotificacionComoLeida(Long notificacionId) {
@@ -201,10 +206,8 @@ public class EstudianteServiceImpl implements EstudianteService {
 
         return actividadRepository.findByProfesorMateriaCursoIdAndProfesorMateriaMateriaId(
                 estudiante.getCurso().getId(),
-                materiaId
-        );
+                materiaId);
     }
-
 
     @Override
     @Transactional
@@ -229,11 +232,13 @@ public class EstudianteServiceImpl implements EstudianteService {
                     nueva.setEstudiante(estudiante);
                     nueva.setActividad(actividad);
                     nueva.setFechaInicio(LocalDateTime.now());
-                    logger.info("Creando nueva RespuestaEstudiante para estudiante {} actividad {}", estudianteId, actividadId);
+                    logger.info("Creando nueva RespuestaEstudiante para estudiante {} actividad {}", estudianteId,
+                            actividadId);
                     return nueva;
                 });
 
-        // Si la respuesta existente no tiene asociado el estudiante (inconsistencia en BD), forzarlo
+        // Si la respuesta existente no tiene asociado el estudiante (inconsistencia en
+        // BD), forzarlo
         if (respuestaEstudiante.getEstudiante() == null) {
             logger.warn("RespuestaEstudiante id={} sin estudiante. Forzando asociación con estudiante {}",
                     respuestaEstudiante.getId(), estudianteId);
@@ -246,7 +251,8 @@ public class EstudianteServiceImpl implements EstudianteService {
 
         for (RespuestaPreguntaDTO respuestaDTO : request.getRespuestas()) {
             Pregunta pregunta = preguntasMap.get(respuestaDTO.getPreguntaId());
-            if (pregunta == null) continue;
+            if (pregunta == null)
+                continue;
 
             procesarRespuestaIndividual(respuestaEstudiante, respuestaDTO, pregunta);
         }
@@ -256,18 +262,18 @@ public class EstudianteServiceImpl implements EstudianteService {
         respuestaEstudiante.setFechaEntrega(LocalDateTime.now());
         respuestaEstudiante.setNota(calcularNotaPreliminar(respuestaEstudiante, actividad));
         logger.info("Guardando RespuestaEstudiante (estudiante={}, actividad={}, entregado={}, nota={})",
-            respuestaEstudiante.getEstudiante() != null ? respuestaEstudiante.getEstudiante().getId() : null,
-            actividadId,
-            respuestaEstudiante.getEntregado(),
-            respuestaEstudiante.getNota());
+                respuestaEstudiante.getEstudiante() != null ? respuestaEstudiante.getEstudiante().getId() : null,
+                actividadId,
+                respuestaEstudiante.getEntregado(),
+                respuestaEstudiante.getNota());
 
         respuestaEstudianteRepository.save(respuestaEstudiante);
         return convertirAResultadoDTO(respuestaEstudiante, actividad);
     }
 
     private void procesarRespuestaIndividual(RespuestaEstudiante respuestaEstudiante,
-                                             RespuestaPreguntaDTO respuestaDTO,
-                                             Pregunta pregunta) {
+            RespuestaPreguntaDTO respuestaDTO,
+            Pregunta pregunta) {
         RespuestaPregunta respuestaPregunta = new RespuestaPregunta();
         respuestaPregunta.setPregunta(pregunta);
         respuestaPregunta.setEstudiante(respuestaEstudiante.getEstudiante());
@@ -316,7 +322,8 @@ public class EstudianteServiceImpl implements EstudianteService {
                     .orElseThrow(() -> new EntityNotFoundException("Actividad no encontrada"));
 
             // 3. Verificar que el estudiante pertenece al curso de la actividad
-            // Algunas consultas pueden no inicializar profesorMateria/curso, por eso obtendremos
+            // Algunas consultas pueden no inicializar profesorMateria/curso, por eso
+            // obtendremos
             // el curso de forma segura desde profesorMateria si está disponible.
             Long cursoActividadId = null;
             if (actividad.getProfesorMateria() != null && actividad.getProfesorMateria().getCurso() != null) {
@@ -325,9 +332,13 @@ public class EstudianteServiceImpl implements EstudianteService {
                 cursoActividadId = actividad.getCurso().getId();
             }
 
-            if (cursoActividadId == null || estudiante.getCurso() == null || !cursoActividadId.equals(estudiante.getCurso().getId())) {
-                logger.warn("El estudiante {} no pertenece al curso de la actividad {} (cursoActividadId={})",
-                        estudianteId, actividadId, cursoActividadId);
+            if (cursoActividadId == null || estudiante.getCurso() == null
+                    || !cursoActividadId.equals(estudiante.getCurso().getId())) {
+                logger.warn(
+                        "DENEGADO: El estudiante {} no pertenece al curso de la actividad {} (cursoEstudiante={}, cursoActividad={})",
+                        estudianteId, actividadId,
+                        estudiante.getCurso() != null ? estudiante.getCurso().getId() : "NULL",
+                        cursoActividadId);
                 return false;
             }
 
@@ -336,32 +347,36 @@ public class EstudianteServiceImpl implements EstudianteService {
 
             // La actividad debe haber sido creada
             if (actividad.getFechaCreacion() == null || ahora.isBefore(actividad.getFechaCreacion())) {
-                logger.warn("La actividad {} no está disponible aún", actividadId);
+                logger.warn("DENEGADO: La actividad {} no está disponible aún (FechaCreacion={}, Ahora={})",
+                        actividadId, actividad.getFechaCreacion(), ahora);
                 return false;
             }
 
             // Verificar fecha de entrega (si existe)
             if (actividad.getFechaHoraEntrega() != null && ahora.isAfter(actividad.getFechaHoraEntrega())) {
-                logger.warn("La actividad {} ya ha pasado su fecha de entrega", actividadId);
+                logger.warn("DENEGADO: La actividad {} ya ha pasado su fecha de entrega (Deadline={}, Ahora={})",
+                        actividadId, actividad.getFechaHoraEntrega(), ahora);
                 return false;
             }
 
             // 5. Verificar intentos previos
-            boolean tieneIntentoPrevio = respuestaEstudianteRepository.existsByEstudianteIdAndActividadId(estudianteId, actividadId);
+            boolean tieneIntentoPrevio = respuestaEstudianteRepository.existsByEstudianteIdAndActividadId(estudianteId,
+                    actividadId);
 
             if (tieneIntentoPrevio && !actividad.getPermitirReintentos()) {
-                logger.warn("El estudiante {} ya ha realizado la actividad {} y no se permiten reintentos",
+                logger.warn("DENEGADO: El estudiante {} ya ha realizado la actividad {} y no se permiten reintentos",
                         estudianteId, actividadId);
                 return false;
             }
 
             // 6. Verificar que la actividad está activa
             if (!actividad.getActiva()) {
-                logger.warn("La actividad {} no está activa", actividadId);
+                logger.warn("DENEGADO: La actividad {} no está activa", actividadId);
                 return false;
             }
 
-            // Todas las validaciones pasaron
+            logger.info("PERMITIDO: El estudiante {} tiene permiso para realizar la actividad {}", estudianteId,
+                    actividadId);
             return true;
 
         } catch (EntityNotFoundException e) {
@@ -373,54 +388,61 @@ public class EstudianteServiceImpl implements EstudianteService {
         }
     }
 
-//    @Override
-//    public boolean puedeRealizarActividad(Estudiante estudiante, Actividad actividad) {
-//        try {
-//            // 1. Verificar que el estudiante pertenece al curso de la actividad
-//            if (actividad.getCurso() == null || !actividad.getCurso().getId().equals(estudiante.getCurso().getId())) {
-//                logger.warn("El estudiante {} no pertenece al curso de la actividad {}",
-//                        estudiante.getId(), actividad.getId());
-//                return false;
-//            }
-//
-//            // 2. Verificar fechas
-//            LocalDateTime ahora = LocalDateTime.now();
-//
-//            // La actividad debe haber sido creada
-//            if (actividad.getFechaCreacion() == null || ahora.isBefore(actividad.getFechaCreacion())) {
-//                logger.warn("La actividad {} no está disponible aún", actividad.getId());
-//                return false;
-//            }
-//
-//            // Verificar fecha de entrega (si existe)
-//            if (actividad.getFechaHoraEntrega() != null && ahora.isAfter(actividad.getFechaHoraEntrega())) {
-//                logger.warn("La actividad {} ya ha pasado su fecha de entrega", actividad.getId());
-//                return false;
-//            }
-//
-//            // 3. Verificar intentos previos
-//            boolean tieneIntentoPrevio = respuestaEstudianteRepository.existsByEstudianteIdAndActividadId(
-//                    estudiante.getId(), actividad.getId());
-//
-//            if (tieneIntentoPrevio && !actividad.getPermitirReintentos()) {
-//                logger.warn("El estudiante {} ya ha realizado la actividad {} y no se permiten reintentos",
-//                        estudiante.getId(), actividad.getId());
-//                return false;
-//            }
-//
-//            // 4. Verificar que la actividad está activa
-//            if (!actividad.getActiva()) {
-//                logger.warn("La actividad {} no está activa", actividad.getId());
-//                return false;
-//            }
-//
-//            return true;
-//
-//        } catch (Exception e) {
-//            logger.error("Error inesperado al validar actividad", e);
-//            return false;
-//        }
-//    }
+    // @Override
+    // public boolean puedeRealizarActividad(Estudiante estudiante, Actividad
+    // actividad) {
+    // try {
+    // // 1. Verificar que el estudiante pertenece al curso de la actividad
+    // if (actividad.getCurso() == null ||
+    // !actividad.getCurso().getId().equals(estudiante.getCurso().getId())) {
+    // logger.warn("El estudiante {} no pertenece al curso de la actividad {}",
+    // estudiante.getId(), actividad.getId());
+    // return false;
+    // }
+    //
+    // // 2. Verificar fechas
+    // LocalDateTime ahora = LocalDateTime.now();
+    //
+    // // La actividad debe haber sido creada
+    // if (actividad.getFechaCreacion() == null ||
+    // ahora.isBefore(actividad.getFechaCreacion())) {
+    // logger.warn("La actividad {} no está disponible aún", actividad.getId());
+    // return false;
+    // }
+    //
+    // // Verificar fecha de entrega (si existe)
+    // if (actividad.getFechaHoraEntrega() != null &&
+    // ahora.isAfter(actividad.getFechaHoraEntrega())) {
+    // logger.warn("La actividad {} ya ha pasado su fecha de entrega",
+    // actividad.getId());
+    // return false;
+    // }
+    //
+    // // 3. Verificar intentos previos
+    // boolean tieneIntentoPrevio =
+    // respuestaEstudianteRepository.existsByEstudianteIdAndActividadId(
+    // estudiante.getId(), actividad.getId());
+    //
+    // if (tieneIntentoPrevio && !actividad.getPermitirReintentos()) {
+    // logger.warn("El estudiante {} ya ha realizado la actividad {} y no se
+    // permiten reintentos",
+    // estudiante.getId(), actividad.getId());
+    // return false;
+    // }
+    //
+    // // 4. Verificar que la actividad está activa
+    // if (!actividad.getActiva()) {
+    // logger.warn("La actividad {} no está activa", actividad.getId());
+    // return false;
+    // }
+    //
+    // return true;
+    //
+    // } catch (Exception e) {
+    // logger.error("Error inesperado al validar actividad", e);
+    // return false;
+    // }
+    // }
 
     private float calcularNotaPreliminar(RespuestaEstudiante respuesta, Actividad actividad) {
         // Usar las preguntas ya cargadas de la actividad
@@ -428,7 +450,8 @@ public class EstudianteServiceImpl implements EstudianteService {
                 .filter(p -> p.getTipo() != Pregunta.TipoPregunta.RESPUESTA_ABIERTA)
                 .count();
 
-        if (totalPreguntasObjetivas == 0) return 0f;
+        if (totalPreguntasObjetivas == 0)
+            return 0f;
 
         long respuestasCorrectas = respuesta.getRespuestasPreguntas().stream()
                 .filter(rp -> rp.getEsCorrecta() != null && rp.getEsCorrecta())
@@ -479,15 +502,14 @@ public class EstudianteServiceImpl implements EstudianteService {
     private String generarRetroalimentacion(RespuestaPregunta respuesta) {
         Pregunta pregunta = respuesta.getPregunta();
 
-        switch(pregunta.getTipo()) {
+        switch (pregunta.getTipo()) {
             case OPCION_MULTIPLE:
             case VERDADERO_FALSO:
                 if (respuesta.getOpcion() == null) {
                     return "No se seleccionó ninguna opción";
                 }
-                return respuesta.getEsCorrecta() ?
-                        "Respuesta correcta" :
-                        "Respuesta incorrecta. La opción correcta era: " +
+                return respuesta.getEsCorrecta() ? "Respuesta correcta"
+                        : "Respuesta incorrecta. La opción correcta era: " +
                                 pregunta.getOpciones().stream()
                                         .filter(Opcion::getEsCorrecta)
                                         .findFirst()
@@ -496,8 +518,7 @@ public class EstudianteServiceImpl implements EstudianteService {
 
             case RESPUESTA_ABIERTA:
                 return "Respuesta enviada: " +
-                        (respuesta.getRespuestaAbierta() != null ?
-                                respuesta.getRespuestaAbierta() : "[Vacía]") +
+                        (respuesta.getRespuestaAbierta() != null ? respuesta.getRespuestaAbierta() : "[Vacía]") +
                         "\n(Requiere revisión manual)";
 
             default:

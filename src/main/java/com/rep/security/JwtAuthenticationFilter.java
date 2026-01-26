@@ -24,8 +24,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(SecretKey secretKey,
-                                   JwtConfig jwtConfig,
-                                   CustomUserDetailsService userDetailsService) {
+            JwtConfig jwtConfig,
+            CustomUserDetailsService userDetailsService) {
         this.secretKey = secretKey;
         this.jwtConfig = jwtConfig;
         this.userDetailsService = userDetailsService;
@@ -33,11 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
+        System.out.println("DEBUG: Incoming request to " + request.getRequestURI());
+        System.out.println("DEBUG: Authorization Header: "
+                + (header != null ? header.substring(0, Math.min(header.length(), 15)) + "..." : "NULL"));
 
         if (header == null || !header.startsWith("Bearer ")) {
+            System.out.println("DEBUG: No Bearer token found, skipping filter");
             filterChain.doFilter(request, response);
             return;
         }
@@ -45,6 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = header.substring(7);
 
         try {
+            System.out.println("DEBUG: Validating token...");
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
@@ -59,19 +64,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .map(authority -> new SimpleGrantedAuthority((String) authority))
                     .collect(Collectors.toList());
 
+            System.out.println("DEBUG: Token authorities: " + authorities);
+
             // 2. Cargar UserDetails desde la BD para asegurar la consistencia
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            System.out.println("DEBUG: DB user authorities: " + userDetails.getAuthorities());
 
             // 3. Crear autenticación con el UserDetails y las autoridades del token
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails,  // Usar userDetails en lugar del username
+                    userDetails, // Usar userDetails en lugar del username
                     null,
-                    authorities
-            );
+                    authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            System.out.println("DEBUG: User authenticated successfully: " + username);
 
-        } catch (JwtException | UsernameNotFoundException e) {
+        } catch (Exception e) {
+            System.out.println("DEBUG: Authentication failed: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }

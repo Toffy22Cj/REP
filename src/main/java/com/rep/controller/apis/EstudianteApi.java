@@ -1,4 +1,5 @@
 package com.rep.controller.apis;
+
 import com.rep.dto.actividad.ActividadDTO;
 import com.rep.dto.actividad.ActividadResueltaDTO;
 import com.rep.dto.actividad.MateriaDTO;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @RestController // Cambiado de @Controller a @RestController
 @RequestMapping("/api/estudiante")
 public class EstudianteApi {
@@ -26,8 +26,8 @@ public class EstudianteApi {
     private final NotificacionService notificacionService;
     private final EstudianteService estudianteService;
 
-
-    public EstudianteApi(NotificacionService notificacionService, EstudianteService estudianteService) {
+    public EstudianteApi(NotificacionService notificacionService,
+            EstudianteService estudianteService) {
         this.notificacionService = notificacionService;
         this.estudianteService = estudianteService;
     }
@@ -85,15 +85,14 @@ public class EstudianteApi {
                 actividad.getProfesorMateria().getMateria().getId(),
                 actividad.getProfesorMateria().getMateria().getNombre(),
                 actividad.getProfesorMateria().getCurso().getId(),
-                actividad.getProfesorMateria().getCurso().getNombre()
-        );
+                actividad.getProfesorMateria().getCurso().getNombre());
     }
 
     @GetMapping("/{id}/materias/{materiaId}/actividades")
     public ResponseEntity<List<ActividadDTO>> getActividadesByMateria( // Cambiado a ActividadDTO
-                                                                       @PathVariable Long id,
-                                                                       @PathVariable Long materiaId,
-                                                                       @RequestHeader("Authorization") String authHeader) { // Cambiado a header
+            @PathVariable Long id,
+            @PathVariable Long materiaId,
+            @RequestHeader("Authorization") String authHeader) { // Cambiado a header
 
         logger.info("Solicitud de actividades para estudiante {} y materia {}", id, materiaId);
 
@@ -110,46 +109,47 @@ public class EstudianteApi {
         }
     }
 
-//    @GetMapping("/{id}/notificaciones")
-//    public ResponseEntity<List<NotificacionDTO>> getNotificaciones(
-//            @PathVariable Long id,
-//            @RequestParam(required = false) Boolean noLeidas,
-//            @RequestHeader("Authorization") String authHeader) {
-//
-//        List<Notificacion> notificaciones = notificacionService.obtenerNotificaciones(
-//                id,
-//                noLeidas != null && noLeidas
-//        );
-//
-//        return ResponseEntity.ok(
-//                notificaciones.stream()
-//                        .map(this::convertToDTO)
-//                        .collect(Collectors.toList())
-//        );
-//    }
-//
-//    @PutMapping("/{id}/notificaciones/{notificacionId}/leida")
-//    public ResponseEntity<Void> marcarComoLeida(
-//            @PathVariable Long id,
-//            @PathVariable Long notificacionId) {
-//
-//        notificacionService.marcarComoLeida(notificacionId, id);
-//        return ResponseEntity.noContent().build();
-//    }
-//    private NotificacionDTO convertToDTO(Notificacion notificacion) {
-//        NotificacionDTO dto = new NotificacionDTO();
-//        dto.setId(notificacion.getId());
-//        dto.setMensaje(notificacion.getMensaje());
-//        dto.setLeida(notificacion.isLeida());
-//        dto.setFechaCreacion(notificacion.getFechaCreacion());
-//
-//        if (notificacion.getActividad() != null) {
-//            dto.setActividadId(notificacion.getActividad().getId());
-//            dto.setTituloActividad(notificacion.getActividad().getTitulo());
-//        }
-//
-//        return dto;
-//    }
+    // @GetMapping("/{id}/notificaciones")
+    // public ResponseEntity<List<NotificacionDTO>> getNotificaciones(
+    // @PathVariable Long id,
+    // @RequestParam(required = false) Boolean noLeidas,
+    // @RequestHeader("Authorization") String authHeader) {
+    //
+    // List<Notificacion> notificaciones =
+    // notificacionService.obtenerNotificaciones(
+    // id,
+    // noLeidas != null && noLeidas
+    // );
+    //
+    // return ResponseEntity.ok(
+    // notificaciones.stream()
+    // .map(this::convertToDTO)
+    // .collect(Collectors.toList())
+    // );
+    // }
+    //
+    // @PutMapping("/{id}/notificaciones/{notificacionId}/leida")
+    // public ResponseEntity<Void> marcarComoLeida(
+    // @PathVariable Long id,
+    // @PathVariable Long notificacionId) {
+    //
+    // notificacionService.marcarComoLeida(notificacionId, id);
+    // return ResponseEntity.noContent().build();
+    // }
+    // private NotificacionDTO convertToDTO(Notificacion notificacion) {
+    // NotificacionDTO dto = new NotificacionDTO();
+    // dto.setId(notificacion.getId());
+    // dto.setMensaje(notificacion.getMensaje());
+    // dto.setLeida(notificacion.isLeida());
+    // dto.setFechaCreacion(notificacion.getFechaCreacion());
+    //
+    // if (notificacion.getActividad() != null) {
+    // dto.setActividadId(notificacion.getActividad().getId());
+    // dto.setTituloActividad(notificacion.getActividad().getTitulo());
+    // }
+    //
+    // return dto;
+    // }
 
     @PostMapping("/{id}/actividades/{actividadId}/resolver")
     public ResponseEntity<ResultadoActividadDTO> resolverActividad(

@@ -16,8 +16,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Controller
 public class AsistenciaController {
 
     @FXML
@@ -45,19 +48,16 @@ public class AsistenciaController {
     private Button guardarButton;
     @FXML
     private Label statusLabel;
+    @FXML
+    private ListView<LocalDate> historialList;
 
+    @Autowired
     private JwtTokenHolder jwtTokenHolder;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String API_URL = "http://localhost:8080/api/profesor";
 
-    public void setJwtTokenHolder(JwtTokenHolder jwtTokenHolder) {
-        this.jwtTokenHolder = jwtTokenHolder;
-    }
-
-    @FXML
-    private ListView<LocalDate> historialList;
-
     public void initialize() {
+        configurarComboBoxes();
         fechaPicker.setValue(LocalDate.now());
 
         // Setup columns
@@ -153,13 +153,131 @@ public class AsistenciaController {
     }
 
     public void setCursos(List<CursoDTO> cursos) {
+        System.out.println("=== setCursos() llamado ===");
+        System.out.println("Cursos recibidos: " + (cursos != null ? cursos.size() : "null"));
+        if (cursos != null) {
+            cursos.forEach(c -> System.out.println("  - " + c.getNombre() + " (ID: " + c.getId() + ")"));
+        }
         cursoComboBox.setItems(FXCollections.observableArrayList(cursos));
     }
 
     public void setMaterias(List<Materia> materias) {
+        System.out.println("=== setMaterias() llamado ===");
+        System.out.println("Materias recibidas: " + (materias != null ? materias.size() : "null"));
+        if (materias != null) {
+            materias.forEach(m -> System.out.println("  - " + m.getNombre() + " (ID: " + m.getId() + ")"));
+        }
         materiaComboBox.setItems(FXCollections.observableArrayList(materias));
     }
 
+    private void cargarCursos() {
+        try {
+            System.out.println("=== cargarCursos() iniciado ===");
+            HttpHeaders headers = createHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String url = API_URL + "/cursos";
+            System.out.println("URL: " + url);
+            System.out.println("Token presente: " + (jwtTokenHolder != null && jwtTokenHolder.getToken() != null));
+            
+            ResponseEntity<List<CursoDTO>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<List<CursoDTO>>() {
+                    });
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<CursoDTO> cursos = response.getBody();
+                System.out.println("✓ Cursos cargados: " + cursos.size());
+                cursos.forEach(c -> System.out.println("  - " + c.getId() + ": " + c.getNombre()));
+                
+                ObservableList<CursoDTO> items = FXCollections.observableArrayList(cursos);
+                System.out.println("✓ ObservableList creada con " + items.size() + " elementos");
+                
+                cursoComboBox.setItems(items);
+                System.out.println("✓ ComboBox.setItems() ejecutado");
+                System.out.println("✓ ComboBox ahora tiene " + cursoComboBox.getItems().size() + " elementos");
+            } else {
+                System.err.println("✗ Error: Status " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("✗ Error al cargar cursos: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void cargarMaterias() {
+        try {
+            System.out.println("=== cargarMaterias() iniciado ===");
+            HttpHeaders headers = createHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String url = API_URL + "/materias";
+            System.out.println("URL: " + url);
+            System.out.println("Token presente: " + (jwtTokenHolder != null && jwtTokenHolder.getToken() != null));
+            
+            ResponseEntity<List<Materia>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<List<Materia>>() {
+                    });
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<Materia> materias = response.getBody();
+                System.out.println("✓ Materias cargadas: " + materias.size());
+                materias.forEach(m -> System.out.println("  - " + m.getId() + ": " + m.getNombre()));
+                
+                ObservableList<Materia> items = FXCollections.observableArrayList(materias);
+                System.out.println("✓ ObservableList creada con " + items.size() + " elementos");
+                
+                materiaComboBox.setItems(items);
+                System.out.println("✓ ComboBox.setItems() ejecutado");
+                System.out.println("✓ ComboBox ahora tiene " + materiaComboBox.getItems().size() + " elementos");
+            } else {
+                System.err.println("✗ Error: Status " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("✗ Error al cargar materias: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    private void configurarComboBoxes() {
+        System.out.println("=== configurarComboBoxes() iniciado ===");
+        // Configurar CellFactory para cursoComboBox
+        cursoComboBox.setCellFactory(lv -> new ListCell<CursoDTO>() {
+            @Override
+            protected void updateItem(CursoDTO item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getNombre());
+            }
+        });
+        cursoComboBox.setButtonCell(new ListCell<CursoDTO>() {
+            @Override
+            protected void updateItem(CursoDTO item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getNombre());
+            }
+        });
+
+        // Configurar CellFactory para materiaComboBox
+        materiaComboBox.setCellFactory(lv -> new ListCell<Materia>() {
+            @Override
+            protected void updateItem(Materia item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getNombre());
+            }
+        });
+        materiaComboBox.setButtonCell(new ListCell<Materia>() {
+            @Override
+            protected void updateItem(Materia item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getNombre());
+            }
+        });
+        System.out.println("✓ CellFactories configurados");
+    }
     @FXML
     private void cargarLista() {
         CursoDTO curso = cursoComboBox.getValue();

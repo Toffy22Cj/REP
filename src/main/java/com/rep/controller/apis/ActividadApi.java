@@ -1,10 +1,12 @@
 package com.rep.controller.apis;
 
+import com.rep.dto.actividad.ActividadConPreguntasDTO;
 import com.rep.dto.actividad.ActividadCreateDTO;
 import com.rep.dto.actividad.ActividadDTO;
 import com.rep.model.*;
 import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.service.logica.ActividadService;
+import com.rep.service.logica.EstudianteService;
 import com.rep.service.logica.ValidacionService;
 import com.rep.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
@@ -34,6 +36,10 @@ public class ActividadApi {
 
     @Autowired
     private ValidacionService validacionService;
+
+    @Autowired
+    private EstudianteService estudianteService;
+
     @Autowired
     ProfesorMateriaRepository profesorMateriaRepository;
 
@@ -336,23 +342,24 @@ public class ActividadApi {
         dto.setObservaciones(respuesta.getObservaciones());
         dto.setFechaEntrega(respuesta.getFechaEntrega());
 
-        java.util.List<com.rep.dto.actividad.RespuestaPreguntaDetalleDTO> list = respuesta.getRespuestasPreguntas().stream().map(rp -> {
-            com.rep.dto.actividad.RespuestaPreguntaDetalleDTO rpd = new com.rep.dto.actividad.RespuestaPreguntaDetalleDTO();
-            rpd.setId(rp.getId());
-            if (rp.getPregunta() != null) {
-                rpd.setPreguntaId(rp.getPregunta().getId());
-                rpd.setEnunciado(rp.getPregunta().getEnunciado());
-            }
-            if (rp.getOpcion() != null) {
-                rpd.setOpcionId(rp.getOpcion().getId());
-                rpd.setOpcionTexto(rp.getOpcion().getTexto());
-            }
-            rpd.setRespuestaAbierta(rp.getRespuestaAbierta());
-            rpd.setArchivoAdjunto(rp.getArchivoAdjunto());
-            rpd.setNombreArchivo(rp.getNombreArchivo());
-            rpd.setEsCorrecta(rp.getEsCorrecta());
-            return rpd;
-        }).collect(java.util.stream.Collectors.toList());
+        java.util.List<com.rep.dto.actividad.RespuestaPreguntaDetalleDTO> list = respuesta.getRespuestasPreguntas()
+                .stream().map(rp -> {
+                    com.rep.dto.actividad.RespuestaPreguntaDetalleDTO rpd = new com.rep.dto.actividad.RespuestaPreguntaDetalleDTO();
+                    rpd.setId(rp.getId());
+                    if (rp.getPregunta() != null) {
+                        rpd.setPreguntaId(rp.getPregunta().getId());
+                        rpd.setEnunciado(rp.getPregunta().getEnunciado());
+                    }
+                    if (rp.getOpcion() != null) {
+                        rpd.setOpcionId(rp.getOpcion().getId());
+                        rpd.setOpcionTexto(rp.getOpcion().getTexto());
+                    }
+                    rpd.setRespuestaAbierta(rp.getRespuestaAbierta());
+                    rpd.setArchivoAdjunto(rp.getArchivoAdjunto());
+                    rpd.setNombreArchivo(rp.getNombreArchivo());
+                    rpd.setEsCorrecta(rp.getEsCorrecta());
+                    return rpd;
+                }).collect(java.util.stream.Collectors.toList());
 
         dto.setRespuestasPreguntas(list);
         return ResponseEntity.ok(dto);
@@ -367,6 +374,34 @@ public class ActividadApi {
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), id);
         return ResponseEntity.ok(actividadService.actualizarNota(id, estudianteId, nota, observaciones));
+    }
+
+    @GetMapping("/{id}/preguntas")
+    public ResponseEntity<ActividadConPreguntasDTO> getActividadConPreguntas(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        log.info("Usuario {} (Rol: {}) consultando preguntas para actividad {}", usuario.getId(), usuario.getRol(), id);
+
+        boolean tienePermiso = false;
+        if (usuario.getRol() == Usuario.Rol.PROFESOR) {
+            tienePermiso = actividadService.profesorTieneAccesoAActividad(usuario.getId(), id);
+        } else if (usuario.getRol() == Usuario.Rol.ESTUDIANTE) {
+            tienePermiso = estudianteService.puedeRealizarActividad(usuario.getId(), id);
+            log.info("Resultado puedeRealizarActividad para estudiante {}: {}", usuario.getId(), tienePermiso);
+        }
+
+        if (!tienePermiso) {
+            log.warn("Acceso DENEGADO para usuario {} a actividad {}", usuario.getId(), id);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            ActividadConPreguntasDTO dto = actividadService.getActividadConPreguntas(id);
+            return ResponseEntity.ok(dto);
+        } catch (jakarta.persistence.EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }

@@ -740,33 +740,8 @@ public class ProfesorController {
     @FXML
     private void abrirAsistencia() {
         try {
-            URL fxmlUrl = getClass().getResource("/view/asistencia.fxml");
-            if (fxmlUrl == null) {
-                mostrarError("No se encontró el archivo asistencia.fxml", Color.RED);
-                return;
-            }
-
-            FXMLLoader loader = new FXMLLoader(fxmlUrl);
-            Parent root = loader.load();
-
-            AsistenciaController controller = loader.getController();
-            if (controller == null) {
-                mostrarError("Error al inicializar el controlador de asistencia", Color.RED);
-                return;
-            }
-
-            // Pass dependencies
-            controller.setJwtTokenHolder(this.jwtTokenHolder);
-
-            // Pass current selection if any (optional, purely for UX)
-            if (cursoComboBox.getValue() != null) {
-                // controller.setCurso(cursoComboBox.getValue()); // If we implemented this
-                // setter
-            }
-
-            // Pass the lists from the current combo boxes
-            controller.setCursos(cursoComboBox.getItems());
-            controller.setMaterias(materiaComboBox.getItems());
+            // Usar SpringFXMLLoader para que Spring maneje la inyección del controlador
+            Parent root = springFXMLLoader.load("/view/asistencia.fxml");
 
             Stage stage = new Stage();
             stage.setTitle("Gestión de Asistencia");

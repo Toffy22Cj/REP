@@ -33,9 +33,6 @@ public class Materia {
 
     @Override
     public String toString() {
-        return "Materia{" +
-                "id=" + id +
-                ", nombre='" + nombre + '\'' +
-                '}';
+        return nombre != null ? nombre : "Materia";
     }
 }

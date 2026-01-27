@@ -46,7 +46,8 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/**")
+                .securityMatcher("/api/auth/**", "/api/public/**", "/api/estudiante/**", "/api/profesor/**",
+                        "/api/actividades/**", "/api/preguntas/**", "/api/registro")
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -82,8 +83,8 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain adminWebSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/admin/**")
-                .csrf(csrf -> csrf.disable()) // Habilitar después con CookieCsrfTokenRepository si es necesario
+                .securityMatcher("/admin/**", "/api/admin/**")
+                .csrf(csrf -> csrf.disable()) // Habilitar después para mayor seguridad
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login.html", "/admin/css/**", "/admin/js/**").permitAll()
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")

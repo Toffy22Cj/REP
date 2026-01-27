@@ -36,9 +36,14 @@ public class Usuario implements UserDetails {
     }
 
     @NotBlank(message = "El nombre no puede estar vacío")
-    @Size(max = 100, message = "El nombre no puede exceder los 100 caracteres")
+    @Size(max = 50, message = "El nombre no puede exceder los 50 caracteres")
     @Column(nullable = false)
     private String nombre;
+
+    @NotBlank(message = "El apellido no puede estar vacío")
+    @Size(max = 50, message = "El apellido no puede exceder los 50 caracteres")
+    @Column(nullable = false)
+    private String apellido;
 
     @NotBlank(message = "El correo no puede estar vacío")
     @Email(message = "Debe ser una dirección de correo válida")
@@ -55,8 +60,7 @@ public class Usuario implements UserDetails {
 
     @NotBlank(message = "La contraseña no puede estar vacía")
     @Column(name = "contraseña", nullable = false)
-    @JsonProperty("contraseña") // Añadir esta anotación
-    @JsonIgnore
+    @JsonProperty(value = "contraseña", access = JsonProperty.Access.WRITE_ONLY)
     private String contraseña;
 
     @Enumerated(EnumType.STRING)

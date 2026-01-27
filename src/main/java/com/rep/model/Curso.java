@@ -12,11 +12,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "cursos")
-@EqualsAndHashCode(exclude = {"estudiantes"}) // Excluir la lista de estudiantes
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
+@EqualsAndHashCode(exclude = { "estudiantes" })
 public class Curso {
 
     @Id
@@ -24,7 +20,8 @@ public class Curso {
     private Long id;
 
     @NotNull
-    @Min(1) @Max(12)
+    @Min(1)
+    @Max(12)
     @Column(nullable = false)
     private Integer grado;
 
@@ -34,8 +31,7 @@ public class Curso {
     private String grupo;
 
     @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    @JsonIgnore // Añade esto para evitar serialización
+    @JsonIgnore
     private List<Estudiante> estudiantes = new ArrayList<>();
 
     @Transient
@@ -55,14 +51,13 @@ public class Curso {
             estudiante.setCurso(this);
         }
     }
+
     // Agregar constructores
-    public Curso() {}
+    public Curso() {
+    }
 
     public Curso(Long id) {
         this.id = id;
     }
-
-
-
 
 }

@@ -5,7 +5,9 @@ import com.rep.model.*;
 import com.rep.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,8 @@ public class AdminApi {
     private final CursoRepository cursoRepository;
     private final MateriaRepository materiaRepository;
     private final ProfesorMateriaRepository profesorMateriaRepository;
+    private final AuditLogRepository auditLogRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AdminApi(UsuarioRepository usuarioRepository,
@@ -29,13 +33,17 @@ public class AdminApi {
             ProfesorRepository profesorRepository,
             CursoRepository cursoRepository,
             MateriaRepository materiaRepository,
-            ProfesorMateriaRepository profesorMateriaRepository) {
+            ProfesorMateriaRepository profesorMateriaRepository,
+            AuditLogRepository auditLogRepository,
+            PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.estudianteRepository = estudianteRepository;
         this.profesorRepository = profesorRepository;
         this.cursoRepository = cursoRepository;
         this.materiaRepository = materiaRepository;
         this.profesorMateriaRepository = profesorMateriaRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // -------------------- Gestión de Cursos --------------------
@@ -69,7 +77,9 @@ public class AdminApi {
             Curso nuevoCurso = new Curso();
             nuevoCurso.setGrado(curso.getGrado());
             nuevoCurso.setGrupo(curso.getGrupo());
-            return ResponseEntity.ok(cursoRepository.save(nuevoCurso));
+            Curso guardado = cursoRepository.save(nuevoCurso);
+            registrarAuditoria("CREAR_CURSO", "ID: " + guardado.getId() + ", " + guardado.getNombre());
+            return ResponseEntity.ok(guardado);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al registrar el curso: " + e.getMessage());
         }
@@ -89,7 +99,9 @@ public class AdminApi {
                         }
                         curso.setGrado(cursoActualizado.getGrado());
                         curso.setGrupo(cursoActualizado.getGrupo());
-                        return ResponseEntity.ok(cursoRepository.save(curso));
+                        Curso guardado = cursoRepository.save(curso);
+                        registrarAuditoria("ACTUALIZAR_CURSO", "ID: " + guardado.getId() + ", " + guardado.getNombre());
+                        return ResponseEntity.ok(guardado);
                     })
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -114,6 +126,7 @@ public class AdminApi {
                         .body("No se puede eliminar el curso porque tiene materias asignadas");
             }
 
+            registrarAuditoria("ELIMINAR_CURSO", "ID: " + id + ", " + curso.getNombre());
             cursoRepository.delete(curso);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -190,7 +203,9 @@ public class AdminApi {
             if (materiaRepository.findByNombre(materia.getNombre()).isPresent()) {
                 return ResponseEntity.badRequest().body("Error: Ya existe una materia con este nombre");
             }
-            return ResponseEntity.ok(materiaRepository.save(materia));
+            Materia guardada = materiaRepository.save(materia);
+            registrarAuditoria("CREAR_MATERIA", "ID: " + guardada.getId() + ", " + guardada.getNombre());
+            return ResponseEntity.ok(guardada);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al crear materia: " + e.getMessage());
         }
@@ -208,6 +223,7 @@ public class AdminApi {
                         .body("No se puede eliminar la materia porque está asignada a uno o más profesores");
             }
 
+            registrarAuditoria("ELIMINAR_MATERIA", "ID: " + id);
             materiaRepository.deleteById(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -232,6 +248,52 @@ public class AdminApi {
         }
     }
 
+    @PostMapping("/usuarios")
+    public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
+        try {
+            if (usuarioRepository.findByIdentificacion(usuario.getIdentificacion()).isPresent()) {
+                return ResponseEntity.badRequest().body("Error: La identificación ya existe");
+            }
+            if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
+                return ResponseEntity.badRequest().body("Error: El correo ya existe");
+            }
+
+            // Validación de Edad vs Tipo Identificación
+            if (usuario.getEdad() != null && usuario.getTipoIdentificacion() != null) {
+                String idStr = usuario.getIdentificacion();
+                if (usuario.getTipoIdentificacion() == Usuario.TipoIdentificacion.CC) {
+                    if (usuario.getEdad() < 18) {
+                        return ResponseEntity.badRequest()
+                                .body("Error: No se permite Cédula (CC) para menores de edad (menor a 18 años)");
+                    }
+                    if (idStr.length() < 6 || idStr.length() > 10) {
+                        return ResponseEntity.badRequest()
+                                .body("Error: La Cédula (CC) debe tener entre 6 y 10 dígitos");
+                    }
+                }
+                if (usuario.getTipoIdentificacion() == Usuario.TipoIdentificacion.TI) {
+                    if (usuario.getEdad() >= 18) {
+                        return ResponseEntity.badRequest().body(
+                                "Error: No se permite Tarjeta Identidad (TI) para mayores de edad (18 años o más)");
+                    }
+                    if (idStr.length() != 10) {
+                        return ResponseEntity.badRequest()
+                                .body("Error: La Tarjeta de Identidad (TI) debe tener exactamente 10 dígitos");
+                    }
+                }
+            }
+
+            usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
+            Usuario guardado = usuarioRepository.save(usuario);
+
+            registrarAuditoria("CREAR_USUARIO", "ID: " + guardado.getId() + ", ROL: " + guardado.getRol());
+
+            return ResponseEntity.ok(guardado);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al registrar usuario: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/usuarios/{id}")
     public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable Long id) {
         try {
@@ -240,6 +302,7 @@ public class AdminApi {
                         Map<String, Object> response = new HashMap<>();
                         response.put("id", usuario.getId());
                         response.put("nombre", usuario.getNombre());
+                        response.put("apellido", usuario.getApellido());
                         response.put("correo", usuario.getCorreo());
                         response.put("rol", usuario.getRol());
                         return ResponseEntity.ok(response);
@@ -256,15 +319,19 @@ public class AdminApi {
             return usuarioRepository.findById(id)
                     .map(usuario -> {
                         usuario.setNombre(usuarioActualizado.getNombre());
+                        usuario.setApellido(usuarioActualizado.getApellido());
                         usuario.setCorreo(usuarioActualizado.getCorreo());
                         // Only update password if provided and not empty
                         if (usuarioActualizado.getContraseña() != null
                                 && !usuarioActualizado.getContraseña().isEmpty()) {
-                            usuario.setContraseña(usuarioActualizado.getContraseña());
+                            usuario.setContraseña(passwordEncoder.encode(usuarioActualizado.getContraseña()));
                         }
                         usuario.setRol(usuarioActualizado.getRol());
                         usuario.setActivo(usuarioActualizado.isActivo());
-                        return ResponseEntity.ok(usuarioRepository.save(usuario));
+                        Usuario guardado = usuarioRepository.save(usuario);
+                        registrarAuditoria("ACTUALIZAR_USUARIO",
+                                "ID: " + id + ", Nombre: " + guardado.getNombre() + " " + guardado.getApellido());
+                        return ResponseEntity.ok(guardado);
                     })
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -279,7 +346,9 @@ public class AdminApi {
             return usuarioRepository.findById(id)
                     .map(usuario -> {
                         usuario.setActivo(activo);
-                        return ResponseEntity.ok(usuarioRepository.save(usuario));
+                        Usuario guardado = usuarioRepository.save(usuario);
+                        registrarAuditoria("CAMBIAR_ESTADO_USUARIO", "ID: " + id + ", Activo: " + activo);
+                        return ResponseEntity.ok(guardado);
                     })
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -300,6 +369,7 @@ public class AdminApi {
                         .body("No se puede eliminar el profesor porque tiene materias asignadas");
             }
 
+            registrarAuditoria("ELIMINAR_USUARIO", "ID: " + id + ", Rol: " + usuario.getRol());
             usuarioRepository.delete(usuario);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -426,5 +496,27 @@ public class AdminApi {
             return ResponseEntity.internalServerError()
                     .body("Error al eliminar asignación: " + e.getMessage());
         }
+    }
+
+    // -------------------- Auditoría y Estadísticas --------------------
+    @GetMapping("/stats")
+    public ResponseEntity<?> getStats() {
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("usuarios", usuarioRepository.count());
+        stats.put("estudiantes", estudianteRepository.count());
+        stats.put("profesores", profesorRepository.count());
+        stats.put("cursos", cursoRepository.count());
+        stats.put("materias", materiaRepository.count());
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/auditoria")
+    public ResponseEntity<List<AuditLog>> listarAuditoria() {
+        return ResponseEntity.ok(auditLogRepository.findAllByOrderByTimestampDesc());
+    }
+
+    private void registrarAuditoria(String action, String details) {
+        String adminUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        auditLogRepository.save(new AuditLog(adminUsername, action, details));
     }
 }

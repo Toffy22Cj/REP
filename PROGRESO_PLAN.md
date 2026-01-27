@@ -34,15 +34,29 @@
 - [ ] Configurar `SecurityConfig` para permitir autenticación basada en **Cookies HttpOnly** para la ruta `/admin/**`.
 - [ ] Implementar pantalla de Login administrativo que invoque a la API.
 
-### 3.3 Dashboard y CRUDs (Implementación por bloques)
-- [ ] **Módulo Usuarios**: Gestión de Profesores y Estudiantes.
-- [ ] **Módulo Académico**: Gestión de Cursos y Materias.
-- [ ] **Módulo Sistema**: Auditoría (`AuditLog`) y backups de base de datos.
-- [ ] **Visualización de Logs**: Interfaz web simple para consultar errores via `trackingId`.
+### 3.3 Dashboard y CRUDs (Implementación Final)
+- [ ] Implementar diálogos de creación/edición para Usuarios.
+- [ ] Implementar diálogos de creación/edición para Cursos y Materias.
+- [ ] Mostrar estadísticas básicas en el Dashboard.
+
+## 🛠️ PARTE 4: CONTROLES DE SISTEMA Y UX (NUEVO)
+*Objetivo: Mejorar la operatividad del servidor.*
+
+### 4.1 Control del Servidor
+- [ ] Implementar endpoint `/api/admin/system/shutdown` para apagar el servidor desde la UI.
+- [ ] Agregar botón de "Apagar Sistema" en la barra lateral del admin.
+
+### 4.2 Inicio Automático
+- [ ] Crear `BrowserLauncher` para abrir el navegador en `http://localhost:8080/admin` al iniciar el servidor.
+
+### 4.3 Corrección de Errores (Bug Fixes)
+- [ ] Fix: Eliminar recursión infinita (`StackOverflowError`) en la serialización de Usuarios/Estudiantes.
+- [ ] Fix: Asegurar persistencia de sesión en el navegador.
 
 ---
 
 ## 📅 PRÓXIMOS PASOS INMEDIATOS
-1.  Establecer la estructura de archivos en `src/main/resources/static/admin`.
-2.  Crear la página de Login Web.
-3.  Asegurar que Spring Boot sirva `index.html` por defecto en la ruta `/admin/`.
+1. Corregir el `StackOverflowError` en los modelos JPA.
+2. Implementar el endpoint de apagado.
+3. Crear el componente de lanzamiento de navegador.
+4. Finalizar los diálogos CRUD en el JS.

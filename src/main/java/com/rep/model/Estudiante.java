@@ -18,7 +18,7 @@ public class Estudiante extends Usuario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curso_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnore // Evitar recursión infinita
     private Curso curso;
 
     @Enumerated(EnumType.STRING)

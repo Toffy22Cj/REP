@@ -91,3 +91,5 @@ logs/
 # JavaFX SDK
 javafx-sdk-*/
 
+.env.prod
+application-prod.properties

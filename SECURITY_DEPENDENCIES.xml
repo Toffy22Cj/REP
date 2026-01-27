@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    DEPENDENCIAS DE SEGURIDAD RECOMENDADAS
+    Agregar estas a tu pom.xml existente en la sección <dependencies>
+-->
+
+<!-- ========== RATE LIMITING ========== -->
+<dependency>
+    <groupId>io.github.bucket4j</groupId>
+    <artifactId>bucket4j-core</artifactId>
+    <version>7.6.0</version>
+</dependency>
+
+<!-- ========== ENCRIPTACIÓN ========== -->
+<dependency>
+    <groupId>com.github.ulisesbocchio</groupId>
+    <artifactId>jasypt-spring-boot-starter</artifactId>
+    <version>3.0.5</version>
+</dependency>
+
+<!-- ========== VALIDACIÓN ========== -->
+<dependency>
+    <groupId>jakarta.validation</groupId>
+    <artifactId>jakarta.validation-api</artifactId>
+    <version>3.0.2</version>
+</dependency>
+<dependency>
+    <groupId>org.hibernate.validator</groupId>
+    <artifactId>hibernate-validator</artifactId>
+    <version>8.0.1.Final</version>
+</dependency>
+
+<!-- ========== SCANNING DE DEPENDENCIAS ========== -->
+<!-- Para verificar vulnerabilidades conocidas (CVEs) -->
+<dependency>
+    <groupId>org.owasp</groupId>
+    <artifactId>dependency-check-maven</artifactId>
+    <version>8.4.2</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- ========== AUDITORÍA ========== -->
+<dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-envers</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-envers</artifactId>
+</dependency>
+
+<!-- ========== MONITOREO ========== -->
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-tracing-bridge-brave</artifactId>
+</dependency>
+
+<!-- ========== ANÁLISIS ESTÁTICO (SonarQube) ========== -->
+<dependency>
+    <groupId>org.sonarsource.scanner.maven</groupId>
+    <artifactId>sonar-maven-plugin</artifactId>
+    <version>3.10.0.2594</version>
+    <scope>provided</scope>
+</dependency>
+
+<!-- ========== TESTING DE SEGURIDAD ========== -->
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <version>6.2.0</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- ========== DOCUMENTACIÓN DE SEGURIDAD ========== -->
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.5.0</version>
+</dependency>
+
+<!-- ========== BUILD PLUGINS PARA SEGURIDAD ========== -->
+
+<!-- Plugin para scanning de dependencias -->
+<plugin>
+    <groupId>org.owasp</groupId>
+    <artifactId>dependency-check-maven</artifactId>
+    <version>8.4.2</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <failBuildOnCVSS>7</failBuildOnCVSS>
+        <skipProvidedScope>true</skipProvidedScope>
+        <skipRuntimeScope>false</skipRuntimeScope>
+        <format>ALL</format>
+        <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
+    </configuration>
+</plugin>
+
+<!-- Plugin para análisis estático (SonarQube) -->
+<plugin>
+    <groupId>org.sonarsource.scanner.maven</groupId>
+    <artifactId>sonar-maven-plugin</artifactId>
+    <version>3.10.0.2594</version>
+</plugin>
+
+<!-- Plugin para validar licencias -->
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-enforcer-plugin</artifactId>
+    <version>3.4.1</version>
+    <executions>
+        <execution>
+            <id>enforce-security</id>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+            <configuration>
+                <rules>
+                    <!-- Prohibir dependencias inseguras conocidas -->
+                    <bannedDependencies>
+                        <excludes>
+                            <!-- Ejemplo: versiones vulnerables de librerías conocidas -->
+                            <!-- Será llenado según vulnerabilidades descubiertas -->
+                        </excludes>
+                        <message>Dependencia bloqueada por vulnerabilidad conocida</message>
+                    </bannedDependencies>
+                    <!-- Requerir versiones mínimas -->
+                    <requireMavenVersion>
+                        <version>[3.6.0,)</version>
+                    </requireMavenVersion>
+                    <requireJavaVersion>
+                        <version>[17,)</version>
+                    </requireJavaVersion>
+                </rules>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+
+<!-- ========== USO ========== 
+    # Verificar vulnerabilidades en dependencias
+    mvn clean dependency-check:check
+    
+    # Análisis estático con SonarQube
+    mvn clean package sonar:sonar -Dsonar.host.url=http://localhost:9000
+    
+    # Enforzar reglas de seguridad
+    mvn clean validate -Dorg.slf4j.simpleLogger.defaultLogLevel=debug
+-->

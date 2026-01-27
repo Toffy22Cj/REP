@@ -7,6 +7,7 @@ import com.rep.repositories.ProfesorMateriaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j
 @Service
 @Transactional(readOnly = true)
@@ -19,15 +20,16 @@ public class ValidacionService {
     private final PreguntaService preguntaService;
     private final RespuestaService respuestaService;
     private final ProfesorMateriaRepository profesorMateriaRepository;
+
     // Inyección por constructor (mejor práctica que @Autowired)
     public ValidacionService(MateriaService materiaService,
-                             CursoService cursoService,
-                             ActividadService actividadService,
-                             EstudianteService estudianteService,
-                             PreguntaService preguntaService,
-                             RespuestaService respuestaService,
-                             ProfesorMateriaRepository profesorMateriaRepository,
-                             PreguntaRepository preguntaRepository) {
+            CursoService cursoService,
+            ActividadService actividadService,
+            EstudianteService estudianteService,
+            PreguntaService preguntaService,
+            RespuestaService respuestaService,
+            ProfesorMateriaRepository profesorMateriaRepository,
+            PreguntaRepository preguntaRepository) {
         this.materiaService = materiaService;
         this.cursoService = cursoService;
         this.actividadService = actividadService;
@@ -52,14 +54,12 @@ public class ValidacionService {
             throw new IllegalArgumentException("ID de profesor o curso no puede ser nulo");
         }
 
-        // Añadir logs para diagnóstico
-        System.out.println("Validando acceso para profesor: " + profesorId + ", curso: " + cursoId);
+        log.debug("Validando acceso para profesor: {}, curso: {}", profesorId, cursoId);
 
         if (!cursoService.profesorTieneAccesoACurso(profesorId, cursoId)) {
             // Más información en el mensaje de error
             throw new AccessDeniedException(
-                    String.format("El profesor %d no tiene acceso al curso %d", profesorId, cursoId)
-            );
+                    String.format("El profesor %d no tiene acceso al curso %d", profesorId, cursoId));
         }
     }
 
@@ -80,6 +80,7 @@ public class ValidacionService {
             throw new AccessDeniedException("No tiene acceso a esta actividad");
         }
     }
+
     public void validarProfesorEstudiante(Long profesorId, Long estudianteId) {
         if (profesorId == null || estudianteId == null) {
             throw new IllegalArgumentException("ID de profesor o estudiante no puede ser nulo");
@@ -119,12 +120,12 @@ public class ValidacionService {
     }
 
     /**
-     * Valida que un profesor tenga acceso a una combinación específica de materia y curso
+     * Valida que un profesor tenga acceso a una combinación específica de materia y
+     * curso
      * (Orden de parámetros: profesorId, materiaId, cursoId)
      */
     public void validarProfesorMateriaCurso(Long profesorId, Long materiaId, Long cursoId) {
-        System.out.println("Validando relación: Profesor=" + profesorId +
-                ", Materia=" + materiaId + ", Curso=" + cursoId);
+        log.debug("Validando relación: Profesor={}, Materia={}, Curso={}", profesorId, materiaId, cursoId);
 
         // Verificar existencia básica
         if (!materiaService.existeMateria(materiaId)) {
@@ -138,7 +139,7 @@ public class ValidacionService {
         boolean existeRelacion = profesorMateriaRepository.existsByProfesorIdAndMateriaIdAndCursoId(
                 profesorId, materiaId, cursoId);
 
-        System.out.println("Resultado validación: " + existeRelacion);
+        log.debug("Resultado validación: {}", existeRelacion);
 
         if (!existeRelacion) {
             throw new AccessDeniedException("El profesor no está asignado a esta materia y curso");
@@ -146,7 +147,8 @@ public class ValidacionService {
     }
 
     /**
-     * Valida que un profesor tenga acceso a una combinación específica de curso y materia
+     * Valida que un profesor tenga acceso a una combinación específica de curso y
+     * materia
      * (Orden de parámetros: profesorId, cursoId, materiaId)
      */
     public void validarProfesorCursoMateria(Long profesorId, Long cursoId, Long materiaId) {
@@ -164,17 +166,17 @@ public class ValidacionService {
             throw new ResourceNotFoundException("Curso no encontrado");
         }
 
-        // Validar relación completa (el orden de materiaId y cursoId no importa para la consulta SQL)
+        // Validar relación completa (el orden de materiaId y cursoId no importa para la
+        // consulta SQL)
         if (!profesorMateriaRepository.existsByProfesorIdAndMateriaIdAndCursoId(profesorId, materiaId, cursoId)) {
             throw new AccessDeniedException(
                     String.format("El profesor %d no tiene acceso a la combinación curso %d - materia %d",
-                            profesorId, cursoId, materiaId)
-            );
+                            profesorId, cursoId, materiaId));
         }
     }
-//    public void validarProfesorOpcion(Long profesorId, Long opcionId) {
-//        if (!preguntaService.profesorTieneAccesoAOpcion(profesorId, opcionId)) {
-//            throw new AccessDeniedException("No tiene acceso a esta opción");
-//        }
-//    }
+    // public void validarProfesorOpcion(Long profesorId, Long opcionId) {
+    // if (!preguntaService.profesorTieneAccesoAOpcion(profesorId, opcionId)) {
+    // throw new AccessDeniedException("No tiene acceso a esta opción");
+    // }
+    // }
 }

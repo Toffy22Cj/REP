@@ -3,6 +3,7 @@ package com.rep.security;
 import com.rep.config.JwtConfig;
 import com.rep.service.logica.CustomUserDetailsService;
 import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final SecretKey secretKey;
     private final JwtConfig jwtConfig;
@@ -36,12 +38,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
-        System.out.println("DEBUG: Incoming request to " + request.getRequestURI());
-        System.out.println("DEBUG: Authorization Header: "
-                + (header != null ? header.substring(0, Math.min(header.length(), 15)) + "..." : "NULL"));
+        log.debug("Incoming request to {}", request.getRequestURI());
 
         if (header == null || !header.startsWith("Bearer ")) {
-            System.out.println("DEBUG: No Bearer token found, skipping filter");
+            log.debug("No Bearer token found, skipping filter");
             filterChain.doFilter(request, response);
             return;
         }
@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = header.substring(7);
 
         try {
-            System.out.println("DEBUG: Validating token...");
+            log.debug("Validating token...");
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
@@ -64,11 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .map(authority -> new SimpleGrantedAuthority((String) authority))
                     .collect(Collectors.toList());
 
-            System.out.println("DEBUG: Token authorities: " + authorities);
+            log.debug("Token authorities: {}", authorities);
 
             // 2. Cargar UserDetails desde la BD para asegurar la consistencia
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            System.out.println("DEBUG: DB user authorities: " + userDetails.getAuthorities());
+            log.debug("DB user authorities: {}", userDetails.getAuthorities());
 
             // 3. Crear autenticación con el UserDetails y las autoridades del token
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -77,11 +77,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            System.out.println("DEBUG: User authenticated successfully: " + username);
+            log.debug("User authenticated successfully: {}", username);
 
         } catch (Exception e) {
-            System.out.println("DEBUG: Authentication failed: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Authentication failed: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }

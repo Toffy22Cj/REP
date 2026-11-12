@@ -64,71 +64,57 @@ En [SecurityConfig.java](file:///home/carlos/Proyectos/REP/src/main/java/com/rep
 
 ### 3.1 Cadena de API REST (`apiSecurityFilterChain` - Orden 1)
 - **Matcher:** `/api/auth/**`, `/api/public/**`, `/api/estudiante/**`, `/api/profesor/**`, `/api/actividades/**`, `/api/preguntas/**`, `/api/registro`.
-- **Sesiones:** `SessionCreationPolicy.STATELESS` (no se crean ni consumen sesiones `JSESSIONID`).
-- **Filtros inyectados:**
-  1. `RateLimitFilter` antes de `UsernamePasswordAuthenticationFilter`.
-  2. `JwtAuthenticationFilter` antes de `UsernamePasswordAuthenticationFilter`.
-- **Cabeceras de Seguridad activadas:**
-  - `Content-Security-Policy: default-src 'self'`
-  - `X-Frame-Options: DENY`
-  - `XSS Protection` habilitada con valores predeterminados.
-- **Reglas de Acceso:**
-  - `GET /api/preguntas/*/archivo`: Acceso para `ESTUDIANTE`, `PROFESOR`, `ADMIN`.
-  - `/api/public/**`, `/api/auth/**`, `/api/registro`: Acceso público (`permitAll()`).
-  - `/api/profesor/**`: Requiere autoridad `PROFESOR`.
-  - `/api/admin/**`: Requiere autoridad `ADMIN`.
-  - `GET /api/actividades/*/preguntas`: Acceso para `ESTUDIANTE`, `PROFESOR`, `ADMIN`, `ROLE_ESTUDIANTE`.
-  - `POST /api/estudiante/*/actividades/*/resolver`: Acceso para `ESTUDIANTE`, `ROLE_ESTUDIANTE`.
-  - `/api/actividades/**`, `/api/preguntas/**`: Acceso para `PROFESOR`, `ADMIN`.
+- **Sesiones:** `STATELESS`. Peticiones sin autenticar responden **401** (no redirección).
+- **Filtros:** `RateLimitFilter` y `JwtAuthenticationFilter` (solo dentro de las cadenas; ya no se registran además como filtros globales del contenedor).
+- **Cabeceras:** `Content-Security-Policy: default-src 'self'`, `X-Frame-Options: DENY`.
+- **Reglas de acceso:**
+  - `/api/public/**`, `/api/auth/**`, `/api/registro`: públicos.
+  - `GET /api/preguntas/*/archivo`, `GET /api/preguntas/opciones/*/archivo`, `GET /api/actividades/*/preguntas`: `ESTUDIANTE`, `PROFESOR`, `ADMIN` (el controlador valida la pertenencia).
+  - `/api/estudiante/**`: `ESTUDIANTE`, `ADMIN`. Además el controlador exige que el id del path sea el del usuario autenticado (o admin); **solo el propio estudiante puede entregar** una actividad.
+  - `/api/profesor/**`: `PROFESOR`.
+  - `/api/actividades/**`, `/api/preguntas/**`: `PROFESOR`, `ADMIN`, con validación de propiedad en `ValidacionService`.
 
-### 3.2 Cadena Web de Administración (`adminWebSecurityFilterChain` - Orden 2)
-- **Matcher:** `/admin/**`, `/api/admin/**`.
-- **Sesiones:** `SessionCreationPolicy.IF_REQUIRED`.
-- **Mecanismo:** `formLogin()` con página personalizada `/admin/login.html`, punto de procesamiento `/admin/login`, campos `identificacion` y `password`, y redirección predeterminada a `/admin/index.html`.
-- **Cierre de sesión:** `logoutUrl("/admin/logout")`, redirección a `/admin/login.html` y purga de cookie `JSESSIONID`.
+### 3.2 Cadena de Administración (`adminSecurityFilterChain` - Orden 2)
+- **Matcher:** `/admin/**`, `/api/admin/**`. Todo requiere `ADMIN` salvo `login.html`, `css/` y `js/`.
+- **Dos mecanismos:** sesión con formulario para el panel web y **JWT** para el cliente de escritorio.
+- `/api/admin/**` sin autenticar → **401**; `/admin/**` → redirección a `/admin/login.html`.
+- Cookie de sesión `HttpOnly` + `SameSite=Strict` (protección CSRF del panel), cambio de id de sesión al iniciar sesión.
+
+### 3.3 Registro público (`POST /api/registro`)
+Solo crea cuentas de **ESTUDIANTE** (403 para otros roles). Profesores y administradores se crean desde `POST /api/admin/usuarios`, que construye el subtipo correcto (`Profesor`, `Estudiante` con curso obligatorio, `Usuario` para ADMIN) mediante `UsuarioRegistrationService.construirUsuario`.
 
 ---
 
-## 4. Algoritmo de Rate Limiting (Bucket4j)
+## 4. Rate Limiting (Bucket4j)
 
-En [RateLimitFilter.java](file:///home/carlos/Proyectos/REP/src/main/java/com/rep/security/RateLimitFilter.java):
+| Ámbito | Límite por IP | Propiedad |
+|--------|---------------|-----------|
+| `POST /api/auth/login` y `POST /admin/login` | 5 cada 15 min | `app.security.rate-limit.login-per-15min` |
+| Resto de `/api/**` | 100 por minuto | `app.security.rate-limit.api-per-minute` |
 
-```java
-// Límite de inicio de sesión: 5 tokens, recarga de 5 tokens cada 15 minutos
-Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(15)));
-
-// Límite general de API: 100 tokens, recarga de 100 tokens cada 1 minuto
-Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1)));
-```
-
-### Funcionamiento Operativo
-1. **Extracción de IP Real:** Se evalúa de manera prioritaria la cabecera `X-Forwarded-For` (tomando la primera IP de la cadena si existen múltiples balanceadores/proxies inversos). Si está ausente, se evalúa `X-Real-IP`, y finalmente `request.getRemoteAddr()`.
-2. **Almacenamiento Concurrente:** Los cubos de tokens se mantienen en memoria viva dentro de instancias `ConcurrentHashMap<String, Bucket>`.
-3. **Respuesta ante Exceso:** Si se agotan los tokens, la petición se interrumpe retornando estado HTTP `429 TOO MANY REQUESTS`, tipo de contenido `application/json` y el cuerpo `{"error": "Demasiados intentos. Intente más tarde."}`.
+- **IP del cliente:** `request.getRemoteAddr()`. Las cabeceras `X-Forwarded-For` / `X-Real-IP` solo se usan con `app.security.trust-proxy-headers=true` (variable `TRUST_PROXY_HEADERS`), es decir, detrás de un proxy inverso de confianza; de lo contrario un atacante podría falsificarlas para evadir el límite.
+- Memoria acotada: máximo 10.000 IPs registradas.
+- Exceso: `429` con cuerpo JSON `{"status":429,"error":"Too Many Requests","message":...}`.
 
 ---
 
-## 5. Ciclo de Vida del Token JWT
+## 5. Ciclo de vida del token JWT
 
-### 5.1 Generación del Token ([AuthService.java](file:///home/carlos/Proyectos/REP/src/main/java/com/rep/service/logica/AuthService.java))
-1. El usuario envía identificación y contraseña en claro en `POST /api/auth/login`.
-2. Se busca al usuario por `identificacion`. Si no existe, se lanza `AuthenticationException("Credenciales inválidas")`.
-3. Se verifica el hash mediante `passwordEncoder.matches(password, usuario.getContraseña())`. Si no coincide, se lanza `AuthenticationException`.
-4. Se verifica `usuario.isActivo()`. Si está inactivo, se lanza `AccountInactiveException("Cuenta inactiva")`.
-5. Se construye el token JWT:
-   - **Subject:** `identificacion` del usuario.
-   - **Claim `"userId"`:** Clave primaria numérica (`Long id`).
-   - **Claim `"authorities"`:** Lista que contiene el nombre del rol (`Collections.singletonList(usuario.getRol().name())`).
-   - **IssuedAt:** Marca de tiempo actual.
-   - **Expiration:** Fecha actual + `jwt.expiration` (86,400,000 ms = 24 horas por defecto).
-   - **Firma:** Algoritmo HMAC-SHA firmado con `SecretKey` (derivada de `jwt.secret`).
+### 5.1 Emisión (`AuthService`)
+1. `POST /api/auth/login` con `identificacion` y `password`.
+2. Usuario inexistente o contraseña incorrecta → **401** (`LoginResponse` con `success=false`). Cuenta inactiva → **403**.
+3. Token: subject = identificación, claims `userId` y `authorities`, expiración `jwt.expiration` (24 h por defecto), firma HMAC-SHA con `jwt.secret`.
 
-### 5.2 Validación e Inyección en Contexto ([JwtAuthenticationFilter.java](file:///home/carlos/Proyectos/REP/src/main/java/com/rep/security/JwtAuthenticationFilter.java))
-1. Se extrae la cabecera `Authorization`. Si no existe o no inicia con `"Bearer "`, se omite el filtro y prosigue la cadena.
-2. Se parsea el token con `Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token)`.
-3. Se extrae el subject (`username`/identificación) y la lista de autoridades del claim `"authorities"`.
-4. **Carga desde Base de Datos:** Se invoca obligatoriamente `userDetailsService.loadUserByUsername(username)` para garantizar que el usuario no haya sido eliminado o desactivado con posterioridad a la emisión del token.
-5. Se crea una instancia `UsernamePasswordAuthenticationToken(userDetails, null, authorities)` y se almacena en el hilo de ejecución mediante `SecurityContextHolder.getContext().setAuthentication(authentication)`.
+### 5.2 Validación (`JwtAuthenticationFilter`)
+1. Sin cabecera `Bearer` → se continúa sin autenticar.
+2. Firma/expiración inválidas → **401** JSON.
+3. Se carga el usuario de la BD; si está desactivado → **401**.
+4. **Las autoridades se toman de la BD, no de la claim `authorities`**: un cambio de rol o una desactivación surten efecto inmediato y un token con rol manipulado no concede privilegios.
+
+### 5.3 Secretos y arranque
+- `jwt.secret` = variable `JWT_SECRET`, **obligatoria** y de al menos 32 bytes (la aplicación no arranca en caso contrario, con un mensaje explícito). Generar con `openssl rand -base64 64`.
+- Credenciales de BD: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`. Plantilla en `.env.example`.
+- Administrador inicial (identificación `22`): contraseña en `ADMIN_INITIAL_PASSWORD`; si no se define se genera una aleatoria y se muestra **una vez** en el log.
 
 ---
 

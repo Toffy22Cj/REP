@@ -46,7 +46,10 @@ public class RespuestaPregunta {
     // Método helper para relación bidireccional
     public void setRespuestaEstudiante(RespuestaEstudiante respuestaEstudiante) {
         this.respuestaEstudiante = respuestaEstudiante;
-        if (respuestaEstudiante != null && !respuestaEstudiante.getRespuestasPreguntas().contains(this)) {
+        // Comparación por identidad: equals/hashCode de Lombok recorren la relación
+        // bidireccional y no sirven para detectar si ya está en la colección.
+        if (respuestaEstudiante != null
+                && respuestaEstudiante.getRespuestasPreguntas().stream().noneMatch(r -> r == this)) {
             respuestaEstudiante.getRespuestasPreguntas().add(this);
         }
     }

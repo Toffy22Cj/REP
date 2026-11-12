@@ -5,7 +5,6 @@ import com.rep.service.logica.UsuarioRegistrationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost")
 @RestController
 @RequestMapping("/api/registro")
 public class RegistroApi {
@@ -16,7 +15,7 @@ public class RegistroApi {
     }
 
     @PostMapping
-    public ResponseEntity<?> registrar(@RequestBody RegistroUsuarioDTO usuarioDTO) {
+    public ResponseEntity<?> registrar(@jakarta.validation.Valid @RequestBody RegistroUsuarioDTO usuarioDTO) {
         return registrationService.registrarUsuario(usuarioDTO);
     }
 }

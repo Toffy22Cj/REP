@@ -1,35 +1,40 @@
 package com.rep.security;
 
-import com.rep.config.JwtConfig;
 import com.rep.service.logica.CustomUserDetailsService;
-import io.jsonwebtoken.*;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.filter.OncePerRequestFilter;
-import javax.crypto.SecretKey;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.crypto.SecretKey;
+import java.io.IOException;
+
+/**
+ * Autentica peticiones con cabecera {@code Authorization: Bearer <jwt>}.
+ *
+ * <p>Las autoridades se toman del usuario cargado desde la base de datos, no de las
+ * claims del token: así, un cambio de rol o la desactivación de una cuenta tienen
+ * efecto inmediato en lugar de esperar a que caduque el token (24 h).</p>
+ */
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final SecretKey secretKey;
-    private final JwtConfig jwtConfig;
     private final CustomUserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(SecretKey secretKey,
-            JwtConfig jwtConfig,
-            CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(SecretKey secretKey, CustomUserDetailsService userDetailsService) {
         this.secretKey = secretKey;
-        this.jwtConfig = jwtConfig;
         this.userDetailsService = userDetailsService;
     }
 
@@ -38,53 +43,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
-        log.debug("Incoming request to {}", request.getRequestURI());
-
-        if (header == null || !header.startsWith("Bearer ")) {
-            log.debug("No Bearer token found, skipping filter");
+        if (header == null || !header.startsWith(BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = header.substring(7);
-
+        String token = header.substring(BEARER_PREFIX.length());
         try {
-            log.debug("Validating token...");
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
 
-            String username = claims.getSubject();
+            UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+            if (!userDetails.isEnabled()) {
+                rechazar(response, "Cuenta inactiva");
+                return;
+            }
 
-            // 1. Extraer autoridades del token
-            List<SimpleGrantedAuthority> authorities = ((List<?>) claims.get("authorities"))
-                    .stream()
-                    .map(authority -> new SimpleGrantedAuthority((String) authority))
-                    .collect(Collectors.toList());
-
-            log.debug("Token authorities: {}", authorities);
-
-            // 2. Cargar UserDetails desde la BD para asegurar la consistencia
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            log.debug("DB user authorities: {}", userDetails.getAuthorities());
-
-            // 3. Crear autenticación con el UserDetails y las autoridades del token
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, // Usar userDetails en lugar del username
-                    null,
-                    authorities);
-
+                    userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("User authenticated successfully: {}", username);
-
-        } catch (Exception e) {
-            log.error("Authentication failed: {}", e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
+            log.warn("Token JWT rechazado para {}: {}", request.getRequestURI(), e.getMessage());
+            SecurityContextHolder.clearContext();
+            rechazar(response, "Token inválido o expirado");
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static void rechazar(HttpServletResponse response, String mensaje) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"" + mensaje + "\"}");
     }
 }

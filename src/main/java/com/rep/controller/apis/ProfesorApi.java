@@ -7,10 +7,6 @@ import com.rep.repositories.MateriaRepository;
 import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.repositories.ProfesorRepository;
 import com.rep.service.logica.*;
-import com.rep.service.logica.AsistenciaService; // Explicit import if wildcard doesn't catch it, though wildcard should.
-// Wait, the wildcard import com.rep.service.logica.* is already there (line 9).
-// If AsistenciaService is in com.rep.service.logica, it should be picked up.
-// Let's verify package of AsistenciaService.
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +21,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/profesor")
 public class ProfesorApi {
+
+    private static final java.util.Set<String> FORMATOS_EXPORTACION = java.util.Set.of("pdf", "xlsx");
 
     private final MateriaService materiaService;
     private final CursoService cursoService;
@@ -202,13 +200,21 @@ public class ProfesorApi {
             @RequestParam Long cursoId,
             @RequestParam Long actividadId,
             @RequestParam String formato,
-            @RequestHeader("Authorization") String authHeader) { // Token en header
+            @AuthenticationPrincipal Usuario usuario) {
 
-        // Validar token y permisos...
-        byte[] reporte = respuestaService.generarReporteResultados(cursoId, actividadId, formato);
+        // Antes este endpoint no comprobaba la propiedad: cualquier profesor podía
+        // descargar resultados de actividades ajenas.
+        validacionService.validarProfesorActividad(usuario.getId(), actividadId);
+        validacionService.validarProfesorCurso(usuario.getId(), cursoId);
+
+        String extension = formato == null ? "" : formato.toLowerCase(java.util.Locale.ROOT);
+        if (!FORMATOS_EXPORTACION.contains(extension)) {
+            throw new IllegalArgumentException("Formato no soportado. Use: " + FORMATOS_EXPORTACION);
+        }
+        byte[] reporte = respuestaService.generarReporteResultados(cursoId, actividadId, extension);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resultados." + formato)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resultados." + extension)
                 .body(reporte);
     }
 

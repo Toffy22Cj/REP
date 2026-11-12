@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class EstudianteServiceImpl implements EstudianteService {
-    private static final Logger logger = LoggerFactory.getLogger(EstudianteApiServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(EstudianteServiceImpl.class);
     private final ProfesorMateriaRepository profesorMateriaRepository;
     private final EstudianteRepository estudianteRepository;
     private final CalificacionRepository calificacionRepository;
@@ -245,17 +245,26 @@ public class EstudianteServiceImpl implements EstudianteService {
             respuestaEstudiante.setEstudiante(estudiante);
         }
 
-        // 4. Procesar respuestas
+        // 4. Procesar respuestas.
+        // En un reintento se descartan las respuestas del intento anterior (orphanRemoval):
+        // antes se acumulaban y las correctas antiguas se sumaban a la nueva nota.
+        respuestaEstudiante.getRespuestasPreguntas().clear();
+
         Map<Long, Pregunta> preguntasMap = actividad.getPreguntas().stream()
-                .collect(Collectors.toMap(Pregunta::getId, Function.identity()));
+                .collect(Collectors.toMap(Pregunta::getId, Function.identity(), (a, b) -> a));
 
-        for (RespuestaPreguntaDTO respuestaDTO : request.getRespuestas()) {
-            Pregunta pregunta = preguntasMap.get(respuestaDTO.getPreguntaId());
-            if (pregunta == null)
-                continue;
-
-            procesarRespuestaIndividual(respuestaEstudiante, respuestaDTO, pregunta);
+        // Una sola respuesta por pregunta: si el cliente envía duplicados se toma la última.
+        Map<Long, RespuestaPreguntaDTO> respuestasPorPregunta = new LinkedHashMap<>();
+        if (request.getRespuestas() != null) {
+            for (RespuestaPreguntaDTO respuestaDTO : request.getRespuestas()) {
+                if (respuestaDTO != null && preguntasMap.containsKey(respuestaDTO.getPreguntaId())) {
+                    respuestasPorPregunta.put(respuestaDTO.getPreguntaId(), respuestaDTO);
+                }
+            }
         }
+
+        respuestasPorPregunta.forEach((preguntaId, respuestaDTO) ->
+                procesarRespuestaIndividual(respuestaEstudiante, respuestaDTO, preguntasMap.get(preguntaId)));
 
         // 5. Calcular y guardar
         respuestaEstudiante.setEntregado(true);
@@ -508,10 +517,10 @@ public class EstudianteServiceImpl implements EstudianteService {
                 if (respuesta.getOpcion() == null) {
                     return "No se seleccionó ninguna opción";
                 }
-                return respuesta.getEsCorrecta() ? "Respuesta correcta"
+                return Boolean.TRUE.equals(respuesta.getEsCorrecta()) ? "Respuesta correcta"
                         : "Respuesta incorrecta. La opción correcta era: " +
                                 pregunta.getOpciones().stream()
-                                        .filter(Opcion::getEsCorrecta)
+                                        .filter(o -> Boolean.TRUE.equals(o.getEsCorrecta()))
                                         .findFirst()
                                         .map(Opcion::getTexto)
                                         .orElse("No definida");

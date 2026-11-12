@@ -79,9 +79,9 @@ export const Usuarios = {
         ];
 
         UI.renderTable('usersList', columns, users, (user) => `
-            <button class="btn-small btn-edit" onclick="alert('Detalles de ${user.nombre} en v2.1')">Detalles</button>
+            <button class="btn-small btn-edit" onclick="alert(this.dataset.msg)" data-msg="${UI.escapeHtml('Detalles de ' + user.nombre + ' en v2.1')}">Detalles</button>
             <button class="btn-small ${user.activo ? 'btn-delete' : 'btn-edit'}" 
-                onclick="alert('Cambio de estado para ${user.identificacion} en v2.1')">
+                onclick="alert(this.dataset.msg)" data-msg="${UI.escapeHtml('Cambio de estado para ' + user.identificacion + ' en v2.1')}">
                 ${user.activo ? 'Desactivar' : 'Activar'}
             </button>
         `);

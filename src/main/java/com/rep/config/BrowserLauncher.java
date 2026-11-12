@@ -40,11 +40,11 @@ public class BrowserLauncher {
                 String os = System.getProperty("os.name").toLowerCase();
                 Runtime rt = Runtime.getRuntime();
                 if (os.contains("win")) {
-                    rt.exec("round /c start " + url);
+                    rt.exec(new String[] { "cmd", "/c", "start", url });
                 } else if (os.contains("mac")) {
-                    rt.exec("open " + url);
+                    rt.exec(new String[] { "open", url });
                 } else if (os.contains("nix") || os.contains("nux")) {
-                    rt.exec("xdg-open " + url);
+                    rt.exec(new String[] { "xdg-open", url });
                 }
             }
         } catch (IOException | URISyntaxException e) {

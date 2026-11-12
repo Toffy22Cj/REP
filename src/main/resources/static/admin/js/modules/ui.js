@@ -1,4 +1,20 @@
+/**
+ * Escapa texto antes de insertarlo con innerHTML. Los datos de usuarios (nombres,
+ * correos, detalles de auditoría) proceden de la API y no son de confianza: sin
+ * escapar permitían XSS almacenado en la sesión del administrador.
+ */
+export function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 export const UI = {
+    escapeHtml,
+
     showLoading(containerId) {
         const container = document.getElementById(containerId);
         container.innerHTML = `
@@ -12,7 +28,7 @@ export const UI = {
         const container = document.getElementById(containerId);
         container.innerHTML = `
             <div class="alert alert-error" style="display: block">
-                <strong>Error:</strong> ${message}
+                <strong>Error:</strong> ${escapeHtml(message)}
             </div>
         `;
     },
@@ -35,7 +51,7 @@ export const UI = {
                 <tbody>
                     ${data.map(row => `
                         <tr>
-                            ${columns.map(c => `<td>${this.getNestedValue(row, c.key)}</td>`).join('')}
+                            ${columns.map(c => `<td>${escapeHtml(this.getNestedValue(row, c.key))}</td>`).join('')}
                             <td>${actionsRenderer(row)}</td>
                         </tr>
                     `).join('')}
@@ -55,7 +71,7 @@ export const UI = {
         alertDiv.className = `ui-alert alert-${type}`;
         alertDiv.innerHTML = `
             <span class="alert-icon">${type === 'success' ? '✅' : '❌'}</span>
-            <span class="alert-msg">${message}</span>
+            <span class="alert-msg">${escapeHtml(message)}</span>
         `;
         
         let container = document.getElementById('alert-container');

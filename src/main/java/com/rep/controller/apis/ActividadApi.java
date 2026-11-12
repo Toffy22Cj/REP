@@ -397,6 +397,9 @@ public class ActividadApi {
 
         try {
             ActividadConPreguntasDTO dto = actividadService.getActividadConPreguntas(id);
+            if (usuario.getRol() == Usuario.Rol.ESTUDIANTE) {
+                dto.ocultarSoluciones();
+            }
             return ResponseEntity.ok(dto);
         } catch (jakarta.persistence.EntityNotFoundException e) {
             return ResponseEntity.notFound().build();

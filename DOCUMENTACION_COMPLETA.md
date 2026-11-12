@@ -1092,7 +1092,7 @@ public class CorsConfig {
   DB_NAME: colegio
   DB_USERNAME: admin # Usuario no-root
   DB_PASSWORD: admin # Generar fuerte en producción
-  JWT_SECRET: guxs6E+... # 256 bits (88 chars base64)
+  JWT_SECRET: <generado con openssl rand -base64 64>
   ALLOWED_ORIGINS: http://localhost:3000
 
 application.properties (SÍ subir, con variables):
@@ -1321,7 +1321,7 @@ DB_USERNAME=admin
 DB_PASSWORD=admin
 
 # ========== SECURITY ==========
-JWT_SECRET=guxs6E+roAhbydKp6hFYVpwoJQbVNV9cOtV6X7VPA9JVG4hKhwwuubMr3ddPJ9kKQqjXu4YplHyKoVhN3u2Dfg==
+JWT_SECRET=<generar con: openssl rand -base64 64>
 
 # ========== CORS ==========
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080,http://localhost:4200

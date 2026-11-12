@@ -10,13 +10,13 @@ import com.rep.service.archivos.ExcelReportGenerator;
 import com.rep.service.archivos.PdfReportGenerator;
 import com.rep.service.logica.RespuestaService;
 import com.rep.exception.RecursoNoEncontradoException;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +30,11 @@ public class RespuestaServiceImpl implements RespuestaService {
 
     private final RespuestaEstudianteRepository respuestaEstudianteRepository;
     private final RespuestaPreguntaRepository respuestaPreguntaRepository;
-private  final ActividadRepository actividadRepository;
-    @Autowired
+    private final ActividadRepository actividadRepository;
+
     public RespuestaServiceImpl(RespuestaEstudianteRepository respuestaEstudianteRepository,
-                                RespuestaPreguntaRepository respuestaPreguntaRepository,ActividadRepository actividadRepository) {
+                                RespuestaPreguntaRepository respuestaPreguntaRepository,
+                                ActividadRepository actividadRepository) {
         this.respuestaEstudianteRepository = respuestaEstudianteRepository;
         this.actividadRepository = actividadRepository;
         this.respuestaPreguntaRepository = respuestaPreguntaRepository;
@@ -88,30 +89,28 @@ private  final ActividadRepository actividadRepository;
     public byte[] generatePromediosPdfReport(Long cursoId, Long materiaId) {
         List<Object[]> promedios = getPromediosByCursoMateria(cursoId, materiaId);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Document document = new Document();
 
-        try {
-            PdfWriter.getInstance(document, baos);
-            document.open();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
 
-            document.add(new Paragraph("Reporte de Promedios"));
-            document.add(new Paragraph(String.format("Curso: %d | Materia: %d", cursoId, materiaId)));
+        document.add(new Paragraph("Reporte de Promedios")
+                .setFontSize(16)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER));
+        document.add(new Paragraph(String.format("Curso: %d | Materia: %d", cursoId, materiaId)));
 
-            PdfPTable table = new PdfPTable(2);
-            table.addCell("Actividad ID");
-            table.addCell("Promedio");
+        Table table = new Table(2);
+        table.addHeaderCell("Actividad ID");
+        table.addHeaderCell("Promedio");
 
-            promedios.forEach(arr -> {
-                table.addCell(arr[0].toString());
-                table.addCell(String.format("%.2f", arr[1]));
-            });
+        promedios.forEach(arr -> {
+            table.addCell(arr[0] != null ? arr[0].toString() : "-");
+            table.addCell(arr[1] != null ? String.format("%.2f", arr[1]) : "0.00");
+        });
 
-            document.add(table);
-        } catch (DocumentException e) {
-            throw new RuntimeException("Error al generar PDF", e);
-        } finally {
-            document.close();
-        }
+        document.add(table);
+        document.close();
 
         return baos.toByteArray();
     }

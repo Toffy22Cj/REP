@@ -133,18 +133,12 @@ public class PreguntaServiceImpl implements PreguntaService {
 
         String uploadDir = System.getProperty("user.home") + "/.rep/uploads";
         java.io.File directory = new java.io.File(uploadDir);
-        if (!directory.exists()) {
-            boolean created = directory.mkdirs();
-            if (!created) throw new java.io.IOException("No se pudo crear directorio de subida: " + uploadDir);
-        }
-
-        String fileName = "opcion_" + opcionId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        java.io.File destination = new java.io.File(directory, fileName);
+        java.io.File destination = crearDestinoSeguro(directory, "opcion_" + opcionId, file.getOriginalFilename());
         file.transferTo(destination);
 
         opcion.setArchivoUrl(destination.getAbsolutePath());
         opcion.setArchivoTipo(file.getContentType());
-        opcion.setNombreArchivo(file.getOriginalFilename());
+        opcion.setNombreArchivo(java.nio.file.Paths.get(file.getOriginalFilename() != null ? file.getOriginalFilename() : "archivo").getFileName().toString());
         opcion.setTieneArchivo(true);
 
         return opcionRepository.save(opcion);
@@ -234,23 +228,9 @@ public class PreguntaServiceImpl implements PreguntaService {
             throws java.io.IOException {
         Pregunta pregunta = getPreguntaById(id);
 
-        // Define upload directory
         String uploadDir = System.getProperty("user.home") + "/.rep/uploads";
         java.io.File directory = new java.io.File(uploadDir);
-
-        // Create directory if it doesn't exist
-        if (!directory.exists()) {
-            boolean created = directory.mkdirs();
-            if (!created) {
-                throw new java.io.IOException("No se pudo crear el directorio de subida: " + uploadDir);
-            }
-        }
-
-        // Generate unique filename
-        String fileName = id + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        java.io.File destination = new java.io.File(directory, fileName);
-
-        // Save file
+        java.io.File destination = crearDestinoSeguro(directory, "pregunta_" + id, file.getOriginalFilename());
         file.transferTo(destination);
 
         // Update entity
@@ -258,6 +238,30 @@ public class PreguntaServiceImpl implements PreguntaService {
         pregunta.setArchivoTipo(file.getContentType());
 
         return preguntaRepository.save(pregunta);
+    }
+
+    private java.io.File crearDestinoSeguro(java.io.File directory, String prefix, String originalFilename) throws java.io.IOException {
+        if (!directory.exists()) {
+            boolean created = directory.mkdirs();
+            if (!created) {
+                throw new java.io.IOException("No se pudo crear el directorio de subida: " + directory.getAbsolutePath());
+            }
+        }
+
+        String safeName = "archivo";
+        if (originalFilename != null && !originalFilename.isBlank()) {
+            safeName = java.nio.file.Paths.get(originalFilename).getFileName().toString();
+            safeName = safeName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        }
+
+        String fileName = prefix + "_" + System.currentTimeMillis() + "_" + safeName;
+        java.io.File destination = new java.io.File(directory, fileName);
+
+        if (!destination.getCanonicalPath().startsWith(directory.getCanonicalPath())) {
+            throw new SecurityException("Intento de path traversal detectado en nombre de archivo");
+        }
+
+        return destination;
     }
 
     @Override

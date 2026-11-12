@@ -16,14 +16,17 @@ import java.util.Optional;
 @Service
 public class AsistenciaServiceImpl implements AsistenciaService {
 
-    @Autowired
-    private AsistenciaRepository asistenciaRepository;
+    private final AsistenciaRepository asistenciaRepository;
+    private final ProfesorMateriaRepository profesorMateriaRepository;
+    private final EstudianteRepository estudianteRepository;
 
-    @Autowired
-    private ProfesorMateriaRepository profesorMateriaRepository;
-
-    @Autowired
-    private EstudianteRepository estudianteRepository;
+    public AsistenciaServiceImpl(AsistenciaRepository asistenciaRepository,
+                                 ProfesorMateriaRepository profesorMateriaRepository,
+                                 EstudianteRepository estudianteRepository) {
+        this.asistenciaRepository = asistenciaRepository;
+        this.profesorMateriaRepository = profesorMateriaRepository;
+        this.estudianteRepository = estudianteRepository;
+    }
 
     @Override
     public List<Asistencia> getAsistenciaByCursoMateriaFecha(Long profesorId, Long cursoId, Long materiaId,

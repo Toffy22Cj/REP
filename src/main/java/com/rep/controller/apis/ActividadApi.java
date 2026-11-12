@@ -31,17 +31,20 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/actividades")
 public class ActividadApi {
 
-    @Autowired
-    private ActividadService actividadService;
+    private final ActividadService actividadService;
+    private final ValidacionService validacionService;
+    private final EstudianteService estudianteService;
+    private final ProfesorMateriaRepository profesorMateriaRepository;
 
-    @Autowired
-    private ValidacionService validacionService;
-
-    @Autowired
-    private EstudianteService estudianteService;
-
-    @Autowired
-    ProfesorMateriaRepository profesorMateriaRepository;
+    public ActividadApi(ActividadService actividadService,
+                        ValidacionService validacionService,
+                        EstudianteService estudianteService,
+                        ProfesorMateriaRepository profesorMateriaRepository) {
+        this.actividadService = actividadService;
+        this.validacionService = validacionService;
+        this.estudianteService = estudianteService;
+        this.profesorMateriaRepository = profesorMateriaRepository;
+    }
 
     // 1. Creación de actividades
     @PostMapping
@@ -288,16 +291,12 @@ public class ActividadApi {
 
     // 8. Clonar actividad
     @PostMapping("/{id}/clonar")
-    public ResponseEntity<Actividad> clonarActividad(
+    public ResponseEntity<ActividadDTO> clonarActividad(
             @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), id);
-        Actividad actividad = actividadService.getActividadById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada"));
-        Actividad copia = new Actividad();
-        // Copiar propiedades...
-        Actividad actividadClonada = actividadService.crearActividad(copia);
-        return ResponseEntity.ok(actividadClonada);
+        Actividad actividadClonada = actividadService.clonarActividad(id);
+        return ResponseEntity.ok(ActividadDTO.fromEntity(actividadClonada));
     }
 
     // 9. Buscar actividades por título

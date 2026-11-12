@@ -5,9 +5,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import java.time.LocalDate;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "profesores")
 @PrimaryKeyJoinColumn(name = "id")

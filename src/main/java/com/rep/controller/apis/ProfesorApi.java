@@ -25,41 +25,30 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/profesor")
 public class ProfesorApi {
-    @Autowired
-    private ProfesorMateriaRepository profesorMateriaRepository;
-    @Autowired
-    private ProfesorMateriaService profesorMateriaService;
-    @Autowired
-    private ProfesorRepository profesorRepository;
 
-    @Autowired
-    private MateriaRepository materiaRepository;
+    private final MateriaService materiaService;
+    private final CursoService cursoService;
+    private final ActividadService actividadService;
+    private final EstudianteService estudianteService;
+    private final RespuestaService respuestaService;
+    private final ValidacionService validacionService;
+    private final AsistenciaService asistenciaService;
 
-    @Autowired
-    private CursoRepository cursoRepository;
-    @Autowired
-    private MateriaService materiaService;
-
-    @Autowired
-    private CursoService cursoService;
-
-    @Autowired
-    private ActividadService actividadService;
-
-    @Autowired
-    private PreguntaService preguntaService;
-
-    @Autowired
-    private EstudianteService estudianteService;
-
-    @Autowired
-    private RespuestaService respuestaService;
-
-    @Autowired
-    private ValidacionService validacionService;
-
-    @Autowired
-    private AsistenciaService asistenciaService;
+    public ProfesorApi(MateriaService materiaService,
+                       CursoService cursoService,
+                       ActividadService actividadService,
+                       EstudianteService estudianteService,
+                       RespuestaService respuestaService,
+                       ValidacionService validacionService,
+                       AsistenciaService asistenciaService) {
+        this.materiaService = materiaService;
+        this.cursoService = cursoService;
+        this.actividadService = actividadService;
+        this.estudianteService = estudianteService;
+        this.respuestaService = respuestaService;
+        this.validacionService = validacionService;
+        this.asistenciaService = asistenciaService;
+    }
 
     // 1. Gestión de Materias
     @GetMapping("/materias")
@@ -80,43 +69,7 @@ public class ProfesorApi {
         return ResponseEntity.ok(cursos);
     }
 
-    // // 4. Gestión de Preguntas
-    // @PostMapping("/preguntas")
-    // public ResponseEntity<Pregunta> crearPregunta(@RequestBody Pregunta pregunta,
-    // @AuthenticationPrincipal Usuario usuario) {
-    // validacionService.validarProfesorActividad(usuario.getId(),
-    // pregunta.getActividad().getId());
-    // Pregunta nuevaPregunta = preguntaService.crearPregunta(pregunta);
-    // return ResponseEntity.ok(nuevaPregunta);
-    // }
-    //
-    // @PutMapping("/preguntas/{id}")
-    // public ResponseEntity<Pregunta> editarPregunta(@PathVariable Long id,
-    // @RequestBody Pregunta pregunta,
-    // @AuthenticationPrincipal Usuario usuario) {
-    // validacionService.validarProfesorPregunta(usuario.getId(), id);
-    // Pregunta preguntaActualizada = preguntaService.editarPregunta(id, pregunta);
-    // return ResponseEntity.ok(preguntaActualizada);
-    // }
-    //
-    // @DeleteMapping("/preguntas/{id}")
-    // public ResponseEntity<Void> eliminarPregunta(@PathVariable Long id,
-    // @AuthenticationPrincipal Usuario usuario) {
-    // validacionService.validarProfesorPregunta(usuario.getId(), id);
-    // preguntaService.eliminarPregunta(id);
-    // return ResponseEntity.noContent().build();
-    // }
-    //
-    // @PostMapping("/opciones")
-    // public ResponseEntity<Opcion> crearOpcion(@RequestBody Opcion opcion,
-    // @AuthenticationPrincipal Usuario usuario) {
-    // validacionService.validarProfesorOpcion(usuario.getId(),
-    // opcion.getPregunta().getId());
-    // Opcion nuevaOpcion = preguntaService.crearOpcion(opcion);
-    // return ResponseEntity.ok(nuevaOpcion);
-    // }
-
-    // 5. Revisión de Resultados
+    // 3. Revisión de Resultados
     @GetMapping("/respuestas/actividad/{actividadId}")
     public ResponseEntity<List<RespuestaEstudiante>> getRespuestasByActividad(@PathVariable Long actividadId,
             @AuthenticationPrincipal Usuario usuario) {

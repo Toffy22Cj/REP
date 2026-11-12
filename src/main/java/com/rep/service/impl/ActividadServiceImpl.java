@@ -334,4 +334,50 @@ public class ActividadServiceImpl implements ActividadService {
         return respuestaEstudianteRepository.save(respuesta);
     }
 
+    @Override
+    public Actividad clonarActividad(Long id) {
+        Actividad original = actividadRepository.findByIdWithPreguntasAndOpciones(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Actividad no encontrada con ID: " + id));
+
+        Actividad clon = new Actividad();
+        clon.setTitulo(original.getTitulo() + " (Copia)");
+        clon.setTipo(original.getTipo());
+        clon.setDescripcion(original.getDescripcion());
+        clon.setFechaEntrega(original.getFechaEntrega());
+        clon.setHoraEntrega(original.getHoraEntrega());
+        clon.setDuracionMinutos(original.getDuracionMinutos());
+        clon.setProfesorMateria(original.getProfesorMateria());
+        clon.setPermitirReintentos(original.getPermitirReintentos());
+        clon.setActiva(true);
+        clon.setFechaCreacion(LocalDateTime.now());
+
+        if (original.getPreguntas() != null) {
+            for (Pregunta pOriginal : original.getPreguntas()) {
+                Pregunta pClon = new Pregunta();
+                pClon.setEnunciado(pOriginal.getEnunciado());
+                pClon.setTipo(pOriginal.getTipo());
+                pClon.setArchivoUrl(pOriginal.getArchivoUrl());
+                pClon.setArchivoTipo(pOriginal.getArchivoTipo());
+                pClon.setActividad(clon);
+
+                if (pOriginal.getOpciones() != null) {
+                    for (Opcion oOriginal : pOriginal.getOpciones()) {
+                        Opcion oClon = new Opcion();
+                        oClon.setTexto(oOriginal.getTexto());
+                        oClon.setEsCorrecta(oOriginal.getEsCorrecta());
+                        oClon.setArchivoUrl(oOriginal.getArchivoUrl());
+                        oClon.setArchivoTipo(oOriginal.getArchivoTipo());
+                        oClon.setNombreArchivo(oOriginal.getNombreArchivo());
+                        oClon.setTieneArchivo(oOriginal.getTieneArchivo());
+                        pClon.addOpcion(oClon);
+                    }
+                }
+                clon.getPreguntas().add(pClon);
+            }
+        }
+
+        Actividad guardada = actividadRepository.save(clon);
+        log.info("Actividad ID {} clonada exitosamente con nuevo ID {}", id, guardada.getId());
+        return guardada;
+    }
 }

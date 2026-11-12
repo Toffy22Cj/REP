@@ -34,6 +34,8 @@ public interface ActividadService {
 
     ActividadConPreguntasDTO getActividadConPreguntas(Long actividadId);
 
+    Actividad clonarActividad(Long id);
+
     // Grading methods
     List<com.rep.dto.actividad.ResultadoActividadDTO> obtenerResultados(Long actividadId);
 

@@ -17,14 +17,66 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 @Slf4j
 public class GlobalExceptionHandler {
 
-        @ExceptionHandler(ResourceNotFoundException.class)
-        public ResponseEntity<Object> handleNotFound(ResourceNotFoundException ex) {
+        @ExceptionHandler({
+                ResourceNotFoundException.class,
+                RecursoNoEncontradoException.class,
+                EntityNotFoundException.class,
+                jakarta.persistence.EntityNotFoundException.class
+        })
+        public ResponseEntity<Object> handleNotFound(Exception ex) {
                 log.warn("Recurso no encontrado: {}", ex.getMessage());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                 .body(Map.of(
                                                 "timestamp", Instant.now().toString(),
                                                 "status", 404,
                                                 "error", "Not Found",
+                                                "message", ex.getMessage()));
+        }
+
+        @ExceptionHandler({
+                ValidacionException.class,
+                LimiteExcedidoException.class
+        })
+        public ResponseEntity<Object> handleBusinessValidation(Exception ex) {
+                log.warn("Error de validación de negocio: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                                "timestamp", Instant.now().toString(),
+                                                "status", 400,
+                                                "error", "Business Validation Error",
+                                                "message", ex.getMessage()));
+        }
+
+        @ExceptionHandler(OperacionNoPermitidaException.class)
+        public ResponseEntity<Object> handleOperacionNoPermitida(OperacionNoPermitidaException ex) {
+                log.warn("Operación no permitida: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                                .body(Map.of(
+                                                "timestamp", Instant.now().toString(),
+                                                "status", 409,
+                                                "error", "Conflict / Operation Not Allowed",
+                                                "message", ex.getMessage()));
+        }
+
+        @ExceptionHandler(IllegalStateException.class)
+        public ResponseEntity<Object> handleIllegalState(IllegalStateException ex) {
+                log.warn("Estado inválido para la operación: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                                "timestamp", Instant.now().toString(),
+                                                "status", 400,
+                                                "error", "Illegal State",
+                                                "message", ex.getMessage()));
+        }
+
+        @ExceptionHandler(SecurityException.class)
+        public ResponseEntity<Object> handleSecurityException(SecurityException ex) {
+                log.warn("Violación de seguridad: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(Map.of(
+                                                "timestamp", Instant.now().toString(),
+                                                "status", 403,
+                                                "error", "Security Violation",
                                                 "message", ex.getMessage()));
         }
 

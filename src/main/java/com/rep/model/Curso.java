@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Entity
 @Table(name = "cursos")
 @EqualsAndHashCode(exclude = { "estudiantes" })

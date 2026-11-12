@@ -9,7 +9,12 @@ public interface RespuestaService {
     byte[] generarReporteResultados(Long cursoId, Long actividadId, String formato);
     List<RespuestaEstudiante> getRespuestasByActividad(Long actividadId);
     List<RespuestaEstudiante> getRespuestasByEstudiante(Long estudianteId);
-    RespuestaEstudiante calificarRespuesta(Long id, Float nota);
+    /** Califica una entrega registrando qué profesor la revisó (puede ser null). */
+    RespuestaEstudiante calificarRespuesta(Long id, Float nota, com.rep.model.Profesor profesor);
+
+    default RespuestaEstudiante calificarRespuesta(Long id, Float nota) {
+        return calificarRespuesta(id, nota, null);
+    }
     List<Object[]> getPromediosByCursoMateria(Long cursoId, Long materiaId);
     List<Object[]> getEstadoEntregasByActividad(Long actividadId);
     RespuestaPregunta guardarRespuestaPregunta(RespuestaPregunta respuestaPregunta);

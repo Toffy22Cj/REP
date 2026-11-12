@@ -87,7 +87,7 @@ export const Usuarios = {
         `);
     },
 
-    showCreateUserModal() {
+    async showCreateUserModal() {
         const content = `
             <form id="userForm">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -139,9 +139,13 @@ export const Usuarios = {
                         </select>
                     </div>
                 </div>
+                <div class="form-group" id="m_curso_group" style="display: none">
+                    <label>Curso (obligatorio para estudiantes)</label>
+                    <select id="m_curso" class="form-control"></select>
+                </div>
                 <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" id="m_password" required>
+                    <label>Contraseña (mínimo 8 caracteres)</label>
+                    <input type="password" id="m_password" minlength="8" required>
                 </div>
             </form>
         `;
@@ -155,8 +159,9 @@ export const Usuarios = {
                 correo: document.getElementById('m_correo').value,
                 contraseña: document.getElementById('m_password').value,
                 rol: document.getElementById('m_rol').value,
-                edad: document.getElementById('m_edad').value,
+                edad: document.getElementById('m_edad').value || null,
                 sexo: document.getElementById('m_sexo').value,
+                cursoId: document.getElementById('m_curso').value || null,
                 activo: true
             };
 
@@ -169,5 +174,28 @@ export const Usuarios = {
                 UI.showAlert(error.message, 'error');
             }
         });
+
+        await this.setupCursoSelect();
+    },
+
+    /** Muestra y rellena el selector de curso solo cuando el rol es ESTUDIANTE. */
+    async setupCursoSelect() {
+        const rolSelect = document.getElementById('m_rol');
+        const group = document.getElementById('m_curso_group');
+        const select = document.getElementById('m_curso');
+        const toggle = () => { group.style.display = rolSelect.value === 'ESTUDIANTE' ? 'block' : 'none'; };
+        rolSelect.addEventListener('change', toggle);
+        toggle();
+        try {
+            const cursos = await API.get('/api/admin/cursos') || [];
+            select.replaceChildren(...cursos.map(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.nombre || `${c.grado}°${c.grupo}`;
+                return option;
+            }));
+        } catch (error) {
+            UI.showAlert('No se pudieron cargar los cursos: ' + error.message, 'error');
+        }
     },
 };

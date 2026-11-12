@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface ActividadRepository extends JpaRepository<Actividad, Long> {
     long countByProfesorMateriaProfesorId(Long profesorId);
+    long countByProfesorMateriaProfesorIdAndActivaTrue(Long profesorId);
     long countByProfesorMateriaProfesorIdAndFechaCreacionAfter(Long profesorId, LocalDateTime fecha);
 
     @Query("SELECT a FROM Actividad a " +

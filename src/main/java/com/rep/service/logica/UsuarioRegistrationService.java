@@ -3,6 +3,7 @@ package com.rep.service.logica;
 import com.rep.dto.auth.AuthUsuarioDTO;
 import com.rep.dto.auth.RegistroUsuarioDTO;
 import com.rep.model.Estudiante;
+import com.rep.model.Profesor;
 import com.rep.model.Usuario;
 import com.rep.repositories.CursoRepository;
 import com.rep.repositories.UsuarioRepository;
@@ -52,37 +53,60 @@ public class UsuarioRegistrationService {
         if (usuarioRepository.existsByIdentificacion(dto.getIdentificacion())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("La identificación ya está registrada");
         }
-        if (dto.getEdad() == null) {
-            return ResponseEntity.badRequest().body("La edad es obligatoria para estudiantes");
-        }
-        if (dto.getCursoId() == null) {
-            return ResponseEntity.badRequest().body("El curso es obligatorio para estudiantes");
-        }
 
         try {
-            Estudiante guardado = usuarioRepository.save(crearEstudiante(dto));
+            Usuario guardado = usuarioRepository.save(construirUsuario(dto));
             return ResponseEntity.status(HttpStatus.CREATED).body(new AuthUsuarioDTO(guardado));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error en los datos: " + e.getMessage());
         }
     }
 
-    private Estudiante crearEstudiante(RegistroUsuarioDTO dto) {
-        Estudiante estudiante = new Estudiante();
-        estudiante.setNombre(dto.getNombre());
-        estudiante.setApellido(dto.getApellido());
-        estudiante.setCorreo(dto.getCorreo());
-        estudiante.setIdentificacion(dto.getIdentificacion());
-        estudiante.setTipoIdentificacion(Usuario.TipoIdentificacion.valueOf(dto.getTipoIdentificacion()));
-        estudiante.setContraseña(passwordEncoder.encode(dto.getContraseña()));
-        estudiante.setRol(Usuario.Rol.ESTUDIANTE);
-        estudiante.setActivo(dto.isActivo());
-        estudiante.setFechaIngreso(dto.getFechaIngreso());
-        estudiante.setSexo(dto.getSexo());
-        estudiante.setEdad(dto.getEdad());
-        estudiante.setCurso(cursoRepository.findById(dto.getCursoId())
-                .orElseThrow(() -> new IllegalArgumentException("Curso no encontrado")));
-        estudiante.setEstado(Estudiante.EstadoEstudiante.activo);
-        return estudiante;
+    /**
+     * Construye la entidad del subtipo correcto según el rol ({@link Estudiante},
+     * {@link Profesor} o {@link Usuario} para administradores), con la contraseña
+     * cifrada. Usado tanto por el auto-registro como por el panel de administración:
+     * antes el panel creaba siempre un {@code Usuario} genérico, por lo que los
+     * profesores no podían recibir asignaciones ni los estudiantes un curso.
+     *
+     * @throws IllegalArgumentException si los datos son inconsistentes
+     */
+    public Usuario construirUsuario(RegistroUsuarioDTO dto) {
+        Usuario.Rol rol = Usuario.Rol.valueOf(dto.getRol());
+        Usuario usuario;
+        switch (rol) {
+            case ESTUDIANTE -> {
+                if (dto.getEdad() == null) {
+                    throw new IllegalArgumentException("La edad es obligatoria para estudiantes");
+                }
+                if (dto.getCursoId() == null) {
+                    throw new IllegalArgumentException("El curso es obligatorio para estudiantes");
+                }
+                Estudiante estudiante = new Estudiante();
+                estudiante.setCurso(cursoRepository.findById(dto.getCursoId())
+                        .orElseThrow(() -> new IllegalArgumentException("Curso no encontrado")));
+                estudiante.setEstado(Estudiante.EstadoEstudiante.activo);
+                usuario = estudiante;
+            }
+            case PROFESOR -> {
+                Profesor profesor = new Profesor();
+                profesor.setEstado(Profesor.EstadoProfesor.activo);
+                usuario = profesor;
+            }
+            default -> usuario = new Usuario();
+        }
+
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setCorreo(dto.getCorreo());
+        usuario.setIdentificacion(dto.getIdentificacion());
+        usuario.setTipoIdentificacion(Usuario.TipoIdentificacion.valueOf(dto.getTipoIdentificacion()));
+        usuario.setContraseña(passwordEncoder.encode(dto.getContraseña()));
+        usuario.setRol(rol);
+        usuario.setActivo(dto.isActivo());
+        usuario.setFechaIngreso(dto.getFechaIngreso());
+        usuario.setSexo(dto.getSexo());
+        usuario.setEdad(dto.getEdad());
+        return usuario;
     }
 }

@@ -274,6 +274,25 @@ class SecurityRegressionTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void loginConCredencialesIncorrectasDevuelve401() throws Exception {
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identificacion\":\"" + estudiante1.getIdentificacion() + "\",\"password\":\"incorrecta\"}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identificacion\":\"no-existe\",\"password\":\"incorrecta\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void loginDeCuentaInactivaDevuelve403() throws Exception {
+        estudiante1.setActivo(false);
+        usuarioRepository.save(estudiante1);
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identificacion\":\"" + estudiante1.getIdentificacion() + "\",\"password\":\"Secreta123\"}"))
+                .andExpect(status().isForbidden());
+    }
+
     // ---------------------------------------------------------------- integridad de notas
 
     @Test
@@ -307,6 +326,31 @@ class SecurityRegressionTest {
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk()).andReturn();
         assertThat(mapper.readTree(r.getResponse().getContentAsString()).path("nota").asDouble()).isEqualTo(2.5);
+    }
+
+    @Test
+    void dashboardDelProfesorIncluyeLasMetricasQueMuestraElCliente() throws Exception {
+        resolver(correcta); // una entrega
+        MvcResult r = mvc.perform(get("/api/profesor/dashboard").header("Authorization", bearer(profesorA)))
+                .andExpect(status().isOk()).andReturn();
+        JsonNode json = mapper.readTree(r.getResponse().getContentAsString());
+        assertThat(json.path("totalEstudiantes").asLong()).isEqualTo(2);
+        assertThat(json.path("actividadesActivas").asLong()).isEqualTo(1);
+        // Sin preguntas abiertas no hay nada pendiente de revisión manual
+        assertThat(json.path("entregasPendientes").asLong()).isZero();
+    }
+
+    @Test
+    void calificacionManualFueraDeEscalaEsRechazada() throws Exception {
+        resolver(correcta);
+        mvc.perform(put("/api/actividades/{id}/notas/{e}", actividad.getId(), estudiante1.getId())
+                        .param("nota", "50")
+                        .header("Authorization", bearer(profesorA)))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/actividades/{id}/notas/{e}", actividad.getId(), estudiante1.getId())
+                        .param("nota", "4.5")
+                        .header("Authorization", bearer(profesorA)))
+                .andExpect(status().isOk());
     }
 
     // ---------------------------------------------------------------- helpers

@@ -75,4 +75,16 @@ public interface RespuestaEstudianteRepository extends JpaRepository<RespuestaEs
     List<Object[]> findDistribucionRespuestasByPregunta(@Param("preguntaId") Long preguntaId);
     boolean existsByEstudianteIdAndActividadId(Long estudianteId, Long actividadId);
     Optional<RespuestaEstudiante> findByEstudianteIdAndActividadId(Long estudianteId, Long actividadId);
+
+    /**
+     * Entregas de actividades del profesor que contienen preguntas abiertas
+     * (requieren revisión manual) y que aún no ha calificado ningún profesor.
+     */
+    @Query("SELECT COUNT(r) FROM RespuestaEstudiante r "
+            + "WHERE r.actividad.profesorMateria.profesor.id = :profesorId "
+            + "AND r.entregado = true AND r.calificadoPor IS NULL "
+            + "AND EXISTS (SELECT p.id FROM Pregunta p WHERE p.actividad = r.actividad AND p.tipo = :tipoAbierta)")
+    long countEntregasPendientesDeRevision(
+            @org.springframework.data.repository.query.Param("profesorId") Long profesorId,
+            @org.springframework.data.repository.query.Param("tipoAbierta") com.rep.model.Pregunta.TipoPregunta tipoAbierta);
 }

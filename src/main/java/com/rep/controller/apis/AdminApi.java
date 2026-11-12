@@ -1,6 +1,8 @@
 package com.rep.controller.apis;
 
+import com.rep.dto.auth.RegistroUsuarioDTO;
 import com.rep.dto.profesor.ProfesorMateriaRequest;
+import com.rep.service.logica.UsuarioRegistrationService;
 import com.rep.model.*;
 import com.rep.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ public class AdminApi {
     private final ProfesorMateriaRepository profesorMateriaRepository;
     private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuarioRegistrationService registrationService;
 
     @Autowired
     public AdminApi(UsuarioRepository usuarioRepository,
@@ -34,7 +37,8 @@ public class AdminApi {
             MateriaRepository materiaRepository,
             ProfesorMateriaRepository profesorMateriaRepository,
             AuditLogRepository auditLogRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            UsuarioRegistrationService registrationService) {
         this.usuarioRepository = usuarioRepository;
         this.estudianteRepository = estudianteRepository;
         this.profesorRepository = profesorRepository;
@@ -43,6 +47,7 @@ public class AdminApi {
         this.profesorMateriaRepository = profesorMateriaRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
+        this.registrationService = registrationService;
     }
 
     // -------------------- Gestión de Cursos --------------------
@@ -248,49 +253,51 @@ public class AdminApi {
     }
 
     @PostMapping("/usuarios")
-    public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
-        try {
-            if (usuarioRepository.findByIdentificacion(usuario.getIdentificacion()).isPresent()) {
-                return ResponseEntity.badRequest().body("Error: La identificación ya existe");
-            }
-            if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
-                return ResponseEntity.badRequest().body("Error: El correo ya existe");
-            }
-
-            // Validación de Edad vs Tipo Identificación
-            if (usuario.getEdad() != null && usuario.getTipoIdentificacion() != null) {
-                String idStr = usuario.getIdentificacion();
-                if (usuario.getTipoIdentificacion() == Usuario.TipoIdentificacion.CC) {
-                    if (usuario.getEdad() < 18) {
-                        return ResponseEntity.badRequest()
-                                .body("Error: No se permite Cédula (CC) para menores de edad (menor a 18 años)");
-                    }
-                    if (idStr.length() < 6 || idStr.length() > 10) {
-                        return ResponseEntity.badRequest()
-                                .body("Error: La Cédula (CC) debe tener entre 6 y 10 dígitos");
-                    }
-                }
-                if (usuario.getTipoIdentificacion() == Usuario.TipoIdentificacion.TI) {
-                    if (usuario.getEdad() >= 18) {
-                        return ResponseEntity.badRequest().body(
-                                "Error: No se permite Tarjeta Identidad (TI) para mayores de edad (18 años o más)");
-                    }
-                    if (idStr.length() != 10) {
-                        return ResponseEntity.badRequest()
-                                .body("Error: La Tarjeta de Identidad (TI) debe tener exactamente 10 dígitos");
-                    }
-                }
-            }
-
-            usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
-            Usuario guardado = usuarioRepository.save(usuario);
-
-            registrarAuditoria("CREAR_USUARIO", "ID: " + guardado.getId() + ", ROL: " + guardado.getRol());
-
-            return ResponseEntity.ok(guardado);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al registrar usuario: " + e.getMessage());
+    public ResponseEntity<?> registrarUsuario(@jakarta.validation.Valid @RequestBody RegistroUsuarioDTO dto) {
+        if (usuarioRepository.findByIdentificacion(dto.getIdentificacion()).isPresent()) {
+            return ResponseEntity.badRequest().body("Error: La identificación ya existe");
         }
+        if (usuarioRepository.findByCorreo(dto.getCorreo()).isPresent()) {
+            return ResponseEntity.badRequest().body("Error: El correo ya existe");
+        }
+
+        String errorDocumento = validarDocumentoSegunEdad(dto);
+        if (errorDocumento != null) {
+            return ResponseEntity.badRequest().body(errorDocumento);
+        }
+
+        try {
+            Usuario guardado = usuarioRepository.save(registrationService.construirUsuario(dto));
+            registrarAuditoria("CREAR_USUARIO", "ID: " + guardado.getId() + ", ROL: " + guardado.getRol());
+            return ResponseEntity.ok(guardado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    /** Regla de negocio: CC solo para mayores de edad (6-10 dígitos); TI solo para menores (10 dígitos). */
+    private static String validarDocumentoSegunEdad(RegistroUsuarioDTO dto) {
+        if (dto.getEdad() == null || dto.getTipoIdentificacion() == null) {
+            return null;
+        }
+        String idStr = dto.getIdentificacion();
+        if ("CC".equals(dto.getTipoIdentificacion())) {
+            if (dto.getEdad() < 18) {
+                return "Error: No se permite Cédula (CC) para menores de edad (menor a 18 años)";
+            }
+            if (idStr.length() < 6 || idStr.length() > 10) {
+                return "Error: La Cédula (CC) debe tener entre 6 y 10 dígitos";
+            }
+        }
+        if ("TI".equals(dto.getTipoIdentificacion())) {
+            if (dto.getEdad() >= 18) {
+                return "Error: No se permite Tarjeta Identidad (TI) para mayores de edad (18 años o más)";
+            }
+            if (idStr.length() != 10) {
+                return "Error: La Tarjeta de Identidad (TI) debe tener exactamente 10 dígitos";
+            }
+        }
+        return null;
     }
 
     @GetMapping("/usuarios/{id}")

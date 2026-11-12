@@ -51,11 +51,15 @@ public class RespuestaServiceImpl implements RespuestaService {
     }
 
     @Override
-    public RespuestaEstudiante calificarRespuesta(Long id, Float nota) {
+    public RespuestaEstudiante calificarRespuesta(Long id, Float nota, com.rep.model.Profesor profesor) {
+        float notaValida = com.rep.service.logica.EscalaCalificacion.validar(nota);
         RespuestaEstudiante respuesta = respuestaEstudianteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Respuesta no encontrada"));
 
-        respuesta.setNota(nota);
+        respuesta.setNota(notaValida);
+        if (profesor != null) {
+            respuesta.setCalificadoPor(profesor);
+        }
         return respuestaEstudianteRepository.save(respuesta);
     }
 

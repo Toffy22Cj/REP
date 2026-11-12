@@ -89,7 +89,8 @@ public class ProfesorApi {
             @PathVariable Long id, @RequestParam Float nota,
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorRespuesta(usuario.getId(), id);
-        RespuestaEstudiante respuesta = respuestaService.calificarRespuesta(id, nota);
+        RespuestaEstudiante respuesta = respuestaService.calificarRespuesta(id, nota,
+                usuario instanceof Profesor profesor ? profesor : null);
         return ResponseEntity.ok(respuesta);
     }
 

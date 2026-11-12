@@ -372,7 +372,8 @@ public class ActividadApi {
             @RequestParam(required = false) String observaciones,
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), id);
-        return ResponseEntity.ok(actividadService.actualizarNota(id, estudianteId, nota, observaciones));
+        return ResponseEntity.ok(actividadService.actualizarNota(id, estudianteId, nota, observaciones,
+                usuario instanceof Profesor profesor ? profesor : null));
     }
 
     @GetMapping("/{id}/preguntas")

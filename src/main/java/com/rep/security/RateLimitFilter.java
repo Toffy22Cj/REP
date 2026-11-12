@@ -1,5 +1,7 @@
 package com.rep.security;
 
+import com.rep.exception.ApiErrorWriter;
+import com.rep.exception.ErrorCode;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -10,8 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -65,12 +65,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (isLoginAttempt(request, path)) {
             if (!consume(loginBuckets, clientIp, loginBandwidth())) {
                 logger.warn("Límite de intentos de login excedido desde IP {}", clientIp);
-                reject(response, "Demasiados intentos. Intente más tarde.");
+                ApiErrorWriter.write(request, response, ErrorCode.DEMASIADAS_SOLICITUDES, "Demasiados intentos de inicio de sesión. Espere 15 minutos");
                 return;
             }
         } else if (path.startsWith("/api/") && !consume(generalBuckets, clientIp, generalBandwidth())) {
             logger.warn("Límite general de peticiones excedido desde IP {}", clientIp);
-            reject(response, "Rate limit exceeded.");
+            ApiErrorWriter.write(request, response, ErrorCode.DEMASIADAS_SOLICITUDES);
             return;
         }
 
@@ -98,12 +98,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return buckets.computeIfAbsent(key, k -> Bucket.builder().addLimit(limit).build()).tryConsume(1);
     }
 
-    private static void reject(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"status\":429,\"error\":\"Too Many Requests\",\"message\":\"" + message + "\"}");
-    }
 
     private String resolveClientIp(HttpServletRequest request) {
         if (trustProxyHeaders) {

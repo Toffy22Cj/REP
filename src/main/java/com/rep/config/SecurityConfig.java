@@ -1,5 +1,7 @@
 package com.rep.config;
 
+import com.rep.exception.ApiErrorWriter;
+import com.rep.exception.ErrorCode;
 import com.rep.security.JwtAuthenticationFilter;
 import com.rep.security.RateLimitFilter;
 import com.rep.service.logica.CustomUserDetailsService;
@@ -9,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,7 +18,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -75,7 +75,9 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
                         .frameOptions(frame -> frame.deny()))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(SecurityConfig::noAutenticado)
+                        .accessDeniedHandler(SecurityConfig::accesoDenegado))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/public/**", "/api/auth/**", "/api/registro").permitAll()
                         // Descarga de adjuntos: el controlador valida la pertenencia al curso/actividad
@@ -106,9 +108,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login.html", "/admin/css/**", "/admin/js/**").permitAll()
                         .anyRequest().hasAuthority(ADMIN))
-                .exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
-                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                        new AntPathRequestMatcher("/api/admin/**")))
+                .exceptionHandling(ex -> ex
+                        .defaultAuthenticationEntryPointFor(SecurityConfig::noAutenticado,
+                                new AntPathRequestMatcher("/api/admin/**"))
+                        .defaultAccessDeniedHandlerFor(SecurityConfig::accesoDenegado,
+                                new AntPathRequestMatcher("/api/admin/**")))
                 .formLogin(form -> form
                         .loginPage("/admin/login.html")
                         .loginProcessingUrl("/admin/login")
@@ -142,6 +146,20 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated());
         return http.build();
+    }
+
+    /** 401 con cuerpo {@code ApiError} (código NO_AUTENTICADO). */
+    private static void noAutenticado(jakarta.servlet.http.HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response,
+            org.springframework.security.core.AuthenticationException e) throws java.io.IOException {
+        ApiErrorWriter.write(request, response, ErrorCode.NO_AUTENTICADO);
+    }
+
+    /** 403 con cuerpo {@code ApiError} (código ACCESO_DENEGADO). */
+    private static void accesoDenegado(jakarta.servlet.http.HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response,
+            org.springframework.security.access.AccessDeniedException e) throws java.io.IOException {
+        ApiErrorWriter.write(request, response, ErrorCode.ACCESO_DENEGADO);
     }
 
     @Bean

@@ -147,10 +147,10 @@ public class RespuestaServiceImpl implements RespuestaService {
                 case "xlsx":
                     return new ExcelReportGenerator().generate(respuestas, actividad);
                 default:
-                    throw new IllegalArgumentException("Formato no soportado: " + formato);
+                    throw new com.rep.exception.ValidacionException(com.rep.exception.ErrorCode.FORMATO_EXPORTACION_NO_SOPORTADO, "Formato no soportado: " + formato);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error al generar el reporte", e);
+            throw new com.rep.exception.RepException(com.rep.exception.ErrorCode.REPORTE_NO_GENERADO, null, null, e);
         }
     }
 }

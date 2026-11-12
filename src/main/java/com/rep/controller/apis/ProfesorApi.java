@@ -51,12 +51,7 @@ public class ProfesorApi {
     // 1. Gestión de Materias
     @GetMapping("/materias")
     public ResponseEntity<?> getMateriasAsignadas(@AuthenticationPrincipal Usuario usuario) {
-        try {
-            List<Materia> materias = materiaService.getMateriasByProfesor(usuario.getId());
-            return ResponseEntity.ok(materias);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al obtener materias: " + e.getMessage());
-        }
+        return ResponseEntity.ok(materiaService.getMateriasByProfesor(usuario.getId()));
     }
 
     // 2. Gestión de Cursos/Grupos
@@ -128,13 +123,8 @@ public class ProfesorApi {
             @RequestParam Long cursoId,
             @RequestParam Long materiaId,
             @AuthenticationPrincipal Usuario usuario) {
-        try {
-            validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
-            List<Object[]> promedios = respuestaService.getPromediosByCursoMateria(cursoId, materiaId);
-            return ResponseEntity.ok(promedios);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        return ResponseEntity.ok(respuestaService.getPromediosByCursoMateria(cursoId, materiaId));
     }
 
     @GetMapping("/reportes/entregas")
@@ -210,7 +200,8 @@ public class ProfesorApi {
 
         String extension = formato == null ? "" : formato.toLowerCase(java.util.Locale.ROOT);
         if (!FORMATOS_EXPORTACION.contains(extension)) {
-            throw new IllegalArgumentException("Formato no soportado. Use: " + FORMATOS_EXPORTACION);
+            throw new com.rep.exception.ValidacionException(com.rep.exception.ErrorCode.FORMATO_EXPORTACION_NO_SOPORTADO,
+                    "Formato no soportado. Use: " + FORMATOS_EXPORTACION);
         }
         byte[] reporte = respuestaService.generarReporteResultados(cursoId, actividadId, extension);
 

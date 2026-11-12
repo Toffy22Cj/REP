@@ -1,11 +1,22 @@
 package com.rep.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import java.util.Map;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class ValidacionException extends RuntimeException {
+/** 400 — los datos no cumplen una regla de negocio. */
+public class ValidacionException extends RepException {
     public ValidacionException(String message) {
-        super(message);
+        super(ErrorCode.VALIDACION_FALLIDA, message);
+    }
+
+    public ValidacionException(ErrorCode code) {
+        super(code);
+    }
+
+    public ValidacionException(ErrorCode code, String message) {
+        super(code, message);
+    }
+
+    public ValidacionException(ErrorCode code, String message, Map<String, Object> details) {
+        super(code, message, details);
     }
 }

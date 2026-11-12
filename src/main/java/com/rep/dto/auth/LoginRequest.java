@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequest {
-    @NotBlank(message = "La identificación es requerida")
-    @Size(min = 2, max = 50, message = "La identificación debe tener entre 2 y 50 caracteres")
+    @NotBlank(message = "La identificación es obligatoria")
+    @Size(max = 50, message = "La identificación no puede superar 50 caracteres")
     private String identificacion;
 
-    @NotBlank(message = "La contraseña es requerida")
-    @Size(min = 4, message = "La contraseña debe tener al menos 4 caracteres")
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(max = 100, message = "La contraseña no puede superar 100 caracteres")
     private String password;
 }

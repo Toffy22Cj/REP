@@ -14,11 +14,11 @@ public final class EscalaCalificacion {
     private EscalaCalificacion() {
     }
 
-    /** @throws IllegalArgumentException si la nota es nula o está fuera de la escala */
+    /** @throws com.rep.exception.NotaFueraDeEscalaException si la nota es nula o está fuera de la escala */
     public static float validar(Float nota) {
         if (nota == null || nota.isNaN() || nota < MINIMA || nota > MAXIMA) {
-            throw new IllegalArgumentException(
-                    "La nota debe estar entre " + MINIMA + " y " + MAXIMA);
+            throw new com.rep.exception.NotaFueraDeEscalaException(
+                    "La nota debe estar entre " + MINIMA + " y " + MAXIMA + " (recibida: " + nota + ")");
         }
         return nota;
     }

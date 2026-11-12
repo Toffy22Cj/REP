@@ -1,11 +1,16 @@
 package com.rep.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-@ResponseStatus(HttpStatus.FORBIDDEN)
-public class OperacionNoPermitidaException extends RuntimeException {
+/** 409 — la operación no es posible en el estado actual del recurso. */
+public class OperacionNoPermitidaException extends RepException {
     public OperacionNoPermitidaException(String message) {
-        super(message);
+        super(ErrorCode.OPERACION_NO_PERMITIDA, message);
+    }
+
+    public OperacionNoPermitidaException(ErrorCode code) {
+        super(code);
+    }
+
+    public OperacionNoPermitidaException(ErrorCode code, String message) {
+        super(code, message);
     }
 }

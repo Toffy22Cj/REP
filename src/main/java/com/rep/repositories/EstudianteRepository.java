@@ -29,4 +29,6 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
     @Query("SELECT COUNT(DISTINCT e) FROM Estudiante e WHERE e.curso.id IN "
             + "(SELECT pm.curso.id FROM ProfesorMateria pm WHERE pm.profesor.id = :profesorId)")
     long countEstudiantesDeProfesor(@org.springframework.data.repository.query.Param("profesorId") Long profesorId);
+
+    boolean existsByCursoId(Long cursoId);
 }

@@ -1,5 +1,7 @@
 package com.rep.security;
 
+import com.rep.exception.ApiErrorWriter;
+import com.rep.exception.ErrorCode;
 import com.rep.service.logica.CustomUserDetailsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -9,7 +11,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -58,7 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
             if (!userDetails.isEnabled()) {
-                rechazar(response, "Cuenta inactiva");
+                ApiErrorWriter.write(request, response, ErrorCode.TOKEN_INVALIDO,
+                        "La cuenta está inactiva. Contacte al administrador");
                 return;
             }
 
@@ -68,17 +70,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
             log.warn("Token JWT rechazado para {}: {}", request.getRequestURI(), e.getMessage());
             SecurityContextHolder.clearContext();
-            rechazar(response, "Token inválido o expirado");
+            ApiErrorWriter.write(request, response, ErrorCode.TOKEN_INVALIDO);
             return;
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private static void rechazar(HttpServletResponse response, String mensaje) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"" + mensaje + "\"}");
     }
 }

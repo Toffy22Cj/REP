@@ -182,9 +182,9 @@ class ActividadServiceTest {
     @Test
     @DisplayName("actualizarNota rechaza notas fuera de la escala 0-5")
     void testActualizarNotaFueraDeEscala() {
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        org.junit.jupiter.api.Assertions.assertThrows(com.rep.exception.NotaFueraDeEscalaException.class,
                 () -> actividadService.actualizarNota(20L, 10L, 7.5f, null));
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        org.junit.jupiter.api.Assertions.assertThrows(com.rep.exception.NotaFueraDeEscalaException.class,
                 () -> actividadService.actualizarNota(20L, 10L, -1f, null));
         org.mockito.Mockito.verifyNoInteractions(respuestaEstudianteRepository);
     }

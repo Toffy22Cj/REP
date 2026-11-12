@@ -1,7 +1,12 @@
 package com.rep.exception;
 
-public class AccessDeniedException extends RuntimeException {
+/** 403 — el usuario está autenticado pero no puede acceder a este recurso. */
+public class AccessDeniedException extends RepException {
     public AccessDeniedException(String message) {
-        super(message);
+        super(ErrorCode.ACCESO_DENEGADO, message);
+    }
+
+    public AccessDeniedException(ErrorCode code) {
+        super(code);
     }
 }

@@ -221,7 +221,8 @@ public class EstudianteServiceImpl implements EstudianteService {
 
         // 2. Validación de acceso
         if (!puedeRealizarActividad(estudianteId, actividadId)) {
-            throw new IllegalStateException("El estudiante no puede realizar esta actividad");
+            throw new com.rep.exception.ActividadNoDisponibleException(
+                    "No puede resolver esta actividad: está inactiva, fuera de plazo, ya la entregó sin reintentos o no pertenece a su curso");
         }
 
         // 3. Crear o actualizar respuesta

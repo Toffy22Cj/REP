@@ -1,7 +1,12 @@
 package com.rep.exception;
 
-public class AuthenticationException extends RuntimeException {
+/** 401 — credenciales incorrectas. */
+public class AuthenticationException extends RepException {
     public AuthenticationException(String message) {
-        super(message);
+        super(ErrorCode.CREDENCIALES_INVALIDAS, message);
+    }
+
+    protected AuthenticationException(ErrorCode code, String message) {
+        super(code, message);
     }
 }

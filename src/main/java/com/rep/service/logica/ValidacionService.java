@@ -1,7 +1,8 @@
 package com.rep.service.logica;
 
 import com.rep.exception.AccessDeniedException;
-import com.rep.exception.ResourceNotFoundException;
+import com.rep.exception.ErrorCode;
+import com.rep.exception.RecursoNoEncontradoException;
 import com.rep.repositories.PreguntaRepository;
 import com.rep.repositories.ProfesorMateriaRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +73,7 @@ public class ValidacionService {
 
         if (!actividadService.existeActividad(actividadId)) {
             log.error("Actividad {} no encontrada", actividadId);
-            throw new ResourceNotFoundException("Actividad no encontrada");
+            throw new RecursoNoEncontradoException(ErrorCode.ACTIVIDAD_NO_ENCONTRADA);
         }
 
         if (!actividadService.profesorTieneAccesoAActividad(profesorId, actividadId)) {
@@ -86,7 +87,7 @@ public class ValidacionService {
             throw new IllegalArgumentException("ID de profesor o estudiante no puede ser nulo");
         }
         if (!estudianteService.existeEstudiante(estudianteId)) {
-            throw new ResourceNotFoundException("Estudiante no encontrado");
+            throw new RecursoNoEncontradoException(ErrorCode.ESTUDIANTE_NO_ENCONTRADO);
         }
         if (!estudianteService.profesorTieneAccesoAEstudiante(profesorId, estudianteId)) {
             throw new AccessDeniedException("No tiene acceso a este estudiante");
@@ -99,7 +100,7 @@ public class ValidacionService {
         }
 
         if (!preguntaRepository.existsById(preguntaId)) {
-            throw new ResourceNotFoundException("Pregunta no encontrada");
+            throw new RecursoNoEncontradoException(ErrorCode.PREGUNTA_NO_ENCONTRADA);
         }
 
         if (!preguntaService.profesorTieneAccesoAPregunta(profesorId, preguntaId)) {
@@ -112,7 +113,7 @@ public class ValidacionService {
             throw new IllegalArgumentException("ID de profesor o respuesta no puede ser nulo");
         }
         if (!respuestaService.existeRespuesta(respuestaId)) {
-            throw new ResourceNotFoundException("Respuesta no encontrada");
+            throw new RecursoNoEncontradoException(ErrorCode.RESPUESTA_NO_ENCONTRADA);
         }
         if (!respuestaService.profesorTieneAccesoARespuesta(profesorId, respuestaId)) {
             throw new AccessDeniedException("No tiene acceso a esta respuesta");
@@ -129,10 +130,10 @@ public class ValidacionService {
 
         // Verificar existencia básica
         if (!materiaService.existeMateria(materiaId)) {
-            throw new ResourceNotFoundException("Materia no existe");
+            throw new RecursoNoEncontradoException(ErrorCode.MATERIA_NO_ENCONTRADA);
         }
         if (!cursoService.existeCurso(cursoId)) {
-            throw new ResourceNotFoundException("Curso no existe");
+            throw new RecursoNoEncontradoException(ErrorCode.CURSO_NO_ENCONTRADO);
         }
 
         // Verificar relación profesor-materia-curso
@@ -159,11 +160,11 @@ public class ValidacionService {
 
         // Verificar existencia de recursos
         if (!materiaService.existeMateria(materiaId)) {
-            throw new ResourceNotFoundException("Materia no encontrada");
+            throw new RecursoNoEncontradoException(ErrorCode.MATERIA_NO_ENCONTRADA);
         }
 
         if (!cursoService.existeCurso(cursoId)) {
-            throw new ResourceNotFoundException("Curso no encontrado");
+            throw new RecursoNoEncontradoException(ErrorCode.CURSO_NO_ENCONTRADO);
         }
 
         // Validar relación completa (el orden de materiaId y cursoId no importa para la

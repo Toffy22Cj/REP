@@ -18,10 +18,6 @@ public class PublicCursoApi {
 
     @GetMapping
     public ResponseEntity<List<Curso>> listarCursosDisponibles() {
-        try {
-            return ResponseEntity.ok(cursoRepository.findAllByOrderByGradoAsc());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        return ResponseEntity.ok(cursoRepository.findAllByOrderByGradoAsc());
     }
 }

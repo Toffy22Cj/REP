@@ -1,11 +1,8 @@
 package com.rep.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class LimiteExcedidoException extends RuntimeException {
+/** 400 — se superó un límite permitido (p. ej. número de opciones). */
+public class LimiteExcedidoException extends RepException {
     public LimiteExcedidoException(String message) {
-        super(message);
+        super(ErrorCode.LIMITE_EXCEDIDO, message);
     }
 }

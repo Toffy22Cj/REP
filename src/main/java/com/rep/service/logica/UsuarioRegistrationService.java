@@ -51,6 +51,9 @@ public class UsuarioRegistrationService {
             log.warn("Intento de auto-registro con rol no permitido: {}", dto.getRol());
             throw new AccessDeniedException(ErrorCode.REGISTRO_ROL_NO_PERMITIDO);
         }
+        // La cuenta queda pendiente hasta que un administrador la active: el registro
+        // público no puede activarse a sí mismo.
+        dto.setActivo(false);
         return crear(dto);
     }
 

@@ -55,7 +55,8 @@ public class AuthService {
         return usuario;
     }
 
-    private String generateToken(Usuario usuario) {
+    /** Emite un JWT para el usuario (login y tras cambiar la contraseña). */
+    public String generateToken(Usuario usuario) {
         Claims claims = Jwts.claims().setSubject(usuario.getIdentificacion());
         claims.put("userId", usuario.getId());
         claims.put("authorities", Collections.singletonList(usuario.getRol().name()));

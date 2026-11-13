@@ -22,4 +22,23 @@ public final class EscalaCalificacion {
         }
         return nota;
     }
+
+    /**
+     * Desempeño cualitativo (escala nacional del Decreto 1290: Superior, Alto, Básico,
+     * Bajo). El umbral de Básico es la nota mínima aprobatoria de la institución.
+     */
+    public static String desempeno(Float nota, float minimaAprobatoria) {
+        if (nota == null) {
+            return null;
+        }
+        if (nota >= 4.6f) return "SUPERIOR";
+        if (nota >= 4.0f) return "ALTO";
+        if (nota >= minimaAprobatoria) return "BASICO";
+        return "BAJO";
+    }
+
+    /** Redondeo institucional a una cifra decimal. */
+    public static Float redondear(Double valor) {
+        return valor == null ? null : Math.round(valor * 10) / 10f;
+    }
 }

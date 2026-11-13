@@ -159,10 +159,23 @@ public class AlmacenamientoArchivosService {
                 ? tipoGuardado
                 : TIPOS_PERMITIDOS.getOrDefault(extension(nombre), MediaType.APPLICATION_OCTET_STREAM_VALUE);
 
+        // Las rutas internas son únicas (UUID): sirven como ETag. Los clientes guardan el
+        // archivo y solo revalidan (304 sin cuerpo), lo que ahorra datos en redes lentas.
+        String etag = "\"" + Integer.toHexString(ruta.hashCode()) + "-" + archivo.toFile().length() + "\"";
+        var atributos = (org.springframework.web.context.request.ServletRequestAttributes)
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (atributos != null && new org.springframework.web.context.request.ServletWebRequest(
+                atributos.getRequest(), atributos.getResponse()).checkNotModified(etag)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_MODIFIED).eTag(etag)
+                    .cacheControl(org.springframework.http.CacheControl.noCache().cachePrivate()).build();
+        }
+
         ContentDisposition disposition = (PREVISUALIZABLES.contains(tipo) ? ContentDisposition.inline() : ContentDisposition.attachment())
                 .filename(nombre, StandardCharsets.UTF_8)
                 .build();
         return ResponseEntity.ok()
+                .eTag(etag)
+                .cacheControl(org.springframework.http.CacheControl.noCache().cachePrivate())
                 .contentType(MediaType.parseMediaType(tipo))
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
                 .header("X-Content-Type-Options", "nosniff")

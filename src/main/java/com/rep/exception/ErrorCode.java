@@ -38,6 +38,9 @@ public enum ErrorCode {
 
     // ---------------------------------------------------------------- usuarios
     USUARIO_NO_ENCONTRADO(HttpStatus.NOT_FOUND, "El usuario no existe"),
+    CONTRASENA_ACTUAL_INCORRECTA(HttpStatus.BAD_REQUEST, "La contraseña actual no es correcta"),
+    CONTRASENA_DEBIL(HttpStatus.BAD_REQUEST, "La nueva contraseña no cumple los requisitos de seguridad"),
+    CONTRASENA_REPETIDA(HttpStatus.BAD_REQUEST, "La nueva contraseña debe ser distinta de la actual"),
     USUARIO_IDENTIFICACION_DUPLICADA(HttpStatus.CONFLICT, "Ya existe un usuario con esa identificación"),
     USUARIO_CORREO_DUPLICADO(HttpStatus.CONFLICT, "Ya existe un usuario con ese correo"),
     USUARIO_CAMBIO_ROL_NO_PERMITIDO(HttpStatus.CONFLICT, "No se puede cambiar el rol de profesores o estudiantes"),

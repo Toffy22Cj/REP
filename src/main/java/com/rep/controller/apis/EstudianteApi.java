@@ -33,9 +33,33 @@ public class EstudianteApi {
     private static final Logger logger = LoggerFactory.getLogger(EstudianteApi.class);
 
     private final EstudianteService estudianteService;
+    private final com.rep.service.logica.NotasService notasService;
+    private final com.rep.service.archivos.NotasReportGenerator reportes;
 
-    public EstudianteApi(EstudianteService estudianteService) {
+    public EstudianteApi(EstudianteService estudianteService, com.rep.service.logica.NotasService notasService,
+            com.rep.service.archivos.NotasReportGenerator reportes) {
         this.estudianteService = estudianteService;
+        this.notasService = notasService;
+        this.reportes = reportes;
+    }
+
+    /** Boletín de notas: promedio y desempeño por materia, estado de cada actividad y asistencia. */
+    @GetMapping("/{id}/notas")
+    public com.rep.dto.notas.NotasDTOs.Boletin notas(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        verificarAcceso(id, usuario);
+        return notasService.boletin(id);
+    }
+
+    /** Boletín en PDF (para guardar o imprimir sin conexión). */
+    @GetMapping(value = "/{id}/notas/pdf", produces = "application/pdf")
+    public ResponseEntity<byte[]> notasPdf(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        verificarAcceso(id, usuario);
+        var boletin = notasService.boletin(id);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename("boletin-" + boletin.identificacion() + ".pdf").build().toString())
+                .body(reportes.boletinPdf(boletin));
     }
 
     @GetMapping("/{id}/materias")

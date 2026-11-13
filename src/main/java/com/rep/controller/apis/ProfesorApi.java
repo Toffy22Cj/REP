@@ -31,6 +31,9 @@ public class ProfesorApi {
     private final RespuestaService respuestaService;
     private final ValidacionService validacionService;
     private final AsistenciaService asistenciaService;
+    private final NotasService notasService;
+    private final com.rep.repositories.ProfesorMateriaRepository profesorMateriaRepository;
+    private final com.rep.service.archivos.NotasReportGenerator reportes;
 
     public ProfesorApi(MateriaService materiaService,
                        CursoService cursoService,
@@ -38,7 +41,10 @@ public class ProfesorApi {
                        EstudianteService estudianteService,
                        RespuestaService respuestaService,
                        ValidacionService validacionService,
-                       AsistenciaService asistenciaService) {
+                       AsistenciaService asistenciaService,
+                       NotasService notasService,
+                       com.rep.service.archivos.NotasReportGenerator reportes,
+                       com.rep.repositories.ProfesorMateriaRepository profesorMateriaRepository) {
         this.materiaService = materiaService;
         this.cursoService = cursoService;
         this.actividadService = actividadService;
@@ -46,6 +52,84 @@ public class ProfesorApi {
         this.respuestaService = respuestaService;
         this.validacionService = validacionService;
         this.asistenciaService = asistenciaService;
+        this.notasService = notasService;
+        this.reportes = reportes;
+        this.profesorMateriaRepository = profesorMateriaRepository;
+    }
+
+    /** Asignaciones del profesor (materia + curso) para los selectores del cliente. */
+    @GetMapping("/asignaciones")
+    public List<Map<String, Object>> asignaciones(@AuthenticationPrincipal Usuario usuario) {
+        return profesorMateriaRepository.findByProfesorId(usuario.getId()).stream()
+                .sorted(java.util.Comparator.comparing((ProfesorMateria pm) -> pm.getMateria().getNombre())
+                        .thenComparing(pm -> pm.getCurso().getNombre()))
+                .map(pm -> {
+                    Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("id", pm.getId());
+                    m.put("materiaId", pm.getMateria().getId());
+                    m.put("materia", pm.getMateria().getNombre());
+                    m.put("cursoId", pm.getCurso().getId());
+                    m.put("curso", pm.getCurso().getNombre());
+                    m.put("nombre", pm.getMateria().getNombre() + " · " + pm.getCurso().getNombre());
+                    return m;
+                })
+                .toList();
+    }
+
+    // Planilla de notas de un curso y materia asignados
+    @GetMapping("/notas")
+    public com.rep.dto.notas.NotasDTOs.Planilla planillaNotas(@RequestParam Long cursoId, @RequestParam Long materiaId,
+            @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        return notasService.planilla(cursoId, materiaId);
+    }
+
+    @GetMapping("/notas/export")
+    public ResponseEntity<byte[]> exportarPlanilla(@RequestParam Long cursoId, @RequestParam Long materiaId,
+            @RequestParam(defaultValue = "xlsx") String formato, @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        var planilla = notasService.planilla(cursoId, materiaId);
+        String base = ("notas-" + planilla.materia() + "-" + planilla.curso()).replaceAll("[^A-Za-z0-9._-]", "_");
+        return switch (formato.toLowerCase(java.util.Locale.ROOT)) {
+            case "pdf" -> archivo(reportes.planillaPdf(planilla), base + ".pdf", "application/pdf");
+            case "xlsx" -> archivo(reportes.planillaExcel(planilla), base + ".xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            default -> throw new com.rep.exception.ValidacionException(
+                    com.rep.exception.ErrorCode.FORMATO_EXPORTACION_NO_SOPORTADO, "Use formato=xlsx o formato=pdf");
+        };
+    }
+
+    /**
+     * Entregas de una actividad en formato resumido (ruta que usa el cliente de
+     * escritorio; antes no existía y la pantalla de calificar quedaba vacía).
+     */
+    @GetMapping("/actividades/{actividadId}/respuestas")
+    public List<Map<String, Object>> entregasDeActividad(@PathVariable Long actividadId,
+            @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorActividad(usuario.getId(), actividadId);
+        return respuestaService.getRespuestasByActividad(actividadId).stream()
+                .filter(r -> Boolean.TRUE.equals(r.getEntregado()))
+                .sorted(java.util.Comparator.comparing(r -> r.getEstudiante().getApellido(), String.CASE_INSENSITIVE_ORDER))
+                .map(r -> {
+                    Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("id", r.getId());
+                    m.put("estudianteId", r.getEstudiante().getId());
+                    m.put("nombreEstudiante", (r.getEstudiante().getNombre() + " " + r.getEstudiante().getApellido()).trim());
+                    m.put("nota", r.getNota());
+                    m.put("fechaEntrega", r.getFechaEntrega());
+                    m.put("calificada", r.getCalificadoPor() != null);
+                    m.put("observaciones", r.getObservaciones());
+                    return m;
+                })
+                .toList();
+    }
+
+    private static ResponseEntity<byte[]> archivo(byte[] datos, String nombre, String tipo) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(tipo))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment().filename(nombre).build().toString())
+                .body(datos);
     }
 
     // 1. Gestión de Materias

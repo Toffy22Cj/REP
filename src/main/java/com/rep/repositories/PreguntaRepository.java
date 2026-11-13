@@ -39,5 +39,11 @@ public interface PreguntaRepository extends JpaRepository<Pregunta, Long>, JpaSp
             Long profesorId
     );
 
-}
 
+    /** Actividades (de las indicadas) que contienen al menos una pregunta del tipo dado. */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT DISTINCT p.actividad.id FROM Pregunta p WHERE p.actividad.id IN :ids AND p.tipo = :tipo")
+    List<Long> findActividadIdsConTipo(
+            @org.springframework.data.repository.query.Param("ids") java.util.Collection<Long> ids,
+            @org.springframework.data.repository.query.Param("tipo") com.rep.model.Pregunta.TipoPregunta tipo);
+}

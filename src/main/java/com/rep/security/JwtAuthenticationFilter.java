@@ -64,6 +64,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if (userDetails instanceof com.rep.model.Usuario usuario && tokenAnteriorAlCambioDeClave(claims, usuario)) {
+                ApiErrorWriter.write(request, response, ErrorCode.TOKEN_INVALIDO,
+                        "La contraseña de la cuenta cambió. Inicie sesión de nuevo");
+                return;
+            }
+
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -75,5 +81,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /** El token se emitió antes del último cambio de contraseña (precisión de segundos del JWT). */
+    private static boolean tokenAnteriorAlCambioDeClave(Claims claims, com.rep.model.Usuario usuario) {
+        if (usuario.getCredencialesActualizadasEn() == null || claims.getIssuedAt() == null) {
+            return false;
+        }
+        long cambio = usuario.getCredencialesActualizadasEn()
+                .atZone(java.time.ZoneId.systemDefault()).toEpochSecond();
+        return claims.getIssuedAt().toInstant().getEpochSecond() < cambio;
     }
 }

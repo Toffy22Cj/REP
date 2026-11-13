@@ -11,7 +11,9 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "respuestas_estudiante")
+@Table(name = "respuestas_estudiante", indexes = {
+        @Index(name = "idx_respuesta_estudiante", columnList = "estudiante_id, actividad_id"),
+        @Index(name = "idx_respuesta_actividad", columnList = "actividad_id") })
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class RespuestaEstudiante {
 

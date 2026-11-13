@@ -17,16 +17,14 @@
 ### 2. Configuración
 
 ```bash
-# Crear variables de entorno (desarrollo) a partir de la plantilla
-cp .env.example .env.local
-nano .env.local          # JWT_SECRET (obligatorio, >= 32 bytes), credenciales de BD...
-chmod 600 .env.local
-source .env.local
-
-# Producción: ver production.env.example
+cp .env.example .env
+echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
+nano .env   # credenciales de MySQL y, opcionalmente, ADMIN_INITIAL_PASSWORD
 ```
 
-> `.env.local` está en `.gitignore`. Nunca versione secretos.
+La aplicación lee `.env` automáticamente al arrancar (formato `CLAVE=valor`, sin
+comillas). Las variables de entorno del sistema tienen prioridad. `.env` está en
+`.gitignore`: nunca versione secretos.
 
 ### 3. Compilar y probar
 

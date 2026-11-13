@@ -1,5 +1,44 @@
 # Changelog — REP Backend
 
+## [Profesionalización 2026-11] — Errores con nombre y gestión académica
+
+### Manejo de errores
+- **Catálogo de errores** (`ErrorCode`, documentado en `docs/errores.md`): cada error
+  tiene un nombre estable (p. ej. `USUARIO_IDENTIFICACION_DUPLICADA`,
+  `DOCUMENTO_LONGITUD_INVALIDA`, `CURSO_CON_ESTUDIANTES`), estado HTTP y mensaje.
+- **Formato único `ApiError`** en todas las rutas, incluidos los filtros de seguridad
+  (401/403/429). Antes convivían texto plano, mapas ad hoc y cuerpos vacíos: el panel web
+  mostraba "Error 400:" sin explicación.
+- Excepciones con nombre sobre una base común `RepException`; se eliminan duplicadas
+  (`ResourceNotFoundException`, `EntityNotFoundException` propia, `ApiException`) y los
+  `catch (Exception)` de los controladores que devolvían 500 con mensajes internos.
+- Not-found que lanzaban `RuntimeException` (→ 500) ahora son 404 con código.
+
+### Errores funcionales y de seguridad
+- **Escalada de privilegios**: crear una actividad en una materia/curso no asignado creaba
+  la asignación automáticamente. Ahora `ACCESO_DENEGADO`.
+- Edición de usuario parcial: el cliente de escritorio no enviaba `apellido` y se guardaba
+  `null` (error 500).
+- El administrador ya no puede desactivarse ni eliminarse a sí mismo.
+- No se permite cambiar el rol de profesores/estudiantes (dejaba datos inconsistentes).
+- Nuevo `PUT /api/admin/materias/{id}` (el cliente de escritorio ya lo usaba).
+
+### Arquitectura
+- `AdminApi` (520 líneas con repositorios y try/catch) pasa a ser un controlador delgado
+  sobre `AdminUsuarioService`, `AdminAcademicoService` y `AuditoriaService`.
+- Reglas CC/TI centralizadas en `DocumentoIdentidadPolicy`.
+
+### Panel web de administración
+- Errores mostrados con su mensaje real y asociados al campo correspondiente.
+- Validación previa al envío (mismas reglas que el backend).
+- Gestión de **asignaciones profesor-materia-curso** (no existía en el panel web), ver
+  estudiantes de un curso, eliminar cursos/materias, activar/desactivar usuarios y ver
+  detalles (antes eran `alert("en v2.1")`).
+
+### Pruebas
+- 45 → **60** pruebas (`ApiErrorContractTest`: contrato de errores y reglas nuevas).
+
+
 ## [Refactorización 2026-11] — Seguridad, integridad y modernización
 
 ### Críticos (seguridad)

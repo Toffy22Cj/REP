@@ -31,7 +31,7 @@ source .env.local
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 45 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 60 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar
@@ -58,6 +58,9 @@ Contraseña: la de ADMIN_INITIAL_PASSWORD (o la generada que aparece en el log a
 ---
 
 ## 📖 Documentación
+
+- Catálogo de errores de la API: [docs/errores.md](docs/errores.md)
+- Historial de cambios: [CHANGELOG.md](CHANGELOG.md)
 
 La **documentación completa** está en [DOCUMENTACION_COMPLETA.md](DOCUMENTACION_COMPLETA.md)
 

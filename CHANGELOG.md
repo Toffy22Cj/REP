@@ -1,5 +1,31 @@
 # Changelog — REP Backend
 
+## [Perfil, notas y gestión 2026-11-13]
+- **Mi perfil** para todos los roles: `GET/PUT /api/perfil` (y `/api/admin/perfil` para el
+  panel web) y `PUT /api/perfil/contrasena`. Cambiar la contraseña invalida los tokens
+  emitidos antes (`credenciales_actualizadas_en`) y devuelve uno nuevo.
+- **Notas**: boletín del estudiante (`GET /api/estudiante/{id}/notas`, PDF en `/notas/pdf`)
+  y planilla del profesor (`GET /api/profesor/notas`, exportación `xlsx`/`pdf`), con
+  desempeño según el Decreto 1290. Configurable con `NOTA_MINIMA_APROBATORIA` (3.0) y
+  `VENCIDAS_CUENTAN_CERO` (true).
+- `GET /api/profesor/asignaciones` y `GET /api/profesor/actividades/{id}/respuestas`
+  (el cliente pedía esta ruta y no existía: la pantalla de calificar quedaba vacía).
+- `PUT /api/actividades/{id}/estado?activa=` para publicar u ocultar una actividad;
+  `ActividadDTO` incluye `activa`.
+- **Corregido**: la copia de una actividad no quedaba asociada al profesor (no aparecía en
+  su lista ni se podía editar); editar no guardaba la duración; las estadísticas contaban
+  intentos sin entregar como entregas y dividían por cero en cursos vacíos (ahora además
+  dan promedio, máximo, mínimo, revisadas, en curso y sin iniciar); la respuesta de un
+  estudiante exponía la ruta interna del archivo.
+- El auto-registro crea la cuenta inactiva hasta que la administración la activa; el
+  mensaje de cuenta inactiva lo explica.
+- **Rendimiento en redes lentas**: compresión gzip, `ETag`/304 en descargas, índices en
+  `respuesta_estudiante`, consultas agrupadas en notas y asistencia; auditoría limitada.
+- Nuevos códigos: `CONTRASENA_ACTUAL_INCORRECTA`, `CONTRASENA_DEBIL`, `CONTRASENA_REPETIDA`.
+- Panel web: sección **Mi perfil** (datos y contraseña) y nombre del administrador en la
+  barra superior.
+- Pruebas: 68 → 83.
+
 ## [Material y archivos 2026-11-13]
 - **Material de estudio**: API `/api/materiales` (publicar, listar según rol, descargar,
   eliminar) sobre la entidad `Recurso`.

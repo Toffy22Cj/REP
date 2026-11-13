@@ -23,7 +23,9 @@ public class AuditoriaService {
         auditLogRepository.save(new AuditLog(usuario, accion, detalles));
     }
 
-    public List<AuditLog> listar() {
-        return auditLogRepository.findAllByOrderByTimestampDesc();
+    /** Últimos registros (el historial completo puede crecer sin límite). */
+    public List<AuditLog> listar(int limite) {
+        int tamano = Math.max(1, Math.min(limite, 5000));
+        return auditLogRepository.findAllByOrderByTimestampDesc(org.springframework.data.domain.PageRequest.of(0, tamano));
     }
 }

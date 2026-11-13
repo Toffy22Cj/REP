@@ -87,4 +87,6 @@ public interface RespuestaEstudianteRepository extends JpaRepository<RespuestaEs
     long countEntregasPendientesDeRevision(
             @org.springframework.data.repository.query.Param("profesorId") Long profesorId,
             @org.springframework.data.repository.query.Param("tipoAbierta") com.rep.model.Pregunta.TipoPregunta tipoAbierta);
+
+    List<RespuestaEstudiante> findByActividadIdIn(java.util.Collection<Long> actividadIds);
 }

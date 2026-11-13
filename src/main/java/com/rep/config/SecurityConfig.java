@@ -68,7 +68,7 @@ public class SecurityConfig {
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/auth/**", "/api/public/**", "/api/estudiante/**", "/api/profesor/**",
-                        "/api/actividades/**", "/api/preguntas/**", "/api/registro", "/api/materiales/**")
+                        "/api/actividades/**", "/api/preguntas/**", "/api/registro", "/api/materiales/**", "/api/perfil/**")
                 .csrf(AbstractHttpConfigurer::disable) // API sin estado con Bearer token: CSRF no aplica
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -85,6 +85,7 @@ public class SecurityConfig {
                         .hasAnyAuthority(ESTUDIANTE, PROFESOR, ADMIN)
                         .requestMatchers(HttpMethod.GET, "/api/actividades/*/preguntas")
                         .hasAnyAuthority(ESTUDIANTE, PROFESOR, ADMIN)
+                        .requestMatchers("/api/perfil/**").hasAnyAuthority(ESTUDIANTE, PROFESOR, ADMIN)
                         .requestMatchers("/api/estudiante/**").hasAnyAuthority(ESTUDIANTE, ADMIN)
                         // Material de estudio: publicar solo profesores; el servicio filtra por curso/asignación
                         .requestMatchers(HttpMethod.POST, "/api/materiales/**").hasAuthority(PROFESOR)

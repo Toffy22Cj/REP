@@ -91,6 +91,14 @@ public class Usuario implements UserDetails {
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean activo = true;
 
+    /**
+     * Momento del último cambio de contraseña. Los tokens JWT emitidos antes de esta
+     * fecha dejan de ser válidos (cierra sesiones abiertas en otros equipos).
+     */
+    @JsonIgnore
+    @Column(name = "credenciales_actualizadas_en")
+    private LocalDateTime credencialesActualizadasEn;
+
     public enum TipoIdentificacion {
         CC("Cédula de Ciudadanía"),
         TI("Tarjeta de Identidad");

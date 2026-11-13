@@ -49,10 +49,19 @@ Solo cuentan los intentos **fallidos** (`LOGIN_MAX_INTENTOS`, por defecto 5, dur
 `LOGIN_BLOQUEO_MINUTOS`, por defecto 15). El contador está en memoria: **reiniciar el
 servidor desbloquea inmediatamente**.
 
+### Notas y funcionamiento sin internet
+
+- `NOTA_MINIMA_APROBATORIA` (por defecto `3.0`) y `VENCIDAS_CUENTAN_CERO` (por defecto
+  `true`: una actividad vencida sin entregar cuenta 0.0) ajustan el reporte de notas.
+- El servidor no necesita internet: basta con una red local (LAN/Wi-Fi del colegio). Los
+  clientes de escritorio guardan una copia de lo consultado y, si se pierde la conexión
+  con el servidor, siguen mostrando notas, actividades y material, y encolan las
+  entregas para enviarlas automáticamente al reconectar.
+
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 68 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 83 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar

@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     List<AuditLog> findAllByOrderByTimestampDesc();
+
+    List<AuditLog> findAllByOrderByTimestampDesc(org.springframework.data.domain.Pageable pagina);
 }

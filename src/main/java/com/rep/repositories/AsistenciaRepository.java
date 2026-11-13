@@ -22,4 +22,10 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
 
         @Query("SELECT DISTINCT a.fecha FROM Asistencia a WHERE a.profesorMateria.id = :profesorMateriaId ORDER BY a.fecha DESC")
         List<LocalDate> findFechasByProfesorMateriaId(@Param("profesorMateriaId") Long profesorMateriaId);
+
+    /** [estudianteId, materiaId, estado, cantidad] de todo un curso, en una sola consulta. */
+    @Query("SELECT a.estudiante.id, a.profesorMateria.materia.id, a.estado, COUNT(a) FROM Asistencia a "
+            + "WHERE a.profesorMateria.curso.id = :cursoId "
+            + "GROUP BY a.estudiante.id, a.profesorMateria.materia.id, a.estado")
+    List<Object[]> contarPorCurso(@Param("cursoId") Long cursoId);
 }

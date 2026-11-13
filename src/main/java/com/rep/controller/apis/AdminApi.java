@@ -202,7 +202,7 @@ public class AdminApi {
     }
 
     @GetMapping("/auditoria")
-    public List<AuditLog> auditoria() {
-        return auditoria.listar();
+    public List<AuditLog> auditoria(@RequestParam(defaultValue = "500") int limite) {
+        return auditoria.listar(limite);
     }
 }

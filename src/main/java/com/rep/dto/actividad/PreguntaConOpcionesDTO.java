@@ -20,4 +20,6 @@ public class PreguntaConOpcionesDTO {
     private boolean archivoDisponible;
     private String nombreArchivo;
     private String archivoUrl;
+    private String archivoTipo;
+    private boolean archivoEsImagen;
 }

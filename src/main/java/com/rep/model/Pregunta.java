@@ -48,6 +48,10 @@ public class Pregunta {
     @Column(name = "archivo_tipo")
     private String archivoTipo;
 
+    /** Nombre original del adjunto (el archivo se guarda con un nombre interno aleatorio). */
+    @Column(name = "nombre_archivo")
+    private String nombreArchivo;
+
     @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Opcion> opciones = new HashSet<>(); // Cambia List por Set
     // Método helper para añadir opciones

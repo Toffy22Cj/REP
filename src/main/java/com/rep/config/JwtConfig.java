@@ -27,14 +27,26 @@ public class JwtConfig {
     @Bean
     public SecretKey secretKey() {
         if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException(
-                    "jwt.secret no está configurado. Defina la variable de entorno JWT_SECRET "
-                            + "(p. ej. generada con: openssl rand -base64 64).");
+            throw new IllegalStateException("""
+
+                    ================================================================
+                     Falta JWT_SECRET: la aplicación no puede arrancar sin él.
+
+                     Solución rápida (desde la raíz del proyecto):
+                       cp .env.example .env
+                       echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
+                       mvn spring-boot:run
+
+                     O como variable de entorno:
+                       export JWT_SECRET="$(openssl rand -base64 48)"
+                    ================================================================
+                    """);
         }
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < MIN_SECRET_BYTES) {
             throw new IllegalStateException(
-                    "jwt.secret debe tener al menos " + MIN_SECRET_BYTES + " bytes. Defina JWT_SECRET con un valor más largo.");
+                    "JWT_SECRET debe tener al menos " + MIN_SECRET_BYTES + " caracteres (tiene " + bytes.length
+                            + "). Genere uno con: openssl rand -base64 48");
         }
         return Keys.hmacShaKeyFor(bytes);
     }

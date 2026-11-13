@@ -1,34 +1,43 @@
 package com.rep.service.logica;
 
 import com.rep.dto.actividad.OpcionRequest;
-import com.rep.dto.actividad.PreguntaPlantillaDTO;
 import com.rep.dto.actividad.PreguntaRequest;
-import com.rep.model.*;
+import com.rep.model.Opcion;
+import com.rep.model.Pregunta;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
-import java.util.Map;
 
 public interface PreguntaService {
-        Pregunta crearPregunta(PreguntaRequest request);
+    Pregunta crearPregunta(PreguntaRequest request);
 
-        Pregunta getPreguntaById(Long id);
+    Pregunta getPreguntaById(Long id);
 
-        List<Pregunta> getPreguntasByActividad(Long actividadId);
+    List<Pregunta> getPreguntasByActividad(Long actividadId);
 
-        Pregunta actualizarPregunta(Long id, PreguntaRequest request);
+    Pregunta actualizarPregunta(Long id, PreguntaRequest request);
 
-        void eliminarPregunta(Long id);
+    void eliminarPregunta(Long id);
 
-        Opcion agregarOpcion(Long preguntaId, OpcionRequest request);
-        Opcion subirArchivoOpcion(Long opcionId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
-        java.io.File obtenerArchivoOpcion(Long opcionId);
-        Opcion getOpcionById(Long opcionId);
+    Opcion agregarOpcion(Long preguntaId, OpcionRequest request);
 
-        List<Opcion> getOpcionesByPreguntaId(Long preguntaId);
+    Opcion getOpcionById(Long opcionId);
 
-        boolean profesorTieneAccesoAPregunta(Long profesorId, Long preguntaId);
-        // boolean profesorTieneAccesoAOpcion(Long profesorId, Long opcionId);
+    List<Opcion> getOpcionesByPreguntaId(Long preguntaId);
 
-        Pregunta subirArchivo(Long id, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException;
+    boolean profesorTieneAccesoAPregunta(Long profesorId, Long preguntaId);
 
-        java.io.File obtenerArchivo(Long id) throws java.io.FileNotFoundException;
+    // ---- Adjuntos (imágenes, PDF, documentos, audio, vídeo...) ----
+
+    Pregunta subirArchivo(Long preguntaId, MultipartFile file);
+
+    void eliminarArchivo(Long preguntaId);
+
+    Opcion subirArchivoOpcion(Long opcionId, MultipartFile file);
+
+    ResponseEntity<Resource> descargarArchivo(Long preguntaId);
+
+    ResponseEntity<Resource> descargarArchivoOpcion(Long opcionId);
 }

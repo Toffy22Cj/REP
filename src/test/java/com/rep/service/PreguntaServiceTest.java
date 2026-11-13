@@ -53,7 +53,9 @@ class PreguntaServiceTest {
                 preguntaRepository,
                 opcionRepository,
                 actividadService,
-                respuestaPreguntaRepository
+                respuestaPreguntaRepository,
+                new com.rep.service.archivos.AlmacenamientoArchivosService(
+                        System.getProperty("java.io.tmpdir") + "/rep-test-uploads")
         );
     }
 
@@ -146,7 +148,6 @@ class PreguntaServiceTest {
         opciones.add(op2);
         request.setOpciones(opciones);
 
-        when(preguntaRepository.save(any(Pregunta.class))).thenAnswer(inv -> inv.getArgument(0));
 
         assertThrows(ValidacionException.class, () -> preguntaService.crearPregunta(request));
     }

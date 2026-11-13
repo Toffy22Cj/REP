@@ -1,282 +1,241 @@
 package com.rep.service.impl;
 
-import com.rep.dto.actividad.*;
-import com.rep.model.*;
-import com.rep.repositories.*;
+import com.rep.dto.actividad.OpcionRequest;
+import com.rep.dto.actividad.PreguntaRequest;
 import com.rep.exception.*;
-import com.rep.service.logica.*;
+import com.rep.model.Actividad;
+import com.rep.model.Opcion;
+import com.rep.model.Pregunta;
+import com.rep.repositories.OpcionRepository;
+import com.rep.repositories.PreguntaRepository;
+import com.rep.repositories.RespuestaPreguntaRepository;
+import com.rep.service.archivos.AlmacenamientoArchivosService;
+import com.rep.service.archivos.AlmacenamientoArchivosService.ArchivoGuardado;
+import com.rep.service.logica.ActividadService;
+import com.rep.service.logica.PreguntaService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Preguntas de una actividad.
+ *
+ * <p>Reglas de opciones por tipo:</p>
+ * <ul>
+ *   <li>{@code OPCION_MULTIPLE}: entre 2 y {@value #MAX_OPCIONES} opciones con texto y
+ *       exactamente una correcta.</li>
+ *   <li>{@code VERDADERO_FALSO}: exactamente 2 opciones y una correcta. Antes las
+ *       opciones de este tipo no se guardaban: el estudiante no podía responder y la
+ *       pregunta contaba siempre como incorrecta.</li>
+ *   <li>{@code RESPUESTA_ABIERTA}: sin opciones (se ignoran si se envían).</li>
+ * </ul>
+ */
 @Service
 @Transactional
 public class PreguntaServiceImpl implements PreguntaService {
+
+    static final int MAX_OPCIONES = 5;
+    private static final String CARPETA_PREGUNTAS = "preguntas";
+    private static final String CARPETA_OPCIONES = "opciones";
 
     private final PreguntaRepository preguntaRepository;
     private final OpcionRepository opcionRepository;
     private final ActividadService actividadService;
     private final RespuestaPreguntaRepository respuestaPreguntaRepository;
+    private final AlmacenamientoArchivosService almacenamiento;
 
     public PreguntaServiceImpl(PreguntaRepository preguntaRepository,
             OpcionRepository opcionRepository,
             ActividadService actividadService,
-            RespuestaPreguntaRepository respuestaPreguntaRepository) {
+            RespuestaPreguntaRepository respuestaPreguntaRepository,
+            AlmacenamientoArchivosService almacenamiento) {
         this.preguntaRepository = preguntaRepository;
         this.opcionRepository = opcionRepository;
         this.actividadService = actividadService;
         this.respuestaPreguntaRepository = respuestaPreguntaRepository;
+        this.almacenamiento = almacenamiento;
     }
 
     @Override
     public Pregunta crearPregunta(PreguntaRequest request) {
-        // Validar actividad
         Actividad actividad = actividadService.getActividadById(request.getActividadId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Actividad no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException(ErrorCode.ACTIVIDAD_NO_ENCONTRADA, request.getActividadId()));
 
-        // Crear pregunta base
+        validarOpciones(request.getTipo(), request.getOpciones());
+
         Pregunta pregunta = new Pregunta();
         pregunta.setActividad(actividad);
-        pregunta.setEnunciado(request.getEnunciado());
+        pregunta.setEnunciado(request.getEnunciado().trim());
         pregunta.setTipo(request.getTipo());
-
-        // Guardar pregunta
-        Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
-
-        // Procesar opciones si es necesario
-        if (request.getTipo() == Pregunta.TipoPregunta.OPCION_MULTIPLE && request.getOpciones() != null) {
-            validarOpciones(request.getOpciones());
-            guardarOpciones(preguntaGuardada, request.getOpciones());
-        }
-
-        return preguntaGuardada;
+        agregarOpciones(pregunta, request.getTipo(), request.getOpciones());
+        return preguntaRepository.save(pregunta);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Pregunta getPreguntaById(Long id) {
         return preguntaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pregunta no encontrada con ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException(ErrorCode.PREGUNTA_NO_ENCONTRADA, id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Pregunta> getPreguntasByActividad(Long actividadId) {
         return preguntaRepository.findByActividadIdOrderByIdAsc(actividadId);
     }
 
     @Override
     public Pregunta actualizarPregunta(Long id, PreguntaRequest request) {
-        Pregunta preguntaExistente = getPreguntaById(id);
-
-        // Validar cambio de tipo si ya tiene respuestas
-        if (!preguntaExistente.getTipo().equals(request.getTipo())) {
-            validarCambioTipoPregunta(preguntaExistente);
+        Pregunta pregunta = getPreguntaById(id);
+        if (pregunta.getTipo() != request.getTipo() && respuestaPreguntaRepository.existsByPreguntaId(id)) {
+            throw new OperacionNoPermitidaException(
+                    "No se puede cambiar el tipo de pregunta porque ya tiene respuestas asociadas");
         }
+        validarOpciones(request.getTipo(), request.getOpciones());
 
-        // Actualizar campos
-        preguntaExistente.setEnunciado(request.getEnunciado());
-        preguntaExistente.setTipo(request.getTipo());
-
-        // Manejo especial para opciones múltiples
-        if (request.getTipo() == Pregunta.TipoPregunta.OPCION_MULTIPLE) {
-            actualizarOpciones(preguntaExistente, request.getOpciones());
-        } else {
-            // Eliminar opciones existentes si cambia de tipo
-            opcionRepository.deleteByPreguntaId(preguntaExistente.getId());
-        }
-
-        return preguntaRepository.save(preguntaExistente);
+        pregunta.setEnunciado(request.getEnunciado().trim());
+        pregunta.setTipo(request.getTipo());
+        pregunta.getOpciones().clear(); // orphanRemoval elimina las anteriores
+        agregarOpciones(pregunta, request.getTipo(), request.getOpciones());
+        return preguntaRepository.save(pregunta);
     }
 
     @Override
     public void eliminarPregunta(Long id) {
         Pregunta pregunta = getPreguntaById(id);
-
-        // Validar si tiene respuestas asociadas
         if (respuestaPreguntaRepository.existsByPreguntaId(id)) {
             throw new OperacionNoPermitidaException(
                     "No se puede eliminar la pregunta porque tiene respuestas asociadas");
         }
-
-        // Eliminar en cascada (configurado en la entidad)
+        almacenamiento.eliminar(pregunta.getArchivoUrl());
+        pregunta.getOpciones().forEach(o -> almacenamiento.eliminar(o.getArchivoUrl()));
         preguntaRepository.delete(pregunta);
     }
 
     @Override
     public Opcion agregarOpcion(Long preguntaId, OpcionRequest request) {
         Pregunta pregunta = getPreguntaById(preguntaId);
-
-        // Validar tipo de pregunta
         if (pregunta.getTipo() != Pregunta.TipoPregunta.OPCION_MULTIPLE) {
-            throw new OperacionNoPermitidaException(
-                    "Solo preguntas de opción múltiple pueden tener opciones");
+            throw new OperacionNoPermitidaException("Solo preguntas de opción múltiple admiten opciones adicionales");
         }
-
-        // Validar límite de opciones
-        if (opcionRepository.countByPreguntaId(preguntaId) >= 5) {
-            throw new LimiteExcedidoException("Máximo 5 opciones por pregunta");
+        if (opcionRepository.countByPreguntaId(preguntaId) >= MAX_OPCIONES) {
+            throw new LimiteExcedidoException("Máximo " + MAX_OPCIONES + " opciones por pregunta");
         }
-
-        // Crear y guardar opción
         Opcion opcion = new Opcion();
         opcion.setPregunta(pregunta);
         opcion.setTexto(request.getTexto());
-        opcion.setEsCorrecta(request.getEsCorrecta());
-
+        opcion.setEsCorrecta(Boolean.TRUE.equals(request.getEsCorrecta()));
         return opcionRepository.save(opcion);
     }
 
     @Override
-    public Opcion subirArchivoOpcion(Long opcionId, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
-        Opcion opcion = opcionRepository.findById(opcionId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Opción no encontrada: " + opcionId));
-
-        String uploadDir = System.getProperty("user.home") + "/.rep/uploads";
-        java.io.File directory = new java.io.File(uploadDir);
-        java.io.File destination = crearDestinoSeguro(directory, "opcion_" + opcionId, file.getOriginalFilename());
-        file.transferTo(destination);
-
-        opcion.setArchivoUrl(destination.getAbsolutePath());
-        opcion.setArchivoTipo(file.getContentType());
-        opcion.setNombreArchivo(java.nio.file.Paths.get(file.getOriginalFilename() != null ? file.getOriginalFilename() : "archivo").getFileName().toString());
-        opcion.setTieneArchivo(true);
-
-        return opcionRepository.save(opcion);
-    }
-
-    @Override
-    public java.io.File obtenerArchivoOpcion(Long opcionId) {
-        Opcion opcion = opcionRepository.findById(opcionId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Opción no encontrada: " + opcionId));
-        if (opcion.getArchivoUrl() == null || opcion.getArchivoUrl().isEmpty()) {
-            throw new RecursoNoEncontradoException("No existe archivo para la opción");
-        }
-        java.io.File file = new java.io.File(opcion.getArchivoUrl());
-        if (!file.exists()) throw new RecursoNoEncontradoException("El archivo físico no existe: " + opcion.getArchivoUrl());
-        return file;
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public Opcion getOpcionById(Long opcionId) {
         return opcionRepository.findById(opcionId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Opción no encontrada: " + opcionId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("La opción no existe (id " + opcionId + ")"));
     }
-
-    // --- Métodos auxiliares ---
-
-    private void validarOpciones(List<OpcionRequest> opciones) {
-        if (opciones == null || opciones.isEmpty()) {
-            throw new ValidacionException("Las preguntas de opción múltiple deben tener al menos una opción");
-        }
-
-        long opcionesCorrectas = opciones.stream()
-                .filter(OpcionRequest::getEsCorrecta)
-                .count();
-
-        if (opcionesCorrectas != 1) {
-            throw new ValidacionException("Debe haber exactamente una opción correcta");
-        }
-    }
-
-    private void guardarOpciones(Pregunta pregunta, List<OpcionRequest> opciones) {
-        List<Opcion> opcionesEntities = opciones.stream()
-                .map(opcionReq -> {
-                    Opcion opcion = new Opcion();
-                    opcion.setPregunta(pregunta);
-                    opcion.setTexto(opcionReq.getTexto());
-                    opcion.setEsCorrecta(opcionReq.getEsCorrecta());
-                    return opcion;
-                }).collect(Collectors.toList());
-
-        opcionRepository.saveAll(opcionesEntities);
-    }
-
-    private void actualizarOpciones(Pregunta pregunta, List<OpcionRequest> nuevasOpciones) {
-        // 1. Eliminar opciones existentes
-        opcionRepository.deleteByPreguntaId(pregunta.getId());
-
-        // 2. Guardar nuevas opciones
-        if (nuevasOpciones != null && !nuevasOpciones.isEmpty()) {
-            validarOpciones(nuevasOpciones);
-            guardarOpciones(pregunta, nuevasOpciones);
-        }
-    }
-
-    private void validarCambioTipoPregunta(Pregunta pregunta) {
-        if (respuestaPreguntaRepository.existsByPreguntaId(pregunta.getId())) {
-            throw new OperacionNoPermitidaException(
-                    "No se puede cambiar el tipo de pregunta porque ya tiene respuestas asociadas");
-        }
-    }
-
-    // --- Métodos adicionales del contrato ---
 
     @Override
+    @Transactional(readOnly = true)
     public List<Opcion> getOpcionesByPreguntaId(Long preguntaId) {
         return opcionRepository.findByPreguntaId(preguntaId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean profesorTieneAccesoAPregunta(Long profesorId, Long preguntaId) {
-        return preguntaRepository.existsByIdAndActividad_ProfesorMateria_Profesor_Id(
-                preguntaId,
-                profesorId);
+        return preguntaRepository.existsByIdAndActividad_ProfesorMateria_Profesor_Id(preguntaId, profesorId);
     }
 
+    // ------------------------------------------------------------------ adjuntos
+
     @Override
-    public Pregunta subirArchivo(Long id, org.springframework.web.multipart.MultipartFile file)
-            throws java.io.IOException {
-        Pregunta pregunta = getPreguntaById(id);
-
-        String uploadDir = System.getProperty("user.home") + "/.rep/uploads";
-        java.io.File directory = new java.io.File(uploadDir);
-        java.io.File destination = crearDestinoSeguro(directory, "pregunta_" + id, file.getOriginalFilename());
-        file.transferTo(destination);
-
-        // Update entity
-        pregunta.setArchivoUrl(destination.getAbsolutePath());
-        pregunta.setArchivoTipo(file.getContentType());
-
+    public Pregunta subirArchivo(Long preguntaId, MultipartFile file) {
+        Pregunta pregunta = getPreguntaById(preguntaId);
+        ArchivoGuardado guardado = almacenamiento.guardar(file, CARPETA_PREGUNTAS);
+        almacenamiento.eliminar(pregunta.getArchivoUrl()); // reemplaza el adjunto anterior
+        pregunta.setArchivoUrl(guardado.ruta());
+        pregunta.setArchivoTipo(guardado.tipoContenido());
+        pregunta.setNombreArchivo(guardado.nombreOriginal());
         return preguntaRepository.save(pregunta);
     }
 
-    private java.io.File crearDestinoSeguro(java.io.File directory, String prefix, String originalFilename) throws java.io.IOException {
-        if (!directory.exists()) {
-            boolean created = directory.mkdirs();
-            if (!created) {
-                throw new java.io.IOException("No se pudo crear el directorio de subida: " + directory.getAbsolutePath());
-            }
-        }
-
-        String safeName = "archivo";
-        if (originalFilename != null && !originalFilename.isBlank()) {
-            safeName = java.nio.file.Paths.get(originalFilename).getFileName().toString();
-            safeName = safeName.replaceAll("[^a-zA-Z0-9._-]", "_");
-        }
-
-        String fileName = prefix + "_" + System.currentTimeMillis() + "_" + safeName;
-        java.io.File destination = new java.io.File(directory, fileName);
-
-        if (!destination.getCanonicalPath().startsWith(directory.getCanonicalPath())) {
-            throw new SecurityException("Intento de path traversal detectado en nombre de archivo");
-        }
-
-        return destination;
+    @Override
+    public void eliminarArchivo(Long preguntaId) {
+        Pregunta pregunta = getPreguntaById(preguntaId);
+        almacenamiento.eliminar(pregunta.getArchivoUrl());
+        pregunta.setArchivoUrl(null);
+        pregunta.setArchivoTipo(null);
+        pregunta.setNombreArchivo(null);
+        preguntaRepository.save(pregunta);
     }
 
     @Override
-    public java.io.File obtenerArchivo(Long id) throws java.io.FileNotFoundException {
-        Pregunta pregunta = getPreguntaById(id);
+    public Opcion subirArchivoOpcion(Long opcionId, MultipartFile file) {
+        Opcion opcion = getOpcionById(opcionId);
+        ArchivoGuardado guardado = almacenamiento.guardar(file, CARPETA_OPCIONES);
+        almacenamiento.eliminar(opcion.getArchivoUrl());
+        opcion.setArchivoUrl(guardado.ruta());
+        opcion.setArchivoTipo(guardado.tipoContenido());
+        opcion.setNombreArchivo(guardado.nombreOriginal());
+        opcion.setTieneArchivo(true);
+        return opcionRepository.save(opcion);
+    }
 
-        if (pregunta.getArchivoUrl() == null || pregunta.getArchivoUrl().isEmpty()) {
-            throw new java.io.FileNotFoundException("La pregunta no tiene archivo adjunto");
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<Resource> descargarArchivo(Long preguntaId) {
+        Pregunta pregunta = getPreguntaById(preguntaId);
+        return almacenamiento.descargar(pregunta.getArchivoUrl(), pregunta.getNombreArchivo(), pregunta.getArchivoTipo());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<Resource> descargarArchivoOpcion(Long opcionId) {
+        Opcion opcion = getOpcionById(opcionId);
+        return almacenamiento.descargar(opcion.getArchivoUrl(), opcion.getNombreArchivo(), opcion.getArchivoTipo());
+    }
+
+    // ------------------------------------------------------------------ opciones
+
+    private static void validarOpciones(Pregunta.TipoPregunta tipo, List<OpcionRequest> opciones) {
+        if (tipo == Pregunta.TipoPregunta.RESPUESTA_ABIERTA) {
+            return;
         }
-
-        java.io.File file = new java.io.File(pregunta.getArchivoUrl());
-        if (!file.exists()) {
-            throw new java.io.FileNotFoundException("El archivo físico no existe: " + pregunta.getArchivoUrl());
+        int cantidad = opciones == null ? 0 : opciones.size();
+        if (tipo == Pregunta.TipoPregunta.VERDADERO_FALSO && cantidad != 2) {
+            throw new ValidacionException(ErrorCode.PREGUNTA_OPCIONES_INVALIDAS,
+                    "Una pregunta de verdadero/falso debe tener exactamente 2 opciones", Map.of("opciones", cantidad));
         }
+        if (tipo == Pregunta.TipoPregunta.OPCION_MULTIPLE && (cantidad < 2 || cantidad > MAX_OPCIONES)) {
+            throw new ValidacionException(ErrorCode.PREGUNTA_OPCIONES_INVALIDAS,
+                    "Una pregunta de opción múltiple debe tener entre 2 y " + MAX_OPCIONES + " opciones",
+                    Map.of("opciones", cantidad));
+        }
+        if (opciones.stream().anyMatch(o -> o.getTexto() == null || o.getTexto().isBlank())) {
+            throw new ValidacionException(ErrorCode.PREGUNTA_OPCIONES_INVALIDAS, "Todas las opciones deben tener texto");
+        }
+        long correctas = opciones.stream().filter(o -> Boolean.TRUE.equals(o.getEsCorrecta())).count();
+        if (correctas != 1) {
+            throw new ValidacionException(ErrorCode.PREGUNTA_OPCIONES_INVALIDAS,
+                    "Debe haber exactamente una opción correcta (hay " + correctas + ")", Map.of("correctas", correctas));
+        }
+    }
 
-        return file;
+    private static void agregarOpciones(Pregunta pregunta, Pregunta.TipoPregunta tipo, List<OpcionRequest> opciones) {
+        if (tipo == Pregunta.TipoPregunta.RESPUESTA_ABIERTA || opciones == null) {
+            return;
+        }
+        for (OpcionRequest req : opciones) {
+            Opcion opcion = new Opcion();
+            opcion.setTexto(req.getTexto().trim());
+            opcion.setEsCorrecta(Boolean.TRUE.equals(req.getEsCorrecta()));
+            pregunta.addOpcion(opcion);
+        }
     }
 }

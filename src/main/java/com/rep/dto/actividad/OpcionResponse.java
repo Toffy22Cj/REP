@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/** Opción vista por el profesor. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,22 +17,16 @@ public class OpcionResponse {
     private String nombreArchivo;
     private String archivoUrl;
 
-    // Constructor desde entidad
     public OpcionResponse(Opcion opcion) {
         this.id = opcion.getId();
         this.texto = opcion.getTexto();
         this.esCorrecta = opcion.getEsCorrecta();
-        if (opcion.getTieneArchivo() != null && opcion.getTieneArchivo()) {
+        if (opcion.getArchivoUrl() != null && !opcion.getArchivoUrl().isBlank()) {
             this.archivoDisponible = true;
-            this.nombreArchivo = opcion.getNombreArchivo() != null ? opcion.getNombreArchivo() : (opcion.getArchivoUrl() != null ? new java.io.File(opcion.getArchivoUrl()).getName() : null);
-            this.archivoUrl = opcion.getArchivoUrl();
-        } else if (opcion.getArchivoUrl() != null && !opcion.getArchivoUrl().isEmpty()) {
-            this.archivoDisponible = true;
-            java.io.File f = new java.io.File(opcion.getArchivoUrl());
-            this.nombreArchivo = f.getName();
-            this.archivoUrl = opcion.getArchivoUrl();
-        } else {
-            this.archivoDisponible = false;
+            this.nombreArchivo = opcion.getNombreArchivo() != null
+                    ? opcion.getNombreArchivo()
+                    : new java.io.File(opcion.getArchivoUrl()).getName();
+            this.archivoUrl = "/api/preguntas/opciones/" + opcion.getId() + "/archivo";
         }
     }
 }

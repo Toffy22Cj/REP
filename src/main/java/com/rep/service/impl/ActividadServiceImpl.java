@@ -226,11 +226,11 @@ public class ActividadServiceImpl implements ActividadService {
         dto.setId(actividad.getId());
         dto.setTitulo(actividad.getTitulo());
         dto.setDescripcion(actividad.getDescripcion());
-
+        // Orden estable: las colecciones son Set y antes el orden variaba entre peticiones
         dto.setPreguntas(actividad.getPreguntas().stream()
+                .sorted(java.util.Comparator.comparing(Pregunta::getId))
                 .map(this::mapPreguntaToDto)
                 .toList());
-
         return dto;
     }
 
@@ -239,22 +239,20 @@ public class ActividadServiceImpl implements ActividadService {
         preguntaDto.setId(pregunta.getId());
         preguntaDto.setEnunciado(pregunta.getEnunciado());
         preguntaDto.setTipo(pregunta.getTipo());
-
         preguntaDto.setOpciones(pregunta.getOpciones().stream()
+                .sorted(java.util.Comparator.comparing(Opcion::getId))
                 .map(this::mapOpcionToDto)
                 .toList());
 
-        // Indicar si hay archivo adjunto (no exponemos la ruta)
-        if (pregunta.getArchivoUrl() != null && !pregunta.getArchivoUrl().isEmpty()) {
+        // Se expone la URL de descarga de la API, nunca la ruta interna del servidor
+        if (pregunta.getArchivoUrl() != null && !pregunta.getArchivoUrl().isBlank()) {
             preguntaDto.setArchivoDisponible(true);
-            java.io.File f = new java.io.File(pregunta.getArchivoUrl());
-            preguntaDto.setNombreArchivo(f.getName());
-            preguntaDto.setArchivoUrl(pregunta.getArchivoUrl());
-        } else {
-            preguntaDto.setArchivoDisponible(false);
-            preguntaDto.setNombreArchivo(null);
+            preguntaDto.setNombreArchivo(pregunta.getNombreArchivo() != null
+                    ? pregunta.getNombreArchivo() : new java.io.File(pregunta.getArchivoUrl()).getName());
+            preguntaDto.setArchivoUrl("/api/preguntas/" + pregunta.getId() + "/archivo");
+            preguntaDto.setArchivoTipo(pregunta.getArchivoTipo());
+            preguntaDto.setArchivoEsImagen(pregunta.getArchivoTipo() != null && pregunta.getArchivoTipo().startsWith("image/"));
         }
-
         return preguntaDto;
     }
 
@@ -263,13 +261,11 @@ public class ActividadServiceImpl implements ActividadService {
         opcionDto.setId(opcion.getId());
         opcionDto.setTexto(opcion.getTexto());
         opcionDto.setEsCorrecta(opcion.getEsCorrecta());
-        if (opcion.getArchivoUrl() != null && !opcion.getArchivoUrl().isEmpty()) {
+        if (opcion.getArchivoUrl() != null && !opcion.getArchivoUrl().isBlank()) {
             opcionDto.setArchivoDisponible(true);
-            java.io.File f = new java.io.File(opcion.getArchivoUrl());
-            opcionDto.setNombreArchivo(f.getName());
-            opcionDto.setArchivoUrl(opcion.getArchivoUrl());
-        } else {
-            opcionDto.setArchivoDisponible(false);
+            opcionDto.setNombreArchivo(opcion.getNombreArchivo() != null
+                    ? opcion.getNombreArchivo() : new java.io.File(opcion.getArchivoUrl()).getName());
+            opcionDto.setArchivoUrl("/api/preguntas/opciones/" + opcion.getId() + "/archivo");
         }
         return opcionDto;
     }

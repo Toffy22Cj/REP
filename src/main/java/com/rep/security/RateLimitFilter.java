@@ -44,14 +44,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> generalBuckets = new ConcurrentHashMap<>();
     private final boolean trustProxyHeaders;
     private final long loginCapacity;
+    private final long loginWindowMinutes;
     private final long generalCapacity;
 
     public RateLimitFilter(
             @Value("${app.security.trust-proxy-headers:false}") boolean trustProxyHeaders,
             @Value("${app.security.rate-limit.login-per-15min:5}") long loginCapacity,
+            @Value("${app.security.rate-limit.login-window-minutes:15}") long loginWindowMinutes,
             @Value("${app.security.rate-limit.api-per-minute:100}") long generalCapacity) {
         this.trustProxyHeaders = trustProxyHeaders;
         this.loginCapacity = loginCapacity;
+        this.loginWindowMinutes = loginWindowMinutes;
         this.generalCapacity = generalCapacity;
     }
 
@@ -63,11 +66,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         if (isLoginAttempt(request, path)) {
-            if (!consume(loginBuckets, clientIp, loginBandwidth())) {
-                logger.warn("Límite de intentos de login excedido desde IP {}", clientIp);
-                ApiErrorWriter.write(request, response, ErrorCode.DEMASIADAS_SOLICITUDES, "Demasiados intentos de inicio de sesión. Espere 15 minutos");
+            // Solo cuentan los intentos FALLIDOS: antes también contaban los correctos y
+            // tras 5 inicios de sesión válidos el usuario quedaba bloqueado 15 minutos.
+            Bucket bucket = bucketFor(loginBuckets, clientIp, loginBandwidth());
+            if (bucket.getAvailableTokens() <= 0) {
+                logger.warn("Límite de intentos fallidos de login excedido desde IP {}", clientIp);
+                ApiErrorWriter.write(request, response, ErrorCode.DEMASIADAS_SOLICITUDES,
+                        "Demasiados intentos fallidos de inicio de sesión. Espere " + loginWindowMinutes + " minutos");
                 return;
             }
+            filterChain.doFilter(request, response);
+            if (esLoginFallido(response)) {
+                bucket.tryConsume(1);
+            }
+            return;
         } else if (path.startsWith("/api/") && !consume(generalBuckets, clientIp, generalBandwidth())) {
             logger.warn("Límite general de peticiones excedido desde IP {}", clientIp);
             ApiErrorWriter.write(request, response, ErrorCode.DEMASIADAS_SOLICITUDES);
@@ -77,13 +89,30 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /** API: 401/403. Panel web: redirección a la página de login con ?error. */
+    private static boolean esLoginFallido(HttpServletResponse response) {
+        int status = response.getStatus();
+        if (status == HttpServletResponse.SC_UNAUTHORIZED || status == HttpServletResponse.SC_FORBIDDEN) {
+            return true;
+        }
+        String location = response.getHeader("Location");
+        return status == HttpServletResponse.SC_FOUND && location != null && location.contains("error");
+    }
+
+    private static Bucket bucketFor(Map<String, Bucket> buckets, String key, Bandwidth limit) {
+        if (buckets.size() >= MAX_TRACKED_CLIENTS && !buckets.containsKey(key)) {
+            buckets.clear();
+        }
+        return buckets.computeIfAbsent(key, k -> Bucket.builder().addLimit(limit).build());
+    }
+
     private static boolean isLoginAttempt(HttpServletRequest request, String path) {
         return "POST".equals(request.getMethod())
                 && (path.equals("/api/auth/login") || path.equals("/admin/login"));
     }
 
     private Bandwidth loginBandwidth() {
-        return Bandwidth.classic(loginCapacity, Refill.intervally(loginCapacity, Duration.ofMinutes(15)));
+        return Bandwidth.classic(loginCapacity, Refill.intervally(loginCapacity, Duration.ofMinutes(loginWindowMinutes)));
     }
 
     private Bandwidth generalBandwidth() {

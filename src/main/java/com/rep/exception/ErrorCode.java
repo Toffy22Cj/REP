@@ -73,7 +73,15 @@ public enum ErrorCode {
     RESPUESTA_NO_ENCONTRADA(HttpStatus.NOT_FOUND, "La entrega no existe"),
     NOTA_FUERA_DE_ESCALA(HttpStatus.BAD_REQUEST, "La nota debe estar entre 0.0 y 5.0"),
     FORMATO_EXPORTACION_NO_SOPORTADO(HttpStatus.BAD_REQUEST, "Formato de exportación no soportado"),
-    REPORTE_NO_GENERADO(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo generar el reporte");
+    REPORTE_NO_GENERADO(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo generar el reporte"),
+    PREGUNTA_OPCIONES_INVALIDAS(HttpStatus.BAD_REQUEST, "Las opciones de la pregunta no son válidas"),
+
+    // ---------------------------------------------------------------- archivos y material de estudio
+    ARCHIVO_VACIO(HttpStatus.BAD_REQUEST, "No se recibió ningún archivo o está vacío"),
+    ARCHIVO_TIPO_NO_PERMITIDO(HttpStatus.BAD_REQUEST, "Tipo de archivo no permitido"),
+    ARCHIVO_NO_ENCONTRADO(HttpStatus.NOT_FOUND, "El archivo no existe"),
+    ARCHIVO_NO_GUARDADO(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo guardar el archivo"),
+    MATERIAL_NO_ENCONTRADO(HttpStatus.NOT_FOUND, "El material de estudio no existe");
 
     private final HttpStatus status;
     private final String defaultMessage;

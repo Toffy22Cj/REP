@@ -59,11 +59,14 @@ seguridad) tienen el mismo formato JSON (`ApiError`):
 | Código | HTTP | Mensaje por defecto |
 |---|---|---|
 | `NO_AUTENTICADO` | 401 | Debe iniciar sesión para acceder a este recurso |
-| `TOKEN_INVALIDO` | 401 | La sesión no es válida o ha expirado |
+| `TOKEN_INVALIDO` | 401 | La sesión no es válida o ha expirado (también tras cambiar la contraseña) |
 | `CREDENCIALES_INVALIDAS` | 401 | Identificación o contraseña incorrectas |
 | `CUENTA_INACTIVA` | 403 | La cuenta está inactiva. Contacte al administrador |
 | `ACCESO_DENEGADO` | 403 | No tiene permisos para realizar esta acción |
 | `REGISTRO_ROL_NO_PERMITIDO` | 403 | El registro público solo permite cuentas de estudiante |
+| `CONTRASENA_ACTUAL_INCORRECTA` | 400 | La contraseña actual no es correcta |
+| `CONTRASENA_DEBIL` | 400 | La nueva contraseña no cumple los requisitos de seguridad |
+| `CONTRASENA_REPETIDA` | 400 | La nueva contraseña debe ser distinta de la actual |
 
 ### Usuarios
 

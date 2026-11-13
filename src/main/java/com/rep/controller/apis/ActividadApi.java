@@ -159,6 +159,19 @@ public class ActividadApi {
         return ResponseEntity.noContent().build();
     }
 
+    // 5b. Publicar / ocultar una actividad a los estudiantes (las inactivas no cuentan en las notas)
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<ActividadDTO> cambiarEstado(
+            @PathVariable Long id,
+            @RequestParam boolean activa,
+            @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorActividad(usuario.getId(), id);
+        Actividad actividad = actividadService.getActividadById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(ErrorCode.ACTIVIDAD_NO_ENCONTRADA, id));
+        actividad.setActiva(activa);
+        return ResponseEntity.ok(ActividadDTO.fromEntity(actividadService.editarActividad(id, actividad)));
+    }
+
     // 6. Estadísticas de actividad
     @GetMapping("/{id}/estadisticas")
     public ResponseEntity<Map<String, Object>> obtenerEstadisticas(
@@ -223,14 +236,17 @@ public class ActividadApi {
         dto.setId(respuesta.getId());
         if (respuesta.getEstudiante() != null) {
             dto.setEstudianteId(respuesta.getEstudiante().getId());
-            dto.setNombreEstudiante(respuesta.getEstudiante().getNombre());
+            dto.setNombreEstudiante((respuesta.getEstudiante().getNombre() + " "
+                    + respuesta.getEstudiante().getApellido()).trim());
         }
         dto.setNota(respuesta.getNota());
         dto.setObservaciones(respuesta.getObservaciones());
         dto.setFechaEntrega(respuesta.getFechaEntrega());
 
         java.util.List<com.rep.dto.actividad.RespuestaPreguntaDetalleDTO> list = respuesta.getRespuestasPreguntas()
-                .stream().map(rp -> {
+                .stream()
+                .sorted(java.util.Comparator.comparing(rp -> rp.getPregunta() != null ? rp.getPregunta().getId() : 0L))
+                .map(rp -> {
                     com.rep.dto.actividad.RespuestaPreguntaDetalleDTO rpd = new com.rep.dto.actividad.RespuestaPreguntaDetalleDTO();
                     rpd.setId(rp.getId());
                     if (rp.getPregunta() != null) {
@@ -242,7 +258,7 @@ public class ActividadApi {
                         rpd.setOpcionTexto(rp.getOpcion().getTexto());
                     }
                     rpd.setRespuestaAbierta(rp.getRespuestaAbierta());
-                    rpd.setArchivoAdjunto(rp.getArchivoAdjunto());
+                    // No se expone la ruta interna del servidor
                     rpd.setNombreArchivo(rp.getNombreArchivo());
                     rpd.setEsCorrecta(rp.getEsCorrecta());
                     return rpd;

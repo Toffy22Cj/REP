@@ -26,6 +26,7 @@ public class ActividadDTO {
     private String materiaNombre;
     private Long cursoId;
     private String cursoNombre;
+    private Boolean activa;
 
     // Getters y Setters
     public Long getId() { return id; }
@@ -63,6 +64,7 @@ public class ActividadDTO {
         dto.setFechaEntrega(actividad.getFechaEntrega());
         dto.setDuracionMinutos(actividad.getDuracionMinutos());
         dto.setFechaCreacion(actividad.getFechaCreacion());
+        dto.setActiva(actividad.getActiva());
 
         if(actividad.getProfesorMateria() != null && actividad.getProfesorMateria().getProfesor() != null) {
             dto.setProfesorId(actividad.getProfesorMateria().getProfesor().getId());

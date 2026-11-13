@@ -92,6 +92,13 @@ public class ActividadServiceImpl implements ActividadService {
         existente.setTipo(actividad.getTipo());
         existente.setDescripcion(actividad.getDescripcion());
         existente.setFechaEntrega(actividad.getFechaEntrega());
+        // La duración y el estado no se copiaban: editarlos no tenía efecto.
+        if (actividad.getDuracionMinutos() != null) {
+            existente.setDuracionMinutos(actividad.getDuracionMinutos());
+        }
+        if (actividad.getActiva() != null) {
+            existente.setActiva(actividad.getActiva());
+        }
         return actividadRepository.save(existente);
     }
 
@@ -169,14 +176,31 @@ public class ActividadServiceImpl implements ActividadService {
         Actividad actividad = actividadRepository.findById(actividadId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Actividad no encontrada"));
 
-        List<Object[]> entregas = respuestaEstudianteRepository.findEstadoEntregasByActividad(actividadId);
-        long totalEntregas = entregas.stream().mapToLong(arr -> (Long) arr[1]).sum();
+        int totalEstudiantes = actividad.getProfesorMateria().getCurso().getEstudiantes().size();
+        List<com.rep.model.RespuestaEstudiante> respuestas = respuestaEstudianteRepository.findByActividadId(actividadId);
+        // Antes se sumaban también los intentos sin entregar y, con un curso vacío, el
+        // porcentaje era una división por cero (NaN/Infinity en el JSON).
+        long entregadas = respuestas.stream().filter(r -> Boolean.TRUE.equals(r.getEntregado())).count();
+        long enCurso = respuestas.size() - entregadas;
+        java.util.DoubleSummaryStatistics notas = respuestas.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getEntregado()) && r.getNota() != null)
+                .mapToDouble(r -> r.getNota()).summaryStatistics();
+        long revisadas = respuestas.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getEntregado()) && r.getCalificadoPor() != null).count();
 
-        return Map.of(
-                "totalEstudiantes", actividad.getProfesorMateria().getCurso().getEstudiantes().size(),
-                "entregasRealizadas", totalEntregas,
-                "porcentajeEntregas",
-                totalEntregas * 100.0 / actividad.getProfesorMateria().getCurso().getEstudiantes().size());
+        Map<String, Object> resultado = new java.util.LinkedHashMap<>();
+        resultado.put("totalEstudiantes", totalEstudiantes);
+        resultado.put("entregasRealizadas", entregadas);
+        resultado.put("porcentajeEntregas", totalEstudiantes == 0 ? 0.0
+                : Math.round(entregadas * 1000.0 / totalEstudiantes) / 10.0);
+        resultado.put("enCurso", enCurso);
+        resultado.put("sinIniciar", Math.max(0, totalEstudiantes - respuestas.size()));
+        resultado.put("revisadas", revisadas);
+        resultado.put("promedio", notas.getCount() == 0 ? null : Math.round(notas.getAverage() * 10) / 10.0);
+        resultado.put("notaMaxima", notas.getCount() == 0 ? null : Math.round(notas.getMax() * 10) / 10.0);
+        resultado.put("notaMinima", notas.getCount() == 0 ? null : Math.round(notas.getMin() * 10) / 10.0);
+        resultado.put("preguntas", actividad.getPreguntas() == null ? 0 : actividad.getPreguntas().size());
+        return resultado;
     }
 
     @Override
@@ -356,6 +380,9 @@ public class ActividadServiceImpl implements ActividadService {
         clon.setHoraEntrega(original.getHoraEntrega());
         clon.setDuracionMinutos(original.getDuracionMinutos());
         clon.setProfesorMateria(original.getProfesorMateria());
+        // Sin el profesor, la copia no aparecía en su lista ni se podía editar.
+        clon.setProfesor(original.getProfesor() != null ? original.getProfesor()
+                : original.getProfesorMateria().getProfesor());
         clon.setPermitirReintentos(original.getPermitirReintentos());
         clon.setActiva(true);
         clon.setFechaCreacion(LocalDateTime.now());

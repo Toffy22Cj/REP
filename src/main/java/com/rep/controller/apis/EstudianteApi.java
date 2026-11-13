@@ -154,6 +154,7 @@ public class EstudianteApi {
                 pm.getMateria().getId(),
                 pm.getMateria().getNombre(),
                 pm.getCurso().getId(),
-                pm.getCurso().getNombre());
+                pm.getCurso().getNombre(),
+                actividad.getActiva());
     }
 }

@@ -1,6 +1,7 @@
 import { Usuarios } from './modules/usuarios.js';
 import { Academico } from './modules/academico.js';
 import { Auditoria } from './modules/auditoria.js';
+import { Perfil } from './modules/perfil.js';
 import { API } from './modules/api.js';
 import { UI } from './modules/ui.js';
 
@@ -76,6 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'auditoria':
                 await Auditoria.init(containerId);
                 break;
+            case 'perfil':
+                await Perfil.init(containerId);
+                break;
             case 'archivos':
                 contentArea.innerHTML = '<div class="card"><h3>Gestión de Archivos</h3><p>Módulo de archivos en construcción (v2.1).</p></div>';
                 break;
@@ -124,5 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Default module
+    Perfil.cargarUsuarioActual();
     loadModule('dashboard');
 });

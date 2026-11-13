@@ -49,7 +49,7 @@ public class AuthService {
         }
 
         if (!usuario.isActivo()) {
-            throw new AccountInactiveException("Cuenta inactiva");
+            throw new AccountInactiveException("La cuenta está inactiva. Si acaba de solicitarla, espere a que la administración la active");
         }
 
         return usuario;

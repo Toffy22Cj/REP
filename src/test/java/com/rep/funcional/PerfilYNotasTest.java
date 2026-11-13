@@ -3,6 +3,7 @@ package com.rep.funcional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rep.model.Usuario;
+import com.rep.repositories.ActividadRepository;
 import com.rep.repositories.CursoRepository;
 import com.rep.repositories.MateriaRepository;
 import com.rep.repositories.UsuarioRepository;
@@ -52,6 +53,7 @@ class PerfilYNotasTest {
     @Autowired private UsuarioRepository usuarios;
     @Autowired private CursoRepository cursos;
     @Autowired private MateriaRepository materias;
+    @Autowired private ActividadRepository actividades;
 
     // ------------------------------------------------------------------ perfil
 
@@ -271,6 +273,63 @@ class PerfilYNotasTest {
 
     private long idDe(String identificacion) {
         return usuarios.findByIdentificacion(identificacion).orElseThrow().getId();
+    }
+
+    // ------------------------------------------------------------------ gestión de actividades
+
+    private long idActividad(String titulo) {
+        return actividades.findAll().stream().filter(a -> a.getTitulo().equals(titulo)).findFirst().orElseThrow().getId();
+    }
+
+    @Test
+    void estadisticasCuentanSoloEntregasYRedondean() throws Exception {
+        long id = idActividad("Quiz: Derivadas");
+        mvc.perform(get("/api/actividades/" + id + "/estadisticas").header("Authorization", bearer(CARLOS)))
+                .andExpect(status().isOk())
+                // (otra prueba puede registrar un estudiante más en 10-A)
+                .andExpect(jsonPath("$.totalEstudiantes", greaterThanOrEqualTo(6)))
+                .andExpect(jsonPath("$.entregasRealizadas").value(3))
+                .andExpect(jsonPath("$.enCurso").value(1))
+                .andExpect(jsonPath("$.porcentajeEntregas", lessThanOrEqualTo(50.0)))
+                .andExpect(jsonPath("$.notaMinima").value(1.7));
+    }
+
+    @Test
+    void laCopiaPerteneceAlProfesorYSePuedeEditarOcultarYEliminar() throws Exception {
+        long id = idActividad("Taller: Límites");
+        String json = mvc.perform(post("/api/actividades/" + id + "/clonar").header("Authorization", bearer(CARLOS)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.titulo").value("Taller: Límites (Copia)"))
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        long copia = mapper.readTree(json).get("id").asLong();
+
+        mvc.perform(get("/api/actividades").header("Authorization", bearer(CARLOS)))
+                .andExpect(jsonPath("$[*].id", hasItem((int) copia)));
+
+        mvc.perform(put("/api/actividades/" + copia).header("Authorization", bearer(CARLOS))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Copia\",\"tipo\":\"QUIZ\",\"fechaEntrega\":\"2099-01-01\","
+                                + "\"duracionMinutos\":35,\"materiaId\":1,\"cursoId\":1}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.duracionMinutos").value(35));
+
+        mvc.perform(put("/api/actividades/" + copia + "/estado").param("activa", "false").header("Authorization", bearer(CARLOS)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activa").value(false));
+
+        // Otro profesor no puede ocultarla
+        mvc.perform(put("/api/actividades/" + copia + "/estado").param("activa", "true").header("Authorization", bearer(ANDRES)))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(delete("/api/actividades/" + copia).header("Authorization", bearer(CARLOS)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void noSeEliminaUnaActividadConEntregas() throws Exception {
+        mvc.perform(delete("/api/actividades/" + idActividad("Quiz: Derivadas")).header("Authorization", bearer(CARLOS)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("OPERACION_NO_PERMITIDA"));
     }
 
     private String bearer(String identificacion) {

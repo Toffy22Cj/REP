@@ -1,5 +1,23 @@
 # Changelog — REP Backend
 
+## [Material y archivos 2026-11-13]
+- **Material de estudio**: API `/api/materiales` (publicar, listar según rol, descargar,
+  eliminar) sobre la entidad `Recurso`.
+- **Archivos**: `AlmacenamientoArchivosService` (lista blanca de tipos, nombres UUID,
+  `STORAGE_DIR`, máx. `MAX_FILE_SIZE`=25MB, descarga en línea de imágenes/PDF/audio/vídeo).
+  Corrige nombres con tildes en servidores sin locale UTF-8.
+- **Preguntas**: las de verdadero/falso no guardaban sus opciones (siempre incorrectas).
+  Reglas por tipo (`PREGUNTA_OPCIONES_INVALIDAS`), orden estable, URL de descarga en
+  lugar de la ruta interna del servidor.
+- **Inicio de sesión**: el bloqueo contaba también los accesos correctos; ahora solo los
+  fallidos (`LOGIN_MAX_INTENTOS`, `LOGIN_BLOQUEO_MINUTOS`).
+- **Datos de demostración** con `SEED_DEMO=true` (`DemoDataSeeder`).
+- Nuevos códigos de error: `ARCHIVO_VACIO`, `ARCHIVO_TIPO_NO_PERMITIDO`,
+  `ARCHIVO_NO_ENCONTRADO`, `ARCHIVO_NO_GUARDADO`, `MATERIAL_NO_ENCONTRADO`,
+  `PREGUNTA_OPCIONES_INVALIDAS`.
+- Pruebas: 60 → 68.
+
+
 ## [Profesionalización 2026-11] — Errores con nombre y gestión académica
 
 ### Manejo de errores

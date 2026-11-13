@@ -112,6 +112,17 @@ seguridad) tienen el mismo formato JSON (`ApiError`):
 | `NOTA_FUERA_DE_ESCALA` | 400 | La nota debe estar entre 0.0 y 5.0 |
 | `FORMATO_EXPORTACION_NO_SOPORTADO` | 400 | Formato de exportación no soportado |
 | `REPORTE_NO_GENERADO` | 500 | No se pudo generar el reporte |
+| `PREGUNTA_OPCIONES_INVALIDAS` | 400 | Las opciones de la pregunta no son válidas |
+
+### Archivos y material de estudio
+
+| Código | HTTP | Mensaje por defecto |
+|---|---|---|
+| `ARCHIVO_VACIO` | 400 | No se recibió ningún archivo o está vacío |
+| `ARCHIVO_TIPO_NO_PERMITIDO` | 400 | Tipo de archivo no permitido |
+| `ARCHIVO_NO_ENCONTRADO` | 404 | El archivo no existe |
+| `ARCHIVO_NO_GUARDADO` | 500 | No se pudo guardar el archivo |
+| `MATERIAL_NO_ENCONTRADO` | 404 | El material de estudio no existe |
 
 ## Reglas de documento de identidad
 

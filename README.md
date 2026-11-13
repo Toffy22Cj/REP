@@ -26,10 +26,33 @@ La aplicación lee `.env` automáticamente al arrancar (formato `CLAVE=valor`, s
 comillas). Las variables de entorno del sistema tienen prioridad. `.env` está en
 `.gitignore`: nunca versione secretos.
 
+### 2b. Datos de demostración (opcional)
+
+Con `SEED_DEMO=true` en `.env` y una base de datos vacía, el primer arranque crea un
+colegio de ejemplo (contraseña de todas las cuentas: `Demo12345`):
+
+| Rol | Identificación |
+|-----|----------------|
+| Profesor Carlos Ramírez (Matemáticas, Física) | `1020304050` |
+| Profesora Laura Gómez (Lengua, Inglés) | `1030405060` |
+| Profesor Andrés Torres (Ciencias) | `1040506070` |
+| Estudiantes 10-A | `1098765432` … `1098765437` |
+| Estudiantes 11-A | `1098765438` … `1098765441` |
+
+Incluye actividades (examen, quiz, taller) sin empezar, en curso, entregadas con nota,
+pendientes de revisión, revisadas, vencidas e inactivas; preguntas con imagen; material de
+estudio (PDF, PNG, TXT) y asistencia de la última semana. **No usar en producción.**
+
+### Bloqueo por intentos de inicio de sesión
+
+Solo cuentan los intentos **fallidos** (`LOGIN_MAX_INTENTOS`, por defecto 5, durante
+`LOGIN_BLOQUEO_MINUTOS`, por defecto 15). El contador está en memoria: **reiniciar el
+servidor desbloquea inmediatamente**.
+
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 60 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 68 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar

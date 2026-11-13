@@ -61,6 +61,7 @@ public class Usuario implements UserDetails {
     @NotBlank(message = "La contraseña no puede estar vacía")
     @Column(name = "contraseña", nullable = false)
     @JsonProperty(value = "contraseña", access = JsonProperty.Access.WRITE_ONLY)
+    @lombok.ToString.Exclude // no volcar el hash de la contraseña en logs
     private String contraseña;
 
     @Enumerated(EnumType.STRING)

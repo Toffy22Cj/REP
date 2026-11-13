@@ -19,6 +19,7 @@ public interface ProfesorMateriaRepository extends JpaRepository<ProfesorMateria
     List<ProfesorMateria> findByMateriaId(Long materiaId);
     List<ProfesorMateria> findByCursoId(Long cursoId);
     boolean existsByMateriaId(Long materiaId);
+    boolean existsByProfesorId(Long profesorId);
     boolean existsByProfesorIdAndCursoId(Long profesorId, Long cursoId);
 
     // Método con consulta JPQL personalizada para verificar existencia

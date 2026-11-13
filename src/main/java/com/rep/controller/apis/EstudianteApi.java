@@ -4,75 +4,120 @@ import com.rep.dto.actividad.ActividadDTO;
 import com.rep.dto.actividad.ActividadResueltaDTO;
 import com.rep.dto.actividad.MateriaDTO;
 import com.rep.dto.actividad.ResultadoActividadDTO;
-import com.rep.dto.estudiante.NotificacionDTO;
+import com.rep.exception.AccessDeniedException;
 import com.rep.model.Actividad;
-import com.rep.model.Materia;
-import com.rep.model.Notificacion;
+import com.rep.model.Usuario;
 import com.rep.service.logica.EstudianteService;
-import com.rep.service.logica.NotificacionService;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
-@RestController // Cambiado de @Controller a @RestController
+import java.util.List;
+
+/**
+ * API del portal del estudiante.
+ *
+ * <p>Todas las rutas incluyen el id del estudiante en el path (contrato usado por el
+ * cliente de escritorio). Para evitar accesos a datos de otros estudiantes (IDOR),
+ * cada operación verifica que el usuario autenticado sea ese estudiante, salvo los
+ * administradores, que pueden consultar a cualquiera.</p>
+ *
+ * <p>Los errores se delegan en {@link com.rep.exception.GlobalExceptionHandler}, que
+ * produce respuestas JSON homogéneas (404, 400, 403...).</p>
+ */
+@RestController
 @RequestMapping("/api/estudiante")
 public class EstudianteApi {
-    private static final Logger logger = LoggerFactory.getLogger(EstudianteApi.class); // Logger declarado
-    private final NotificacionService notificacionService;
+    private static final Logger logger = LoggerFactory.getLogger(EstudianteApi.class);
+
     private final EstudianteService estudianteService;
 
-    public EstudianteApi(NotificacionService notificacionService,
-            EstudianteService estudianteService) {
-        this.notificacionService = notificacionService;
+    public EstudianteApi(EstudianteService estudianteService) {
         this.estudianteService = estudianteService;
     }
 
     @GetMapping("/{id}/materias")
     public ResponseEntity<List<MateriaDTO>> getMateriasByEstudiante(
             @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
+            @AuthenticationPrincipal Usuario usuario) {
+        verificarAcceso(id, usuario);
+        logger.debug("Solicitud de materias para estudiante {}", id);
 
-        logger.info("Solicitud de materias para estudiante {}", id);
-
-        try {
-            List<Materia> materias = estudianteService.getMateriasByEstudiante(id);
-            List<MateriaDTO> response = materias.stream()
-                    .map(m -> new MateriaDTO(m.getId(), m.getNombre()))
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error al obtener materias: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        List<MateriaDTO> response = estudianteService.getMateriasByEstudiante(id).stream()
+                .map(m -> new MateriaDTO(m.getId(), m.getNombre()))
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}/actividades")
     public ResponseEntity<List<ActividadDTO>> getActividadesByEstudiante(
             @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
+            @AuthenticationPrincipal Usuario usuario) {
+        verificarAcceso(id, usuario);
+        logger.debug("Solicitud de actividades para estudiante {}", id);
 
-        logger.info("Solicitud de actividades para estudiante {}", id);
+        return ResponseEntity.ok(toDtos(estudianteService.getActividadesByEstudiante(id)));
+    }
 
-        try {
-            List<Actividad> actividades = estudianteService.getActividadesByEstudiante(id);
-            List<ActividadDTO> response = actividades.stream()
-                    .map(this::convertToActividadDTO)
-                    .collect(Collectors.toList());
+    @GetMapping("/{id}/materias/{materiaId}/actividades")
+    public ResponseEntity<List<ActividadDTO>> getActividadesByMateria(
+            @PathVariable Long id,
+            @PathVariable Long materiaId,
+            @AuthenticationPrincipal Usuario usuario) {
+        verificarAcceso(id, usuario);
+        logger.debug("Solicitud de actividades para estudiante {} y materia {}", id, materiaId);
 
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error al obtener actividades: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        return ResponseEntity.ok(toDtos(estudianteService.getActividadesByMateria(id, materiaId)));
+    }
+
+    @PostMapping("/{id}/actividades/{actividadId}/resolver")
+    public ResponseEntity<ResultadoActividadDTO> resolverActividad(
+            @PathVariable Long id,
+            @PathVariable Long actividadId,
+            @RequestBody ActividadResueltaDTO request,
+            @AuthenticationPrincipal Usuario usuario) {
+        // Solo el propio estudiante puede entregar su actividad (ni siquiera un admin).
+        if (usuario == null || !id.equals(usuario.getId())) {
+            throw new AccessDeniedException("Solo el propio estudiante puede resolver la actividad");
+        }
+        logger.info("Estudiante {} resolviendo actividad {}", id, actividadId);
+        return ResponseEntity.ok(estudianteService.resolverActividad(id, actividadId, request));
+    }
+
+    @GetMapping("/{id}/actividades/{actividadId}/resultado")
+    public ResponseEntity<ResultadoActividadDTO> obtenerResultado(
+            @PathVariable Long id,
+            @PathVariable Long actividadId,
+            @AuthenticationPrincipal Usuario usuario) {
+        verificarAcceso(id, usuario);
+        logger.debug("Consultando resultado de actividad {} para estudiante {}", actividadId, id);
+        return ResponseEntity.ok(estudianteService.obtenerResultadoActividad(id, actividadId));
+    }
+
+    /**
+     * Permite el acceso si el usuario autenticado es el estudiante solicitado o un
+     * administrador.
+     */
+    private void verificarAcceso(Long estudianteId, Usuario usuario) {
+        if (usuario == null) {
+            throw new AccessDeniedException("Usuario no autenticado");
+        }
+        boolean esPropietario = estudianteId.equals(usuario.getId());
+        boolean esAdmin = usuario.getRol() == Usuario.Rol.ADMIN;
+        if (!esPropietario && !esAdmin) {
+            logger.warn("Usuario {} intentó acceder a datos del estudiante {}", usuario.getId(), estudianteId);
+            throw new AccessDeniedException("No tiene acceso a los datos de este estudiante");
         }
     }
 
-    private ActividadDTO convertToActividadDTO(Actividad actividad) {
+    private List<ActividadDTO> toDtos(List<Actividad> actividades) {
+        return actividades.stream().map(EstudianteApi::toDto).toList();
+    }
+
+    private static ActividadDTO toDto(Actividad actividad) {
+        var pm = actividad.getProfesorMateria();
         return new ActividadDTO(
                 actividad.getId(),
                 actividad.getDuracionMinutos(),
@@ -81,114 +126,10 @@ public class EstudianteApi {
                 actividad.getDescripcion(),
                 actividad.getFechaEntrega(),
                 actividad.getFechaCreacion(),
-                actividad.getProfesorMateria().getProfesor().getId(),
-                actividad.getProfesorMateria().getMateria().getId(),
-                actividad.getProfesorMateria().getMateria().getNombre(),
-                actividad.getProfesorMateria().getCurso().getId(),
-                actividad.getProfesorMateria().getCurso().getNombre());
-    }
-
-    @GetMapping("/{id}/materias/{materiaId}/actividades")
-    public ResponseEntity<List<ActividadDTO>> getActividadesByMateria( // Cambiado a ActividadDTO
-            @PathVariable Long id,
-            @PathVariable Long materiaId,
-            @RequestHeader("Authorization") String authHeader) { // Cambiado a header
-
-        logger.info("Solicitud de actividades para estudiante {} y materia {}", id, materiaId);
-
-        try {
-            List<Actividad> actividades = estudianteService.getActividadesByMateria(id, materiaId);
-            List<ActividadDTO> response = actividades.stream()
-                    .map(this::convertToActividadDTO)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error al obtener actividades por materia: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    // @GetMapping("/{id}/notificaciones")
-    // public ResponseEntity<List<NotificacionDTO>> getNotificaciones(
-    // @PathVariable Long id,
-    // @RequestParam(required = false) Boolean noLeidas,
-    // @RequestHeader("Authorization") String authHeader) {
-    //
-    // List<Notificacion> notificaciones =
-    // notificacionService.obtenerNotificaciones(
-    // id,
-    // noLeidas != null && noLeidas
-    // );
-    //
-    // return ResponseEntity.ok(
-    // notificaciones.stream()
-    // .map(this::convertToDTO)
-    // .collect(Collectors.toList())
-    // );
-    // }
-    //
-    // @PutMapping("/{id}/notificaciones/{notificacionId}/leida")
-    // public ResponseEntity<Void> marcarComoLeida(
-    // @PathVariable Long id,
-    // @PathVariable Long notificacionId) {
-    //
-    // notificacionService.marcarComoLeida(notificacionId, id);
-    // return ResponseEntity.noContent().build();
-    // }
-    // private NotificacionDTO convertToDTO(Notificacion notificacion) {
-    // NotificacionDTO dto = new NotificacionDTO();
-    // dto.setId(notificacion.getId());
-    // dto.setMensaje(notificacion.getMensaje());
-    // dto.setLeida(notificacion.isLeida());
-    // dto.setFechaCreacion(notificacion.getFechaCreacion());
-    //
-    // if (notificacion.getActividad() != null) {
-    // dto.setActividadId(notificacion.getActividad().getId());
-    // dto.setTituloActividad(notificacion.getActividad().getTitulo());
-    // }
-    //
-    // return dto;
-    // }
-
-    @PostMapping("/{id}/actividades/{actividadId}/resolver")
-    public ResponseEntity<ResultadoActividadDTO> resolverActividad(
-            @PathVariable Long id,
-            @PathVariable Long actividadId,
-            @RequestBody ActividadResueltaDTO request,
-            @RequestHeader("Authorization") String authHeader) {
-
-        logger.info("Estudiante {} resolviendo actividad {}", id, actividadId);
-
-        try {
-            ResultadoActividadDTO resultado = estudianteService.resolverActividad(id, actividadId, request);
-            return ResponseEntity.ok(resultado);
-        } catch (EntityNotFoundException e) {
-            logger.error("Actividad o estudiante no encontrado: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            logger.error("Error al resolver actividad: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{id}/actividades/{actividadId}/resultado")
-    public ResponseEntity<ResultadoActividadDTO> obtenerResultado(
-            @PathVariable Long id,
-            @PathVariable Long actividadId,
-            @RequestHeader("Authorization") String authHeader) {
-
-        logger.info("Consultando resultado de actividad {} para estudiante {}", actividadId, id);
-
-        try {
-            ResultadoActividadDTO resultado = estudianteService.obtenerResultadoActividad(id, actividadId);
-            return ResponseEntity.ok(resultado);
-        } catch (EntityNotFoundException e) {
-            logger.error("Resultado no encontrado: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            logger.error("Error al obtener resultado: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+                pm.getProfesor().getId(),
+                pm.getMateria().getId(),
+                pm.getMateria().getNombre(),
+                pm.getCurso().getId(),
+                pm.getCurso().getNombre());
     }
 }

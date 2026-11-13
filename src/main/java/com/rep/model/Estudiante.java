@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.ToString;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 @EqualsAndHashCode(callSuper = true, exclude = { "curso" }) // Excluir el campo curso
+@ToString(callSuper = true, exclude = { "curso" }) // curso es LAZY: incluirlo provocaba LazyInitializationException
 @Data
 @Entity
 @Table(name = "estudiantes")

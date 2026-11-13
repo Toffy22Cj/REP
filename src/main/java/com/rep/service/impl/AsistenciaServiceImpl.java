@@ -46,14 +46,14 @@ public class AsistenciaServiceImpl implements AsistenciaService {
             List<AsistenciaDTO> asistenciaDTOs) {
         ProfesorMateria pm = profesorMateriaRepository
                 .findByProfesorIdAndMateriaIdAndCursoId(profesorId, materiaId, cursoId)
-                .orElseThrow(() -> new RuntimeException(
-                        "No se encontró la asignación del profesor para este curso y materia"));
+                .orElseThrow(() -> new com.rep.exception.RecursoNoEncontradoException(
+                        com.rep.exception.ErrorCode.ASIGNACION_NO_ENCONTRADA));
 
         List<Asistencia> savedAsistencias = new ArrayList<>();
 
         for (AsistenciaDTO dto : asistenciaDTOs) {
             Estudiante estudiante = estudianteRepository.findById(dto.getEstudianteId())
-                    .orElseThrow(() -> new RuntimeException("Estudiante no encontrado: " + dto.getEstudianteId()));
+                    .orElseThrow(() -> new com.rep.exception.RecursoNoEncontradoException(com.rep.exception.ErrorCode.ESTUDIANTE_NO_ENCONTRADO, dto.getEstudianteId()));
 
             // Buscar si ya existe asistencia para actualizar
             Asistencia asistencia = asistenciaRepository

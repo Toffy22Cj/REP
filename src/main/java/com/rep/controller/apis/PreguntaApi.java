@@ -5,9 +5,9 @@ import com.rep.model.Opcion;
 import com.rep.model.Pregunta;
 import com.rep.model.Usuario;
 import com.rep.service.logica.PreguntaService;
+import com.rep.service.logica.ValidacionService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
@@ -17,84 +17,94 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/preguntas")
-    public class PreguntaApi {
+public class PreguntaApi {
     private static final Logger logger = LoggerFactory.getLogger(PreguntaApi.class);
     private final PreguntaService preguntaService;
     private final com.rep.service.logica.EstudianteService estudianteService;
+    private final ValidacionService validacionService;
 
-    public PreguntaApi(PreguntaService preguntaService, com.rep.service.logica.EstudianteService estudianteService) {
+    /*
+     * La autorización por propiedad (profesor dueño de la actividad/pregunta) se
+     * realiza explícitamente con ValidacionService. Antes se usaba @PreAuthorize,
+     * pero la seguridad por método no estaba habilitada y además los métodos de
+     * validación son void, por lo que las anotaciones no protegían nada.
+     */
+    public PreguntaApi(PreguntaService preguntaService,
+            com.rep.service.logica.EstudianteService estudianteService,
+            ValidacionService validacionService) {
         this.preguntaService = preguntaService;
         this.estudianteService = estudianteService;
+        this.validacionService = validacionService;
     }
 
     // 1. Crear pregunta (con opciones si es necesario)
     @PostMapping
-    @PreAuthorize("@validacionService.validarProfesorActividad(#usuario.id, #request.actividadId)")
     public ResponseEntity<PreguntaResponse> crearPregunta(
             @Valid @RequestBody PreguntaRequest request,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorActividad(usuario.getId(), request.getActividadId());
         Pregunta pregunta = preguntaService.crearPregunta(request);
         return ResponseEntity.ok(new PreguntaResponse(pregunta));
     }
 
     // 2. Obtener pregunta por ID
     @GetMapping("/{id}")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
     public ResponseEntity<PreguntaResponse> getPreguntaById(
             @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), id);
         Pregunta pregunta = preguntaService.getPreguntaById(id);
         return ResponseEntity.ok(new PreguntaResponse(pregunta));
     }
 
     // 3. Listar preguntas por actividad
     @GetMapping("/actividad/{actividadId}")
-    @PreAuthorize("@validacionService.validarProfesorActividad(#usuario.id, #actividadId)")
     public ResponseEntity<List<PreguntaResponse>> getPreguntasByActividad(
             @PathVariable Long actividadId,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorActividad(usuario.getId(), actividadId);
         List<Pregunta> preguntas = preguntaService.getPreguntasByActividad(actividadId);
         return ResponseEntity.ok(preguntas.stream().map(PreguntaResponse::new).toList());
     }
 
     // 4. Actualizar pregunta
     @PutMapping("/{id}")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
     public ResponseEntity<PreguntaResponse> actualizarPregunta(
             @PathVariable Long id,
             @Valid @RequestBody PreguntaRequest request,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), id);
         Pregunta pregunta = preguntaService.actualizarPregunta(id, request);
         return ResponseEntity.ok(new PreguntaResponse(pregunta));
     }
 
     // 5. Eliminar pregunta
     @DeleteMapping("/{id}")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
     public ResponseEntity<Void> eliminarPregunta(
             @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), id);
         preguntaService.eliminarPregunta(id);
         return ResponseEntity.noContent().build();
     }
 
     // 6. Agregar opción a pregunta existente
     @PostMapping("/{preguntaId}/opciones")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #preguntaId)")
     public ResponseEntity<OpcionResponse> agregarOpcion(
             @PathVariable Long preguntaId,
             @Valid @RequestBody OpcionRequest request,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), preguntaId);
         Opcion opcion = preguntaService.agregarOpcion(preguntaId, request);
         return ResponseEntity.ok(new OpcionResponse(opcion));
     }
 
     @PostMapping("/{id}/archivo")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #id)")
     public ResponseEntity<PreguntaResponse> subirArchivo(
             @PathVariable Long id,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), id);
         try {
             Pregunta pregunta = preguntaService.subirArchivo(id, file);
             return ResponseEntity.ok(new PreguntaResponse(pregunta));
@@ -105,12 +115,18 @@ import java.util.List;
 
     // Subir archivo para una opción existente
     @PostMapping("/{preguntaId}/opciones/{opcionId}/archivo")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #preguntaId)")
     public ResponseEntity<OpcionResponse> subirArchivoOpcion(
             @PathVariable Long preguntaId,
             @PathVariable Long opcionId,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), preguntaId);
+        // La opción debe pertenecer a la pregunta validada; de lo contrario un profesor
+        // podría modificar opciones de preguntas ajenas cambiando solo el opcionId.
+        Opcion existente = preguntaService.getOpcionById(opcionId);
+        if (existente.getPregunta() == null || !preguntaId.equals(existente.getPregunta().getId())) {
+            throw new com.rep.exception.AccessDeniedException("La opción no pertenece a esta pregunta");
+        }
         try {
             Opcion opcion = preguntaService.subirArchivoOpcion(opcionId, file);
             return ResponseEntity.ok(new OpcionResponse(opcion));
@@ -121,12 +137,12 @@ import java.util.List;
 
     // Subir archivo para una opción recien creada identificada por índice (útil desde el editor cuando se crean múltiples opciones)
     @PostMapping("/{preguntaId}/opciones/archivo")
-    @PreAuthorize("@validacionService.validarProfesorPregunta(#usuario.id, #preguntaId)")
     public ResponseEntity<Void> subirArchivoOpcionPorIndice(
             @PathVariable Long preguntaId,
             @RequestParam("opcionIndex") Integer opcionIndex,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Usuario usuario) {
+        validacionService.validarProfesorPregunta(usuario.getId(), preguntaId);
         try {
             List<Opcion> opciones = preguntaService.getOpcionesByPreguntaId(preguntaId);
             if (opcionIndex == null || opcionIndex < 0 || opcionIndex >= opciones.size()) {

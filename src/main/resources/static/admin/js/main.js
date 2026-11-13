@@ -2,6 +2,7 @@ import { Usuarios } from './modules/usuarios.js';
 import { Academico } from './modules/academico.js';
 import { Auditoria } from './modules/auditoria.js';
 import { API } from './modules/api.js';
+import { UI } from './modules/ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.sidebar nav a');
@@ -118,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         } catch (error) {
-            container.innerHTML = '<div class="card"><h3>Error al cargar Dashboard</h3><p>' + error.message + '</p></div>';
+            container.innerHTML = '<div class="card"><h3>Error al cargar Dashboard</h3><p>' + UI.escapeHtml(error.message) + '</p></div>';
         }
     }
 

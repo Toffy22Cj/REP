@@ -93,3 +93,7 @@ javafx-sdk-*/
 
 .env.prod
 application-prod.properties
+
+# Configuración local con secretos
+.env.local
+/application.properties

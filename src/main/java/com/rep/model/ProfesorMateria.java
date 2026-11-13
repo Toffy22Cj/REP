@@ -7,6 +7,7 @@ import lombok.Data;
 import java.util.Objects;
 
 @Data
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Entity
 @Table(name = "profesor_materia",
         uniqueConstraints = @UniqueConstraint(

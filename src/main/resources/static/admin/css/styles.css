@@ -329,3 +329,34 @@ body {
     from { transform: translateY(-10px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+/* ---- Validación de formularios ---- */
+.input-error {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.field-error {
+    display: block;
+    margin-top: 0.25rem;
+    color: #b91c1c;
+    font-size: 0.8rem;
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.25rem;
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.detail-list {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1rem;
+}
+
+.detail-list dt {
+    color: #64748b;
+    font-weight: 600;
+}

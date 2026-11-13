@@ -24,4 +24,11 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
                           @Param("cursoId") Long cursoId);
     @Query("SELECT e FROM Estudiante e WHERE e.edad BETWEEN :minEdad AND :maxEdad")
     List<Estudiante> findByEdadBetween(@Param("minEdad") int minEdad, @Param("maxEdad") int maxEdad);
+
+    /** Estudiantes de los cursos en los que el profesor tiene alguna asignación. */
+    @Query("SELECT COUNT(DISTINCT e) FROM Estudiante e WHERE e.curso.id IN "
+            + "(SELECT pm.curso.id FROM ProfesorMateria pm WHERE pm.profesor.id = :profesorId)")
+    long countEstudiantesDeProfesor(@org.springframework.data.repository.query.Param("profesorId") Long profesorId);
+
+    boolean existsByCursoId(Long cursoId);
 }

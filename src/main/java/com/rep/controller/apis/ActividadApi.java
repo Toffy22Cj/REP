@@ -8,7 +8,10 @@ import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.service.logica.ActividadService;
 import com.rep.service.logica.EstudianteService;
 import com.rep.service.logica.ValidacionService;
-import com.rep.exception.ResourceNotFoundException;
+import com.rep.exception.AccessDeniedException;
+import com.rep.exception.ErrorCode;
+import com.rep.exception.RecursoNoEncontradoException;
+import com.rep.exception.ValidacionException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,110 +51,53 @@ public class ActividadApi {
 
     // 1. Creación de actividades
     @PostMapping
-    public ResponseEntity<?> crearActividad(
+    public ResponseEntity<ActividadDTO> crearActividad(
             @RequestBody @Valid ActividadCreateDTO actividadDTO,
-            BindingResult result,
             @AuthenticationPrincipal Usuario usuario) {
+        Profesor profesor = exigirProfesor(usuario);
+        validarFechasYDuracion(actividadDTO);
 
-        try {
-            log.info("=== INICIO crearActividad ===");
-            log.info("Usuario: {} (ID: {})", usuario.getUsername(), usuario.getId());
-            log.info("DTO recibido: {}", actividadDTO);
-            log.info("Materia ID: {}", actividadDTO.getMateriaId());
-            log.info("Curso ID: {}", actividadDTO.getCursoId());
+        // La relación profesor-materia-curso la crea el administrador. Antes, si no
+        // existía, se creaba aquí automáticamente: un profesor podía asignarse cualquier
+        // curso y acceder a sus estudiantes.
+        ProfesorMateria pm = profesorMateriaRepository
+                .findByProfesorIdAndMateriaIdAndCursoId(profesor.getId(), actividadDTO.getMateriaId(),
+                        actividadDTO.getCursoId())
+                .orElseThrow(() -> new AccessDeniedException(
+                        "No tiene asignada esa materia en ese curso. Solicite la asignación al administrador"));
 
-            // 1. Validar usuario
-            if (!(usuario instanceof Profesor)) {
-                log.warn("Usuario no es profesor: {}", usuario.getClass().getSimpleName());
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Solo los profesores pueden crear actividades");
-            }
+        Actividad actividad = new Actividad();
+        actividad.setTitulo(actividadDTO.getTitulo());
+        actividad.setTipo(actividadDTO.getTipo());
+        actividad.setDescripcion(actividadDTO.getDescripcion());
+        actividad.setFechaEntrega(actividadDTO.getFechaEntrega());
+        actividad.setDuracionMinutos(actividadDTO.getDuracionMinutos());
+        actividad.setProfesorMateria(pm);
+        actividad.setProfesor(profesor);
+        actividad.setFechaCreacion(LocalDateTime.now());
+        actividad.setActiva(true);
+        actividad.setPermitirReintentos(false);
 
-            // 2. Validar errores de binding
-            if (result.hasErrors()) {
-                Map<String, String> errores = result.getFieldErrors().stream()
-                        .collect(Collectors.toMap(
-                                FieldError::getField,
-                                FieldError::getDefaultMessage));
-                log.warn("Errores de validación: {}", errores);
-                return ResponseEntity.badRequest().body(errores);
-            }
+        Actividad nuevaActividad = actividadService.crearActividad(actividad);
+        log.info("Actividad {} creada por profesor {}", nuevaActividad.getId(), profesor.getId());
+        return ResponseEntity.ok(ActividadDTO.fromEntity(nuevaActividad));
+    }
 
-            // 3. Validaciones adicionales
-            if (actividadDTO.getDuracionMinutos() <= 0) {
-                return ResponseEntity.badRequest()
-                        .body("La duración debe ser mayor a 0");
-            }
+    private static Profesor exigirProfesor(Usuario usuario) {
+        if (usuario instanceof Profesor profesor) {
+            return profesor;
+        }
+        throw new AccessDeniedException("Solo los profesores pueden gestionar actividades");
+    }
 
-            if (actividadDTO.getFechaEntrega().isBefore(LocalDate.now())) {
-                return ResponseEntity.badRequest()
-                        .body("La fecha de entrega no puede ser en el pasado");
-            }
-
-            // 4. Buscar o crear la relación Profesor-Materia-Curso
-            Profesor profesor = (Profesor) usuario;
-
-            log.info("Buscando relación Profesor-Materia-Curso: Profesor={}, Materia={}, Curso={}",
-                    profesor.getId(), actividadDTO.getMateriaId(), actividadDTO.getCursoId());
-
-            Optional<ProfesorMateria> pmOptional = profesorMateriaRepository
-                    .findByProfesorIdAndMateriaIdAndCursoId(
-                            profesor.getId(),
-                            actividadDTO.getMateriaId(),
-                            actividadDTO.getCursoId());
-
-            ProfesorMateria pm;
-            if (pmOptional.isPresent()) {
-                pm = pmOptional.get();
-                log.info("Relación Profesor-Materia encontrada con ID: {}", pm.getId());
-            } else {
-                log.info("Creando nueva relación Profesor-Materia-Curso");
-
-                // Verificar que la materia y curso existen
-                // (Opcional: puedes agregar validaciones aquí)
-
-                // Crear nueva relación
-                pm = new ProfesorMateria();
-                pm.setProfesor(profesor);
-
-                // Crear objetos con solo ID
-                Materia materia = new Materia();
-                materia.setId(actividadDTO.getMateriaId());
-                pm.setMateria(materia);
-
-                Curso curso = new Curso();
-                curso.setId(actividadDTO.getCursoId());
-                pm.setCurso(curso);
-
-                // Guardar la relación
-                pm = profesorMateriaRepository.save(pm);
-                log.info("Nueva relación creada con ID: {}", pm.getId());
-            }
-
-            // 5. Crear entidad Actividad
-            Actividad actividad = new Actividad();
-            actividad.setTitulo(actividadDTO.getTitulo());
-            actividad.setTipo(actividadDTO.getTipo());
-            actividad.setDescripcion(actividadDTO.getDescripcion());
-            actividad.setFechaEntrega(actividadDTO.getFechaEntrega());
-            actividad.setDuracionMinutos(actividadDTO.getDuracionMinutos());
-            actividad.setProfesorMateria(pm);
-            actividad.setProfesor(profesor);
-            actividad.setFechaCreacion(LocalDateTime.now());
-            actividad.setActiva(true);
-            actividad.setPermitirReintentos(false); // O según tu lógica de negocio
-
-            // 6. Guardar actividad
-            log.info("Guardando actividad: {}", actividad.getTitulo());
-            Actividad nuevaActividad = actividadService.crearActividad(actividad);
-            log.info("Actividad creada con ID: {}", nuevaActividad.getId());
-
-            return ResponseEntity.ok(ActividadDTO.fromEntity(nuevaActividad));
-
-        } catch (Exception e) {
-            log.error("ERROR al crear actividad", e);
-            return ResponseEntity.internalServerError()
-                    .body("Error interno al crear la actividad: " + e.getMessage());
+    private static void validarFechasYDuracion(ActividadCreateDTO dto) {
+        if (dto.getDuracionMinutos() == null || dto.getDuracionMinutos() <= 0) {
+            throw new ValidacionException(ErrorCode.CAMPOS_INVALIDOS, "La duración debe ser mayor a 0",
+                    Map.of("duracionMinutos", "Debe ser mayor a 0"));
+        }
+        if (dto.getFechaEntrega() != null && dto.getFechaEntrega().isBefore(LocalDate.now())) {
+            throw new ValidacionException(ErrorCode.CAMPOS_INVALIDOS, "La fecha de entrega no puede ser en el pasado",
+                    Map.of("fechaEntrega", "No puede ser en el pasado"));
         }
     }
 
@@ -161,25 +107,12 @@ public class ActividadApi {
             @RequestParam(required = false) Long cursoId,
             @AuthenticationPrincipal Usuario usuario) {
 
-        if (!(usuario instanceof Profesor)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        try {
-            List<Actividad> actividades = actividadService.listarActividadesPorProfesor(
-                    materiaId,
-                    cursoId,
-                    usuario.getId());
-
-            List<ActividadDTO> dtos = actividades.stream()
-                    .map(ActividadDTO::fromEntity)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(dtos);
-        } catch (Exception e) {
-            log.error("Error al listar actividades", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        exigirProfesor(usuario);
+        List<ActividadDTO> dtos = actividadService.listarActividadesPorProfesor(materiaId, cursoId, usuario.getId())
+                .stream()
+                .map(ActividadDTO::fromEntity)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     // 3. Obtener una actividad específica
@@ -189,76 +122,31 @@ public class ActividadApi {
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), id);
         Actividad actividad = actividadService.getActividadById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException(ErrorCode.ACTIVIDAD_NO_ENCONTRADA, id));
         return ResponseEntity.ok(ActividadDTO.fromEntity(actividad));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarActividad(
+    public ResponseEntity<ActividadDTO> actualizarActividad(
             @PathVariable Long id,
             @RequestBody @Valid ActividadCreateDTO actividadDTO,
-            BindingResult result,
             @AuthenticationPrincipal Usuario usuario) {
+        Profesor profesor = exigirProfesor(usuario);
+        validarFechasYDuracion(actividadDTO);
 
-        try {
-            // 1. Validar usuario
-            if (!(usuario instanceof Profesor)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Solo los profesores pueden actualizar actividades");
-            }
-
-            // 2. Validar errores de binding
-            if (result.hasErrors()) {
-                Map<String, String> errores = result.getFieldErrors().stream()
-                        .collect(Collectors.toMap(
-                                FieldError::getField,
-                                FieldError::getDefaultMessage));
-                return ResponseEntity.badRequest().body(errores);
-            }
-
-            // 3. Validaciones adicionales
-            if (actividadDTO.getDuracionMinutos() <= 0) {
-                return ResponseEntity.badRequest()
-                        .body("La duración debe ser mayor a 0");
-            }
-
-            if (actividadDTO.getFechaEntrega().isBefore(LocalDate.now())) {
-                return ResponseEntity.badRequest()
-                        .body("La fecha de entrega no puede ser en el pasado");
-            }
-
-            // 4. Obtener actividad existente
-            Actividad actividadExistente = actividadService.getActividadById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada"));
-
-            // 5. Validar que el profesor autenticado es el dueño de la actividad
-            if (!actividadExistente.getProfesor().getId().equals(usuario.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("No tiene permisos para actualizar esta actividad");
-            }
-
-            // 6. Actualizar campos permitidos
-            actividadExistente.setTitulo(actividadDTO.getTitulo());
-            actividadExistente.setTipo(actividadDTO.getTipo());
-            actividadExistente.setDescripcion(actividadDTO.getDescripcion());
-            actividadExistente.setFechaEntrega(actividadDTO.getFechaEntrega());
-            actividadExistente.setDuracionMinutos(actividadDTO.getDuracionMinutos());
-
-            // 7. Guardar cambios
-            Actividad actividadActualizada = actividadService.editarActividad(id, actividadExistente);
-            return ResponseEntity.ok(ActividadDTO.fromEntity(actividadActualizada));
-
-        } catch (ResourceNotFoundException e) {
-            log.error("Error al actualizar actividad: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("Error de validación: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error inesperado al actualizar actividad", e);
-            return ResponseEntity.internalServerError()
-                    .body("Error interno al actualizar la actividad: " + e.getMessage());
+        Actividad actividadExistente = actividadService.getActividadById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(ErrorCode.ACTIVIDAD_NO_ENCONTRADA, id));
+        if (actividadExistente.getProfesor() == null || !actividadExistente.getProfesor().getId().equals(profesor.getId())) {
+            throw new AccessDeniedException("No tiene permisos para actualizar esta actividad");
         }
+
+        actividadExistente.setTitulo(actividadDTO.getTitulo());
+        actividadExistente.setTipo(actividadDTO.getTipo());
+        actividadExistente.setDescripcion(actividadDTO.getDescripcion());
+        actividadExistente.setFechaEntrega(actividadDTO.getFechaEntrega());
+        actividadExistente.setDuracionMinutos(actividadDTO.getDuracionMinutos());
+
+        return ResponseEntity.ok(ActividadDTO.fromEntity(actividadService.editarActividad(id, actividadExistente)));
     }
 
     // 5. Eliminar actividad
@@ -372,7 +260,8 @@ public class ActividadApi {
             @RequestParam(required = false) String observaciones,
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorActividad(usuario.getId(), id);
-        return ResponseEntity.ok(actividadService.actualizarNota(id, estudianteId, nota, observaciones));
+        return ResponseEntity.ok(actividadService.actualizarNota(id, estudianteId, nota, observaciones,
+                usuario instanceof Profesor profesor ? profesor : null));
     }
 
     @GetMapping("/{id}/preguntas")
@@ -395,12 +284,11 @@ public class ActividadApi {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        try {
-            ActividadConPreguntasDTO dto = actividadService.getActividadConPreguntas(id);
-            return ResponseEntity.ok(dto);
-        } catch (jakarta.persistence.EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+        ActividadConPreguntasDTO dto = actividadService.getActividadConPreguntas(id);
+        if (usuario.getRol() == Usuario.Rol.ESTUDIANTE) {
+            dto.ocultarSoluciones();
         }
+        return ResponseEntity.ok(dto);
     }
 
 }

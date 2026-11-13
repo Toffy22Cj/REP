@@ -51,11 +51,15 @@ public class RespuestaServiceImpl implements RespuestaService {
     }
 
     @Override
-    public RespuestaEstudiante calificarRespuesta(Long id, Float nota) {
+    public RespuestaEstudiante calificarRespuesta(Long id, Float nota, com.rep.model.Profesor profesor) {
+        float notaValida = com.rep.service.logica.EscalaCalificacion.validar(nota);
         RespuestaEstudiante respuesta = respuestaEstudianteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Respuesta no encontrada"));
 
-        respuesta.setNota(nota);
+        respuesta.setNota(notaValida);
+        if (profesor != null) {
+            respuesta.setCalificadoPor(profesor);
+        }
         return respuestaEstudianteRepository.save(respuesta);
     }
 
@@ -143,10 +147,10 @@ public class RespuestaServiceImpl implements RespuestaService {
                 case "xlsx":
                     return new ExcelReportGenerator().generate(respuestas, actividad);
                 default:
-                    throw new IllegalArgumentException("Formato no soportado: " + formato);
+                    throw new com.rep.exception.ValidacionException(com.rep.exception.ErrorCode.FORMATO_EXPORTACION_NO_SOPORTADO, "Formato no soportado: " + formato);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error al generar el reporte", e);
+            throw new com.rep.exception.RepException(com.rep.exception.ErrorCode.REPORTE_NO_GENERADO, null, null, e);
         }
     }
 }

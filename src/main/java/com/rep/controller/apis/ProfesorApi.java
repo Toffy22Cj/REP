@@ -7,10 +7,6 @@ import com.rep.repositories.MateriaRepository;
 import com.rep.repositories.ProfesorMateriaRepository;
 import com.rep.repositories.ProfesorRepository;
 import com.rep.service.logica.*;
-import com.rep.service.logica.AsistenciaService; // Explicit import if wildcard doesn't catch it, though wildcard should.
-// Wait, the wildcard import com.rep.service.logica.* is already there (line 9).
-// If AsistenciaService is in com.rep.service.logica, it should be picked up.
-// Let's verify package of AsistenciaService.
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +21,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/profesor")
 public class ProfesorApi {
+
+    private static final java.util.Set<String> FORMATOS_EXPORTACION = java.util.Set.of("pdf", "xlsx");
 
     private final MateriaService materiaService;
     private final CursoService cursoService;
@@ -53,12 +51,7 @@ public class ProfesorApi {
     // 1. Gestión de Materias
     @GetMapping("/materias")
     public ResponseEntity<?> getMateriasAsignadas(@AuthenticationPrincipal Usuario usuario) {
-        try {
-            List<Materia> materias = materiaService.getMateriasByProfesor(usuario.getId());
-            return ResponseEntity.ok(materias);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al obtener materias: " + e.getMessage());
-        }
+        return ResponseEntity.ok(materiaService.getMateriasByProfesor(usuario.getId()));
     }
 
     // 2. Gestión de Cursos/Grupos
@@ -91,7 +84,8 @@ public class ProfesorApi {
             @PathVariable Long id, @RequestParam Float nota,
             @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorRespuesta(usuario.getId(), id);
-        RespuestaEstudiante respuesta = respuestaService.calificarRespuesta(id, nota);
+        RespuestaEstudiante respuesta = respuestaService.calificarRespuesta(id, nota,
+                usuario instanceof Profesor profesor ? profesor : null);
         return ResponseEntity.ok(respuesta);
     }
 
@@ -129,13 +123,8 @@ public class ProfesorApi {
             @RequestParam Long cursoId,
             @RequestParam Long materiaId,
             @AuthenticationPrincipal Usuario usuario) {
-        try {
-            validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
-            List<Object[]> promedios = respuestaService.getPromediosByCursoMateria(cursoId, materiaId);
-            return ResponseEntity.ok(promedios);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+        validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
+        return ResponseEntity.ok(respuestaService.getPromediosByCursoMateria(cursoId, materiaId));
     }
 
     @GetMapping("/reportes/entregas")
@@ -202,13 +191,22 @@ public class ProfesorApi {
             @RequestParam Long cursoId,
             @RequestParam Long actividadId,
             @RequestParam String formato,
-            @RequestHeader("Authorization") String authHeader) { // Token en header
+            @AuthenticationPrincipal Usuario usuario) {
 
-        // Validar token y permisos...
-        byte[] reporte = respuestaService.generarReporteResultados(cursoId, actividadId, formato);
+        // Antes este endpoint no comprobaba la propiedad: cualquier profesor podía
+        // descargar resultados de actividades ajenas.
+        validacionService.validarProfesorActividad(usuario.getId(), actividadId);
+        validacionService.validarProfesorCurso(usuario.getId(), cursoId);
+
+        String extension = formato == null ? "" : formato.toLowerCase(java.util.Locale.ROOT);
+        if (!FORMATOS_EXPORTACION.contains(extension)) {
+            throw new com.rep.exception.ValidacionException(com.rep.exception.ErrorCode.FORMATO_EXPORTACION_NO_SOPORTADO,
+                    "Formato no soportado. Use: " + FORMATOS_EXPORTACION);
+        }
+        byte[] reporte = respuestaService.generarReporteResultados(cursoId, actividadId, extension);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resultados." + formato)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resultados." + extension)
                 .body(reporte);
     }
 

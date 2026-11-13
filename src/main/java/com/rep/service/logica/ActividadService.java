@@ -42,5 +42,10 @@ public interface ActividadService {
     com.rep.model.RespuestaEstudiante obtenerRespuestaEstudiante(Long actividadId, Long estudianteId);
 
     com.rep.model.RespuestaEstudiante actualizarNota(Long actividadId, Long estudianteId, Float nuevaNota,
-            String observaciones);
+            String observaciones, com.rep.model.Profesor profesor);
+
+    default com.rep.model.RespuestaEstudiante actualizarNota(Long actividadId, Long estudianteId, Float nuevaNota,
+            String observaciones) {
+        return actualizarNota(actividadId, estudianteId, nuevaNota, observaciones, null);
+    }
 }

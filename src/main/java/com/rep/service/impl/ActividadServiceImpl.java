@@ -31,13 +31,16 @@ public class ActividadServiceImpl implements ActividadService {
     private final ActividadRepository actividadRepository;
     private final RespuestaEstudianteRepository respuestaEstudianteRepository;
     private final ProfesorMateriaRepository profesorMateriaRepository;
+    private final com.rep.repositories.EstudianteRepository estudianteRepository;
 
     public ActividadServiceImpl(ActividadRepository actividadRepository,
             RespuestaEstudianteRepository respuestaEstudianteRepository,
-            ProfesorMateriaRepository profesorMateriaRepository) {
+            ProfesorMateriaRepository profesorMateriaRepository,
+            com.rep.repositories.EstudianteRepository estudianteRepository) {
         this.actividadRepository = actividadRepository;
         this.respuestaEstudianteRepository = respuestaEstudianteRepository;
         this.profesorMateriaRepository = profesorMateriaRepository;
+        this.estudianteRepository = estudianteRepository;
     }
 
     @Override
@@ -183,10 +186,16 @@ public class ActividadServiceImpl implements ActividadService {
                 profesorId,
                 LocalDateTime.now().minusDays(7));
 
+        // Las tres últimas claves son las que muestra el cliente de escritorio; antes no
+        // se enviaban y el dashboard del profesor mostraba siempre 0.
         return Map.of(
                 "totalActividades", totalActividades,
                 "actividadesRecientes", actividadesRecientes,
-                "cursosAsignados", profesorMateriaRepository.countDistinctCursoByProfesorId(profesorId));
+                "cursosAsignados", profesorMateriaRepository.countDistinctCursoByProfesorId(profesorId),
+                "totalEstudiantes", estudianteRepository.countEstudiantesDeProfesor(profesorId),
+                "actividadesActivas", actividadRepository.countByProfesorMateriaProfesorIdAndActivaTrue(profesorId),
+                "entregasPendientes", respuestaEstudianteRepository.countEntregasPendientesDeRevision(
+                        profesorId, com.rep.model.Pregunta.TipoPregunta.RESPUESTA_ABIERTA));
     }
 
     @Override
@@ -321,7 +330,8 @@ public class ActividadServiceImpl implements ActividadService {
 
     @Override
     public com.rep.model.RespuestaEstudiante actualizarNota(Long actividadId, Long estudianteId, Float nuevaNota,
-            String observaciones) {
+            String observaciones, com.rep.model.Profesor profesor) {
+        com.rep.service.logica.EscalaCalificacion.validar(nuevaNota);
         com.rep.model.RespuestaEstudiante respuesta = respuestaEstudianteRepository
                 .findByEstudianteIdAndActividadId(estudianteId, actividadId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Respuesta no encontrada"));
@@ -329,6 +339,9 @@ public class ActividadServiceImpl implements ActividadService {
         respuesta.setNota(nuevaNota);
         if (observaciones != null) {
             respuesta.setObservaciones(observaciones);
+        }
+        if (profesor != null) {
+            respuesta.setCalificadoPor(profesor);
         }
 
         return respuestaEstudianteRepository.save(respuesta);

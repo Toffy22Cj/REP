@@ -60,7 +60,8 @@ public class RespuestaEstudiante {
 
     // Método helper para relación bidireccional
     public void addRespuestaPregunta(RespuestaPregunta respuesta) {
-        respuestasPreguntas.add(respuesta);
+        // setRespuestaEstudiante ya añade la respuesta a la colección; añadirla aquí
+        // también la duplicaba y cada acierto contaba dos veces en la nota.
         respuesta.setRespuestaEstudiante(this);
     }
 

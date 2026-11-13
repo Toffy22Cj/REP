@@ -43,6 +43,9 @@ class ActividadServiceTest {
     @Mock
     private ProfesorMateriaRepository profesorMateriaRepository;
 
+    @Mock
+    private com.rep.repositories.EstudianteRepository estudianteRepository;
+
     private ActividadServiceImpl actividadService;
 
     @BeforeEach
@@ -50,7 +53,8 @@ class ActividadServiceTest {
         actividadService = new ActividadServiceImpl(
                 actividadRepository,
                 respuestaEstudianteRepository,
-                profesorMateriaRepository
+                profesorMateriaRepository,
+                estudianteRepository
         );
     }
 
@@ -173,5 +177,15 @@ class ActividadServiceTest {
 
         assertEquals(4.8f, actualizada.getNota());
         assertEquals("Excelente corrección", actualizada.getObservaciones());
+    }
+
+    @Test
+    @DisplayName("actualizarNota rechaza notas fuera de la escala 0-5")
+    void testActualizarNotaFueraDeEscala() {
+        org.junit.jupiter.api.Assertions.assertThrows(com.rep.exception.NotaFueraDeEscalaException.class,
+                () -> actividadService.actualizarNota(20L, 10L, 7.5f, null));
+        org.junit.jupiter.api.Assertions.assertThrows(com.rep.exception.NotaFueraDeEscalaException.class,
+                () -> actividadService.actualizarNota(20L, 10L, -1f, null));
+        org.mockito.Mockito.verifyNoInteractions(respuestaEstudianteRepository);
     }
 }

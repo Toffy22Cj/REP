@@ -17,16 +17,24 @@
 ### 2. Configuración
 
 ```bash
-# Crear variables de entorno
-cp production.env.example .env.local
-nano .env.local  # Editar con valores reales
+# Crear variables de entorno (desarrollo) a partir de la plantilla
+cp .env.example .env.local
+nano .env.local          # JWT_SECRET (obligatorio, >= 32 bytes), credenciales de BD...
 chmod 600 .env.local
+source .env.local
 
-# Cargar variables
-./setup-env.sh
+# Producción: ver production.env.example
 ```
 
-### 3. Compilar
+> `.env.local` está en `.gitignore`. Nunca versione secretos.
+
+### 3. Compilar y probar
+
+```bash
+mvn test   # 60 pruebas (unitarias + integración de seguridad con H2)
+```
+
+### 3b. Compilar
 
 ```bash
 mvn clean package -DskipTests
@@ -43,13 +51,16 @@ java -jar target/main-0.0.1-SNAPSHOT.jar
 
 ```
 http://localhost:8080/admin/index.html
-Usuario: admin
-Contraseña: (la configurada)
+Usuario: 22
+Contraseña: la de ADMIN_INITIAL_PASSWORD (o la generada que aparece en el log al primer arranque)
 ```
 
 ---
 
 ## 📖 Documentación
+
+- Catálogo de errores de la API: [docs/errores.md](docs/errores.md)
+- Historial de cambios: [CHANGELOG.md](CHANGELOG.md)
 
 La **documentación completa** está en [DOCUMENTACION_COMPLETA.md](DOCUMENTACION_COMPLETA.md)
 

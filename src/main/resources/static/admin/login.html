@@ -15,6 +15,19 @@
             <p>Panel de Administración Local</p>
 
             <div id="alert" class="alert alert-error"></div>
+            <!-- Primer acceso: contraseña provisional (solo en el propio servidor, una vez) -->
+            <div id="primerAcceso" class="primer-acceso" hidden>
+                <strong>⚠ Primer acceso al servidor</strong>
+                <p>Esta contraseña provisional se muestra <b>una sola vez</b>. Cópiela ahora:
+                   al entrar deberá cambiarla por una propia.</p>
+                <dl>
+                    <dt>Identificación</dt><dd id="paIdent"></dd>
+                    <dt>Contraseña</dt><dd><code id="paClave"></code>
+                        <button type="button" id="paCopiar" class="btn-copiar">Copiar</button></dd>
+                </dl>
+                <button type="button" id="paUsar" class="btn">Usar estos datos</button>
+            </div>
+            <div id="primerAccesoAviso" class="alert alert-info" hidden></div>
 
             <form id="loginForm" action="/admin/login" method="POST">
                 <div class="form-group">

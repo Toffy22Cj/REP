@@ -6,7 +6,7 @@ import { UI, escapeHtml } from './ui.js';
  * Usa /api/admin/perfil (misma lógica que /api/perfil de los clientes de escritorio).
  */
 export const Perfil = {
-    async init(containerId) {
+    async init(containerId, opciones = {}) {
         const container = document.getElementById(containerId);
         UI.showLoading(containerId);
         let perfil;
@@ -17,7 +17,13 @@ export const Perfil = {
             return;
         }
 
-        container.innerHTML = `
+        const banner = opciones.obligatorio ? `
+            <div class="obligatorio-banner">
+                <strong>⚠ Cambie la contraseña provisional</strong><br>
+                Por seguridad, el panel se habilita cuando defina una contraseña propia.
+                Guárdela en un lugar seguro: no se puede recuperar desde otro equipo.
+            </div>` : '';
+        container.innerHTML = banner + `
             <div class="card">
                 <h3>Datos personales</h3>
                 <p class="text-muted">${escapeHtml(perfil.tipoIdentificacion || '')} ${escapeHtml(perfil.identificacion)} · Administrador</p>
@@ -81,6 +87,9 @@ export const Perfil = {
                 });
                 e.target.reset();
                 UI.showAlert('Contraseña actualizada');
+                if (opciones.obligatorio) {
+                    setTimeout(() => window.location.reload(), 900); // habilita el panel completo
+                }
             } catch (error) {
                 UI.showAlert(error.message, 'error');
             }
@@ -95,9 +104,12 @@ export const Perfil = {
 
     async cargarUsuarioActual() {
         try {
-            Perfil.mostrarUsuario(await API.get('/api/admin/perfil'));
+            const perfil = await API.get('/api/admin/perfil');
+            Perfil.mostrarUsuario(perfil);
+            return perfil;
         } catch (_) {
             // La barra superior es informativa; si falla se deja vacía
+            return null;
         }
     },
 };

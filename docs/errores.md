@@ -64,6 +64,7 @@ seguridad) tienen el mismo formato JSON (`ApiError`):
 | `CUENTA_INACTIVA` | 403 | La cuenta está inactiva. Contacte al administrador |
 | `ACCESO_DENEGADO` | 403 | No tiene permisos para realizar esta acción |
 | `REGISTRO_ROL_NO_PERMITIDO` | 403 | El registro público solo permite cuentas de estudiante |
+| `CAMBIO_CONTRASENA_OBLIGATORIO` | 403 | Debe cambiar la contraseña provisional antes de continuar |
 | `CONTRASENA_ACTUAL_INCORRECTA` | 400 | La contraseña actual no es correcta |
 | `CONTRASENA_DEBIL` | 400 | La nueva contraseña no cumple los requisitos de seguridad |
 | `CONTRASENA_REPETIDA` | 400 | La nueva contraseña debe ser distinta de la actual |
@@ -126,6 +127,8 @@ seguridad) tienen el mismo formato JSON (`ApiError`):
 
 | Código | HTTP | Mensaje por defecto |
 |---|---|---|
+| `HOTSPOT_NO_SOPORTADO` | 409 | Este sistema no permite crear la red Wi-Fi desde REP; créela desde la configuración del sistema |
+| `HOTSPOT_FALLO` | 502 | El sistema no pudo crear o detener la red Wi-Fi |
 | `ARCHIVO_VACIO` | 400 | No se recibió ningún archivo o está vacío |
 | `ARCHIVO_TIPO_NO_PERMITIDO` | 400 | Tipo de archivo no permitido |
 | `ARCHIVO_NO_ENCONTRADO` | 404 | El archivo no existe |

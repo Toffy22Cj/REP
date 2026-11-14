@@ -40,6 +40,7 @@ public enum ErrorCode {
     USUARIO_NO_ENCONTRADO(HttpStatus.NOT_FOUND, "El usuario no existe"),
     CONTRASENA_ACTUAL_INCORRECTA(HttpStatus.BAD_REQUEST, "La contraseña actual no es correcta"),
     CONTRASENA_DEBIL(HttpStatus.BAD_REQUEST, "La nueva contraseña no cumple los requisitos de seguridad"),
+    CAMBIO_CONTRASENA_OBLIGATORIO(HttpStatus.FORBIDDEN, "Debe cambiar la contraseña provisional antes de continuar"),
     CONTRASENA_REPETIDA(HttpStatus.BAD_REQUEST, "La nueva contraseña debe ser distinta de la actual"),
     USUARIO_IDENTIFICACION_DUPLICADA(HttpStatus.CONFLICT, "Ya existe un usuario con esa identificación"),
     USUARIO_CORREO_DUPLICADO(HttpStatus.CONFLICT, "Ya existe un usuario con ese correo"),
@@ -82,6 +83,8 @@ public enum ErrorCode {
     NOTA_FUERA_DE_ESCALA(HttpStatus.BAD_REQUEST, "La nota debe estar entre 0.0 y 5.0"),
     FORMATO_EXPORTACION_NO_SOPORTADO(HttpStatus.BAD_REQUEST, "Formato de exportación no soportado"),
     REPORTE_NO_GENERADO(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo generar el reporte"),
+    HOTSPOT_NO_SOPORTADO(HttpStatus.CONFLICT, "Este sistema no permite crear la red Wi-Fi desde REP; créela desde la configuración del sistema"),
+    HOTSPOT_FALLO(HttpStatus.BAD_GATEWAY, "El sistema no pudo crear o detener la red Wi-Fi"),
     PREGUNTA_OPCIONES_INVALIDAS(HttpStatus.BAD_REQUEST, "Las opciones de la pregunta no son válidas"),
 
     // ---------------------------------------------------------------- archivos y material de estudio

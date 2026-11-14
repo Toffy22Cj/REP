@@ -49,14 +49,17 @@ public class SecurityConfig {
     private final SecretKey secretKey;
     private final RateLimitFilter rateLimitFilter;
     private final List<String> allowedOrigins;
+    private final com.rep.repositories.UsuarioRepository usuarioRepository;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService,
             SecretKey secretKey,
             RateLimitFilter rateLimitFilter,
+            com.rep.repositories.UsuarioRepository usuarioRepository,
             @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:8080}") String allowedOrigins) {
         this.userDetailsService = userDetailsService;
         this.secretKey = secretKey;
         this.rateLimitFilter = rateLimitFilter;
+        this.usuarioRepository = usuarioRepository;
         this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
@@ -98,7 +101,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/actividades/**", "/api/preguntas/**").hasAnyAuthority(PROFESOR, ADMIN)
                         .anyRequest().authenticated())
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(cambioObligatorio(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -115,6 +119,8 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.deny()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login.html", "/admin/css/**", "/admin/js/**").permitAll()
+                        // Contraseña inicial: el controlador solo responde a peticiones del propio equipo
+                        .requestMatchers("/admin/primer-acceso").permitAll()
                         .anyRequest().hasAuthority(ADMIN))
                 .exceptionHandling(ex -> ex
                         .defaultAuthenticationEntryPointFor(SecurityConfig::noAutenticado,
@@ -139,7 +145,8 @@ public class SecurityConfig {
                         .sessionFixation(fixation -> fixation.changeSessionId()))
                 // Permite que el cliente de escritorio use /api/admin/** con su token JWT
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(cambioObligatorio(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -168,6 +175,11 @@ public class SecurityConfig {
             jakarta.servlet.http.HttpServletResponse response,
             org.springframework.security.access.AccessDeniedException e) throws java.io.IOException {
         ApiErrorWriter.write(request, response, ErrorCode.ACCESO_DENEGADO);
+    }
+
+    /** No es un bean: así no se registra también como filtro global del contenedor. */
+    private com.rep.security.CambioContrasenaObligatorioFilter cambioObligatorio() {
+        return new com.rep.security.CambioContrasenaObligatorioFilter(usuarioRepository);
     }
 
     @Bean

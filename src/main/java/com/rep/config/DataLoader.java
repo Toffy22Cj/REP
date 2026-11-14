@@ -27,27 +27,43 @@ public class DataLoader implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final String adminIdentificacion;
     private final String adminPassword;
+    private final com.rep.service.logica.PrimerAccesoService primerAcceso;
+    private final String puerto;
 
     public DataLoader(UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
             @Value("${app.bootstrap.admin-identificacion:22}") String adminIdentificacion,
-            @Value("${app.bootstrap.admin-password:}") String adminPassword) {
+            @Value("${app.bootstrap.admin-password:}") String adminPassword,
+            com.rep.service.logica.PrimerAccesoService primerAcceso,
+            @Value("${server.port:8080}") String puerto) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminIdentificacion = adminIdentificacion;
         this.adminPassword = adminPassword;
+        this.primerAcceso = primerAcceso;
+        this.puerto = puerto;
     }
 
     @Override
     public void run(String... args) {
-        if (usuarioRepository.existsByIdentificacion(adminIdentificacion)) {
-            log.info("Admin con identificación {} ya existe, no se crea.", adminIdentificacion);
+        boolean generada = adminPassword == null || adminPassword.isBlank();
+        Usuario existente = usuarioRepository.findByIdentificacion(adminIdentificacion).orElse(null);
+
+        if (existente != null) {
+            // Si nadie cambió aún la contraseña provisional, se genera otra en cada arranque
+            // para poder mostrarla de nuevo (la anterior no se guardó en ningún sitio).
+            if (existente.requiereCambioDeContrasena() && generada) {
+                String password = generarPassword();
+                existente.setContraseña(passwordEncoder.encode(password));
+                usuarioRepository.save(existente);
+                anunciar(password);
+            } else {
+                log.info("Admin con identificación {} ya existe, no se crea.", adminIdentificacion);
+            }
             return;
         }
 
-        boolean generada = adminPassword == null || adminPassword.isBlank();
         String password = generada ? generarPassword() : adminPassword;
-
         Usuario admin = new Usuario();
         admin.setNombre("Administrador");
         admin.setApellido("Sistema"); // campo obligatorio: sin él la creación fallaba siempre
@@ -57,14 +73,29 @@ public class DataLoader implements CommandLineRunner {
         admin.setContraseña(passwordEncoder.encode(password));
         admin.setRol(Usuario.Rol.ADMIN);
         admin.setActivo(true);
+        // Una contraseña generada es provisional: el administrador debe cambiarla al entrar
+        admin.setDebeCambiarContrasena(generada);
         usuarioRepository.save(admin);
 
         if (generada) {
-            log.warn("Administrador inicial creado (identificacion={}). Contraseña generada: {} "
-                    + "-- cámbiela tras el primer acceso o defina ADMIN_INITIAL_PASSWORD.", adminIdentificacion, password);
+            anunciar(password);
         } else {
             log.info("Administrador inicial creado (identificacion={})", adminIdentificacion);
         }
+    }
+
+    private void anunciar(String password) {
+        primerAcceso.registrar(adminIdentificacion, password);
+        log.warn("""
+
+                ================================================================
+                 PRIMER ACCESO AL PANEL DE ADMINISTRACIÓN
+                   Usuario:     {}
+                   Contraseña:  {}
+                 Abra http://localhost:{}/admin/ en este equipo: la contraseña se
+                 muestra allí una sola vez y deberá cambiarla al entrar.
+                ================================================================""",
+                adminIdentificacion, password, puerto);
     }
 
     private static String generarPassword() {

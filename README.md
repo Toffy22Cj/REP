@@ -49,6 +49,12 @@ Solo cuentan los intentos **fallidos** (`LOGIN_MAX_INTENTOS`, por defecto 5, dur
 `LOGIN_BLOQUEO_MINUTOS`, por defecto 15). El contador está en memoria: **reiniciar el
 servidor desbloquea inmediatamente**.
 
+### Instalación en el colegio y red
+
+Instalación sin configuración, primer acceso del administrador, descubrimiento
+automático (LAN, Wi-Fi, red propia, Bluetooth PAN) y cortafuegos:
+[`docs/INSTALACION_Y_RED.md`](docs/INSTALACION_Y_RED.md).
+
 ### Periodos académicos y migraciones
 
 - El administrador define los periodos del año (fechas y porcentaje) en el cliente de
@@ -70,7 +76,7 @@ servidor desbloquea inmediatamente**.
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 92 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 96 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar

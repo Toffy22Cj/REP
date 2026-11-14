@@ -1,0 +1,19 @@
+REP Servidor
+============
+
+Al abrirlo:
+  1. Se inicia el servidor y se abre el panel en el navegador (http://localhost:8080/admin/).
+  2. La primera vez, la página de acceso muestra UNA SOLA VEZ la contraseña provisional del
+     administrador (usuario 22). Al entrar debe cambiarla por una propia.
+     Si no la copió a tiempo, cierre y vuelva a abrir el servidor: se genera otra.
+  3. En Panel › Red verá las direcciones del servidor y podrá darle un nombre o crear una
+     red Wi-Fi propia (en Linux con NetworkManager).
+
+Los equipos de estudiantes y profesores (cliente REP) encuentran el servidor solos en la
+misma red: cable, Wi-Fi, red propia del servidor o Bluetooth (PAN). No necesita internet.
+
+Datos: carpeta .rep del usuario que ejecuta el servidor (base de datos, archivos,
+registros y claves). Haga copia de esa carpeta con regularidad.
+
+Puertos: TCP 8080 (aplicación) y UDP 47800/47801 (descubrimiento). Si el cortafuegos
+pregunta, permita el acceso en redes privadas.

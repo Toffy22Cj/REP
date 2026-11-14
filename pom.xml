@@ -12,7 +12,7 @@
 
 	<groupId>com.rep</groupId>
 	<artifactId>main</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>main</name>
 	<description>Sistema Educativo Integral - Backend REST y Panel Administrativo</description>
 
@@ -150,7 +150,8 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<!-- runtime: base embebida de la instalación preconfigurada (perfil "local") -->
+			<scope>runtime</scope>
 		</dependency>
 
 
@@ -164,6 +165,16 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Las pruebas no tocan el REP_HOME real del usuario -->
+					<systemPropertyVariables>
+						<rep.home>${project.build.directory}/rep-home-pruebas</rep.home>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 			<!-- Plugin de compilación con soporte para Lombok y MapStruct -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

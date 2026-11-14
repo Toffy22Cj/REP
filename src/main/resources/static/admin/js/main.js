@@ -2,6 +2,7 @@ import { Usuarios } from './modules/usuarios.js';
 import { Academico } from './modules/academico.js';
 import { Auditoria } from './modules/auditoria.js';
 import { Perfil } from './modules/perfil.js';
+import { Red } from './modules/red.js';
 import { API } from './modules/api.js';
 import { UI } from './modules/ui.js';
 
@@ -80,8 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'perfil':
                 await Perfil.init(containerId);
                 break;
-            case 'archivos':
-                contentArea.innerHTML = '<div class="card"><h3>Gestión de Archivos</h3><p>Módulo de archivos en construcción (v2.1).</p></div>';
+            case 'red':
+                await Red.init(containerId);
                 break;
             default:
                 await loadDashboard(contentArea);
@@ -127,7 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Default module
-    Perfil.cargarUsuarioActual();
-    loadModule('dashboard');
+    // Default module. Con contraseña provisional, solo se permite cambiarla.
+    Perfil.cargarUsuarioActual().then(perfil => {
+        if (perfil && perfil.debeCambiarContrasena) {
+            document.querySelector('.sidebar nav').classList.add('bloqueado');
+            pageTitle.textContent = 'Cambie su contraseña';
+            Perfil.init(containerId, { obligatorio: true });
+        } else {
+            loadModule('dashboard');
+        }
+    });
 });

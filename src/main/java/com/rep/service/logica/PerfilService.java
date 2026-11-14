@@ -32,14 +32,17 @@ public class PerfilService {
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
     private final AuditoriaService auditoria;
+    private final PrimerAccesoService primerAcceso;
 
     public PerfilService(UsuarioRepository usuarioRepository, ProfesorMateriaRepository profesorMateriaRepository,
-            PasswordEncoder passwordEncoder, AuthService authService, AuditoriaService auditoria) {
+            PasswordEncoder passwordEncoder, AuthService authService, AuditoriaService auditoria,
+            PrimerAccesoService primerAcceso) {
         this.usuarioRepository = usuarioRepository;
         this.profesorMateriaRepository = profesorMateriaRepository;
         this.passwordEncoder = passwordEncoder;
         this.authService = authService;
         this.auditoria = auditoria;
+        this.primerAcceso = primerAcceso;
     }
 
     @Transactional(readOnly = true)
@@ -54,7 +57,7 @@ public class PerfilService {
         return new PerfilDTO(u.getId(), u.getNombre(), u.getApellido(), u.getCorreo(), u.getIdentificacion(),
                 u.getTipoIdentificacion() != null ? u.getTipoIdentificacion().name() : null,
                 u.getRol().name(), u.getEdad(), u.getSexo() != null ? u.getSexo().name() : null,
-                u.getFechaIngreso(), curso, asignaciones);
+                u.getFechaIngreso(), curso, asignaciones, u.requiereCambioDeContrasena());
     }
 
     public PerfilDTO actualizar(Long usuarioId, ActualizarPerfilDTO dto) {
@@ -87,6 +90,8 @@ public class PerfilService {
         }
         u.setContraseña(passwordEncoder.encode(nueva));
         u.setCredencialesActualizadasEn(LocalDateTime.now());
+        u.setDebeCambiarContrasena(false); // la contraseña provisional deja de existir
+        primerAcceso.olvidar(u.getIdentificacion());
         usuarioRepository.save(u);
         auditoria.registrar("CAMBIAR_CONTRASENA", "Usuario " + u.getId());
         return authService.generateToken(u);

@@ -360,3 +360,26 @@ body {
     color: #64748b;
     font-weight: 600;
 }
+
+/* Primer acceso: contraseña provisional del administrador */
+.primer-acceso {
+    background: #fffbeb;
+    border: 2px solid #f59e0b;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+    color: #78350f;
+}
+.primer-acceso p { margin: 0.5rem 0 0.75rem; color: #78350f; font-size: 0.9rem; }
+.primer-acceso dl { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.75rem; margin: 0 0 0.9rem; }
+.primer-acceso dt { font-weight: 600; }
+.primer-acceso dd { margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.primer-acceso code { font-size: 1.15rem; background: #fff; border: 1px solid #fcd34d; border-radius: 6px; padding: 0.15rem 0.5rem; user-select: all; }
+.btn-copiar { border: 1px solid #f59e0b; background: #fff; color: #92400e; border-radius: 6px; padding: 0.15rem 0.6rem; cursor: pointer; }
+.alert-info { display: block; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+.obligatorio-banner { background: #fef3c7; border: 1px solid #f59e0b; color: #78350f; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+.sidebar nav.bloqueado a:not(#btnLogout) { pointer-events: none; opacity: 0.35; }
+
+/* Avisos vacíos u ocultos no ocupan espacio */
+.alert:empty, [hidden] { display: none !important; }

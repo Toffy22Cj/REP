@@ -16,5 +16,6 @@ public record PerfilDTO(
         String sexo,
         LocalDate fechaIngreso,
         String curso,
-        List<String> asignaciones) {
+        List<String> asignaciones,
+        boolean debeCambiarContrasena) {
 }

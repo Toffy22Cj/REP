@@ -1,5 +1,25 @@
 # Changelog — REP Backend
 
+## [Red, primer acceso e instalación 2026-11-14]
+- **Descubrimiento en red** (`com.rep.red`): el servidor responde búsquedas UDP (47800)
+  por broadcast, multicast y localhost y se anuncia cada 5 s (47801) en todas sus redes
+  (cable, Wi-Fi, red propia, Bluetooth PAN). Identidad permanente (`servidor.id`) para
+  que los clientes lo sigan si cambia de IP. `GET /api/public/servidor`.
+- **Panel web › Red**: nombre del servidor, activar/desactivar el descubrimiento,
+  direcciones por interfaz (con tipo), equipos que lo buscaron y red Wi-Fi propia
+  (`nmcli` en Linux; instrucciones en Windows/macOS). `GET/PUT /api/admin/red`,
+  `POST/DELETE /api/admin/red/hotspot`. Se retira el enlace "Archivos" (estaba vacío).
+- **Primer acceso**: la contraseña generada del administrador es provisional; la página
+  de acceso la muestra una sola vez y solo en el propio servidor; hasta cambiarla la API
+  responde `CAMBIO_CONTRASENA_OBLIGATORIO` (web y cliente). Si no se cambió, se regenera
+  en cada arranque.
+- **Instalación preconfigurada** (perfil `local`): base H2 embebida en `REP_HOME`,
+  secreto JWT generado y guardado automáticamente (ya no es obligatorio `JWT_SECRET`),
+  registros y archivos en `REP_HOME`.
+- Empaquetado: `empaquetado/servidor-linux.sh` (jpackage), iconos y LEEME.
+- Versión 1.0.0. Nuevos códigos: `CAMBIO_CONTRASENA_OBLIGATORIO`, `HOTSPOT_NO_SOPORTADO`,
+  `HOTSPOT_FALLO`. Guía `docs/INSTALACION_Y_RED.md`. Pruebas: 92 → 96.
+
 ## [Resultados y entregas 2026-11-14]
 - **Mostrar u ocultar respuestas correctas**: nuevo campo `mostrarRespuestas` en la
   actividad (por defecto `true`, como antes). Con `false`, el resultado del estudiante

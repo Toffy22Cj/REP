@@ -105,6 +105,17 @@ public class Usuario implements UserDetails {
     @Column(name = "credenciales_actualizadas_en")
     private LocalDateTime credencialesActualizadasEn;
 
+    /**
+     * La contraseña es provisional (p. ej. la generada para el administrador inicial):
+     * hasta cambiarla solo se permite el perfil y el cambio de contraseña.
+     */
+    @Column(name = "debe_cambiar_contrasena")
+    private Boolean debeCambiarContrasena = false;
+
+    public boolean requiereCambioDeContrasena() {
+        return Boolean.TRUE.equals(debeCambiarContrasena);
+    }
+
     public enum TipoIdentificacion {
         CC("Cédula de Ciudadanía"),
         TI("Tarjeta de Identidad");

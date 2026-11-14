@@ -14,6 +14,8 @@ public class AuthUsuarioDTO {
     private String correo;
     private String identificacion;
     private Rol rol;
+    /** El cliente debe llevar al usuario a cambiar la contraseña antes de seguir. */
+    private boolean debeCambiarContrasena;
 
     @JsonCreator
     public AuthUsuarioDTO(
@@ -37,6 +39,7 @@ public class AuthUsuarioDTO {
         this.apellido = usuario.getApellido();
         this.correo = usuario.getCorreo();
         this.identificacion = usuario.getIdentificacion();
+        this.debeCambiarContrasena = usuario.requiereCambioDeContrasena();
         this.rol = usuario.getRol();
     }
 }

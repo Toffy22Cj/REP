@@ -27,20 +27,11 @@ public class JwtConfig {
     @Bean
     public SecretKey secretKey() {
         if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException("""
-
-                    ================================================================
-                     Falta JWT_SECRET: la aplicación no puede arrancar sin él.
-
-                     Solución rápida (desde la raíz del proyecto):
-                       cp .env.example .env
-                       echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
-                       mvn spring-boot:run
-
-                     O como variable de entorno:
-                       export JWT_SECRET="$(openssl rand -base64 48)"
-                    ================================================================
-                    """);
+            // Instalación sin configurar: se genera un secreto aleatorio y se guarda en
+            // REP_HOME para que las sesiones sigan siendo válidas tras reiniciar.
+            secret = RepHome.secretoJwt();
+            org.slf4j.LoggerFactory.getLogger(JwtConfig.class)
+                    .info("JWT_SECRET no definido: se usa el secreto guardado en {}", RepHome.directorio().resolve("jwt.secret"));
         }
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < MIN_SECRET_BYTES) {

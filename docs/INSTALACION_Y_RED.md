@@ -50,6 +50,7 @@ Si define `ADMIN_INITIAL_PASSWORD`, esa contraseña se usa y no es provisional.
 |---|---|---|
 | Búsqueda | UDP 47800 | El cliente envía `{"rep":"buscar"}` por broadcast (todas las redes del equipo), por multicast `239.255.47.80` y a localhost. El servidor responde con su identidad. |
 | Anuncio | UDP 47801 | El servidor publica su identidad cada 5 s, por broadcast en cada red y por multicast. |
+| mDNS / DNS-SD | UDP 5353 | Servicio `_rep._tcp.local.` con TXT `id`, `version`, `api=/api` (Bonjour, avahi, NSD de Android; necesario para un futuro cliente iOS). Variable `REP_MDNS`. |
 | Aplicación | TCP 8080 | API y panel web |
 
 - El cliente usa la IP desde la que llegó la respuesta, que es la que puede alcanzar.

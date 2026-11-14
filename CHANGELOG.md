@@ -1,5 +1,16 @@
 # Changelog — REP Backend
 
+## [Horario, mDNS y app móvil 2026-11-14]
+- **Horario de clases** (`BloqueHorario`, `com.rep.horario`): el administrador crea las
+  clases por asignación, día, hora y aula (`/api/admin/horario`); se impiden los cruces
+  del curso (`HORARIO_CRUCE_CURSO`) y del profesor (`HORARIO_CRUCE_PROFESOR`). Consulta:
+  `GET /api/estudiante/{id}/horario` y `GET /api/profesor/horario`. Al borrar una
+  asignación se borran sus bloques. Datos demo con horario semanal.
+- **mDNS/DNS-SD**: el servidor se anuncia como `_rep._tcp.local.` (JmDNS) junto al
+  descubrimiento UDP; se ve en Panel › Red. Variable `REP_MDNS`.
+- Nuevos códigos: `HORARIO_BLOQUE_NO_ENCONTRADO`, `HORARIO_HORAS_INVALIDAS`,
+  `HORARIO_CRUCE_CURSO`, `HORARIO_CRUCE_PROFESOR`. Pruebas: 96 → 98.
+
 ## [Red, primer acceso e instalación 2026-11-14]
 - **Descubrimiento en red** (`com.rep.red`): el servidor responde búsquedas UDP (47800)
   por broadcast, multicast y localhost y se anuncia cada 5 s (47801) en todas sus redes

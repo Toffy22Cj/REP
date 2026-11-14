@@ -39,6 +39,7 @@ public class DescubrimientoService implements SmartLifecycle {
     private static final int MAX_RESPUESTAS_POR_SEGUNDO = 50;
 
     private final RedConfigService red;
+    private final MdnsService mdns;
     private final ObjectMapper mapper;
     private final int puerto;
     private final int puertoAnuncio;
@@ -50,11 +51,12 @@ public class DescubrimientoService implements SmartLifecycle {
     private final AtomicInteger respuestasEnSegundo = new AtomicInteger();
     private volatile long segundoActual;
 
-    public DescubrimientoService(RedConfigService red, ObjectMapper mapper,
+    public DescubrimientoService(RedConfigService red, MdnsService mdns, ObjectMapper mapper,
             @Value("${app.red.descubrimiento.puerto:47800}") int puerto,
             @Value("${app.red.anuncio.puerto:47801}") int puertoAnuncio,
             @Value("${app.red.anuncio.intervalo-segundos:5}") int intervaloAnuncio) {
         this.red = red;
+        this.mdns = mdns;
         this.mapper = mapper;
         this.puerto = puerto;
         this.puertoAnuncio = puertoAnuncio;
@@ -92,6 +94,7 @@ public class DescubrimientoService implements SmartLifecycle {
             if (!red.descubrimientoActivo()) log.info("Descubrimiento en red desactivado");
             return;
         }
+        mdns.iniciar(); // anuncio estándar _rep._tcp, independiente del puerto UDP
         try {
             MulticastSocket s = new MulticastSocket(null);
             s.setReuseAddress(true);
@@ -120,6 +123,7 @@ public class DescubrimientoService implements SmartLifecycle {
 
     @Override
     public synchronized void stop() {
+        mdns.detener();
         if (anunciador != null) {
             anunciador.shutdownNow();
             anunciador = null;

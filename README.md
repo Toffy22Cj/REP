@@ -76,7 +76,7 @@ automático (LAN, Wi-Fi, red propia, Bluetooth PAN) y cortafuegos:
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 96 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 98 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar

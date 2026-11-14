@@ -103,6 +103,10 @@ seguridad) tienen el mismo formato JSON (`ApiError`):
 | `MATERIA_CON_ASIGNACIONES` | 409 | No se puede eliminar una materia asignada a profesores |
 | `ASIGNACION_NO_ENCONTRADA` | 404 | La asignación no existe |
 | `ASIGNACION_DUPLICADA` | 409 | Esa asignación profesor-materia-curso ya existe |
+| `HORARIO_BLOQUE_NO_ENCONTRADO` | 404 | El bloque del horario no existe |
+| `HORARIO_HORAS_INVALIDAS` | 400 | La hora de inicio debe ser anterior a la de fin |
+| `HORARIO_CRUCE_CURSO` | 409 | El curso ya tiene otra clase en esa franja |
+| `HORARIO_CRUCE_PROFESOR` | 409 | El profesor ya tiene otra clase en esa franja |
 | `PERIODO_NO_ENCONTRADO` | 404 | El periodo académico no existe |
 | `PERIODO_FECHAS_INVALIDAS` | 400 | La fecha de inicio del periodo debe ser anterior a la de fin |
 | `PERIODO_SOLAPADO` | 409 | Las fechas se cruzan con otro periodo del mismo año |

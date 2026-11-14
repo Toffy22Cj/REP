@@ -34,6 +34,9 @@ public class ActividadCreateDTO {
     @NotNull(message = "El curso es obligatorio")
     private Long cursoId;
 
+    /** Mostrar las respuestas correctas al estudiante después de entregar (por defecto sí). */
+    private Boolean mostrarRespuestas;
+
     // El profesorId se obtendrá del token en el backend
 
     // Getters y Setters (Lombok @Data los genera automáticamente)

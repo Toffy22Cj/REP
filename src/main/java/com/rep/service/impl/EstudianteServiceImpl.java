@@ -484,6 +484,13 @@ public class EstudianteServiceImpl implements EstudianteService {
         dto.setNota(respuesta.getNota());
         dto.setObservaciones(respuesta.getObservaciones());
 
+        // El profesor puede ocultar las respuestas correctas: solo se envía la nota
+        if (!actividad.respuestasVisibles()) {
+            dto.setRespuestasVisibles(false);
+            dto.setResultadosPreguntas(List.of());
+            return dto;
+        }
+
         // Usar LinkedHashSet para mantener orden
         Set<Long> preguntasProcesadas = new LinkedHashSet<>();
         List<ResultadoPreguntaDTO> resultados = new ArrayList<>();
@@ -502,6 +509,16 @@ public class EstudianteServiceImpl implements EstudianteService {
         ResultadoPreguntaDTO dto = new ResultadoPreguntaDTO();
         dto.setPreguntaId(respuesta.getPregunta().getId());
         dto.setEsCorrecta(Boolean.TRUE.equals(respuesta.getEsCorrecta()));
+        Pregunta pregunta = respuesta.getPregunta();
+        dto.setEnunciado(pregunta.getEnunciado());
+        if (pregunta.getTipo() == Pregunta.TipoPregunta.RESPUESTA_ABIERTA) {
+            dto.setRespuestaEstudiante(respuesta.getRespuestaAbierta());
+        } else {
+            dto.setRespuestaEstudiante(respuesta.getOpcion() != null ? respuesta.getOpcion().getTexto() : null);
+            dto.setRespuestaCorrecta(pregunta.getOpciones().stream()
+                    .filter(o -> Boolean.TRUE.equals(o.getEsCorrecta()))
+                    .map(Opcion::getTexto).findFirst().orElse(null));
+        }
 
         // Generar retroalimentación basada en el tipo de pregunta
         dto.setRetroalimentacion(generarRetroalimentacion(respuesta));

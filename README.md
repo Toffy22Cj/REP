@@ -70,7 +70,7 @@ servidor desbloquea inmediatamente**.
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 90 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 92 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar

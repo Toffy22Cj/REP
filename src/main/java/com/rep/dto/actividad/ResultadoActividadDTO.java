@@ -13,4 +13,6 @@ public class ResultadoActividadDTO {
     private String observaciones;
     private String nombreEstudiante;
     private String fechaEntrega;
+    /** false: el profesor eligió no mostrar las respuestas correctas (sin detalle por pregunta). */
+    private boolean respuestasVisibles = true;
 }

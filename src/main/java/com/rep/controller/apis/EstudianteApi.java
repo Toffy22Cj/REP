@@ -35,12 +35,15 @@ public class EstudianteApi {
     private final EstudianteService estudianteService;
     private final com.rep.service.logica.NotasService notasService;
     private final com.rep.service.archivos.NotasReportGenerator reportes;
+    private final com.rep.repositories.RespuestaEstudianteRepository respuestas;
 
     public EstudianteApi(EstudianteService estudianteService, com.rep.service.logica.NotasService notasService,
-            com.rep.service.archivos.NotasReportGenerator reportes) {
+            com.rep.service.archivos.NotasReportGenerator reportes,
+            com.rep.repositories.RespuestaEstudianteRepository respuestas) {
         this.estudianteService = estudianteService;
         this.notasService = notasService;
         this.reportes = reportes;
+        this.respuestas = respuestas;
     }
 
     /** Boletín de notas: promedio y desempeño por materia, estado de cada actividad y asistencia. */
@@ -84,7 +87,7 @@ public class EstudianteApi {
         verificarAcceso(id, usuario);
         logger.debug("Solicitud de actividades para estudiante {}", id);
 
-        return ResponseEntity.ok(toDtos(estudianteService.getActividadesByEstudiante(id)));
+        return ResponseEntity.ok(toDtos(id, estudianteService.getActividadesByEstudiante(id)));
     }
 
     @GetMapping("/{id}/materias/{materiaId}/actividades")
@@ -95,7 +98,7 @@ public class EstudianteApi {
         verificarAcceso(id, usuario);
         logger.debug("Solicitud de actividades para estudiante {} y materia {}", id, materiaId);
 
-        return ResponseEntity.ok(toDtos(estudianteService.getActividadesByMateria(id, materiaId)));
+        return ResponseEntity.ok(toDtos(id, estudianteService.getActividadesByMateria(id, materiaId)));
     }
 
     @PostMapping("/{id}/actividades/{actividadId}/resolver")
@@ -138,8 +141,30 @@ public class EstudianteApi {
         }
     }
 
-    private List<ActividadDTO> toDtos(List<Actividad> actividades) {
-        return actividades.stream().map(EstudianteApi::toDto).toList();
+    /**
+     * Incluye el estado de entrega del estudiante y su nota: antes la lista seguía
+     * ofreciendo "Resolver" en actividades ya entregadas y el servidor negaba el acceso.
+     */
+    private List<ActividadDTO> toDtos(Long estudianteId, List<Actividad> actividades) {
+        java.util.Map<Long, com.rep.model.RespuestaEstudiante> porActividad = new java.util.HashMap<>();
+        for (var r : respuestas.findByEstudianteId(estudianteId)) {
+            porActividad.merge(r.getActividad().getId(), r,
+                    (a, b) -> Boolean.TRUE.equals(b.getEntregado()) ? b : a);
+        }
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+        return actividades.stream().map(a -> {
+            ActividadDTO dto = toDto(a);
+            var r = porActividad.get(a.getId());
+            if (r != null && Boolean.TRUE.equals(r.getEntregado())) {
+                dto.setEstadoEntrega("ENTREGADA");
+                dto.setNota(r.getNota());
+            } else if (a.getFechaHoraEntrega() != null && ahora.isAfter(a.getFechaHoraEntrega())) {
+                dto.setEstadoEntrega("VENCIDA");
+            } else {
+                dto.setEstadoEntrega(r != null ? "EN_CURSO" : "PENDIENTE");
+            }
+            return dto;
+        }).toList();
     }
 
     private static ActividadDTO toDto(Actividad actividad) {
@@ -157,6 +182,9 @@ public class EstudianteApi {
                 pm.getMateria().getNombre(),
                 pm.getCurso().getId(),
                 pm.getCurso().getNombre(),
-                actividad.getActiva());
+                actividad.getActiva(),
+                actividad.respuestasVisibles(),
+                null,
+                null);
     }
 }

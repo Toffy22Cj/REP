@@ -99,6 +99,9 @@ public class ActividadServiceImpl implements ActividadService {
         if (actividad.getActiva() != null) {
             existente.setActiva(actividad.getActiva());
         }
+        if (actividad.getMostrarRespuestas() != null) {
+            existente.setMostrarRespuestas(actividad.getMostrarRespuestas());
+        }
         return actividadRepository.save(existente);
     }
 
@@ -386,6 +389,7 @@ public class ActividadServiceImpl implements ActividadService {
         clon.setProfesor(original.getProfesor() != null ? original.getProfesor()
                 : original.getProfesorMateria().getProfesor());
         clon.setPermitirReintentos(original.getPermitirReintentos());
+        clon.setMostrarRespuestas(original.getMostrarRespuestas());
         clon.setActiva(true);
         clon.setFechaCreacion(LocalDateTime.now());
 

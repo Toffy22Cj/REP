@@ -69,6 +69,17 @@ public class Actividad {
     @Column(name = "permitir_reintentos", nullable = false)
     private Boolean permitirReintentos = false;
 
+    /**
+     * Si el estudiante ve, tras entregar, la respuesta correcta de cada pregunta. Nulo en
+     * actividades anteriores a esta opción: se trata como true (comportamiento previo).
+     */
+    @Column(name = "mostrar_respuestas")
+    private Boolean mostrarRespuestas = true;
+
+    public boolean respuestasVisibles() {
+        return !Boolean.FALSE.equals(mostrarRespuestas);
+    }
+
     @Column(nullable = false)
     private Boolean activa = true;
 

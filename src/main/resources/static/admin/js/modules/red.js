@@ -54,7 +54,7 @@ export const Red = {
                     <p class="text-muted" style="font-size:.85rem">
                         Estado: ${d.escuchando ? '🟢 activo' : (d.activo ? '🟠 sin puerto (otro programa lo usa)' : '⚪ desactivado')}
                         · UDP ${d.puerto} (búsquedas) y ${d.puertoAnuncio} (anuncios) · HTTP ${red.puertoHttp}
-                        · Versión ${escapeHtml(red.version)} · ID <code>${escapeHtml(red.id.substring(0, 8))}</code></p>
+                        · mDNS ${d.mdns ? '🟢 _rep._tcp' : '⚪'} · Versión ${escapeHtml(red.version)} · ID <code>${escapeHtml(red.id.substring(0, 8))}</code></p>
                     <button class="btn" type="submit" style="width:auto; padding:.5rem 1.25rem">Guardar</button>
                 </form>
             </div>

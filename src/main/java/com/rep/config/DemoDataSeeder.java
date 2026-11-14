@@ -55,6 +55,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final RecursoRepository recursoRepository;
     private final AsistenciaRepository asistenciaRepository;
     private final PeriodoAcademicoRepository periodoRepository;
+    private final BloqueHorarioRepository bloqueHorarioRepository;
     private final AlmacenamientoArchivosService almacenamiento;
     private final PasswordEncoder passwordEncoder;
     private final TransactionTemplate transaction;
@@ -67,6 +68,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             ActividadRepository actividadRepository, PreguntaRepository preguntaRepository,
             RespuestaEstudianteRepository respuestaRepository, RecursoRepository recursoRepository,
             AsistenciaRepository asistenciaRepository, PeriodoAcademicoRepository periodoRepository,
+            BloqueHorarioRepository bloqueHorarioRepository,
             AlmacenamientoArchivosService almacenamiento,
             PasswordEncoder passwordEncoder, TransactionTemplate transaction) {
         this.usuarioRepository = usuarioRepository;
@@ -79,6 +81,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         this.recursoRepository = recursoRepository;
         this.asistenciaRepository = asistenciaRepository;
         this.periodoRepository = periodoRepository;
+        this.bloqueHorarioRepository = bloqueHorarioRepository;
         this.almacenamiento = almacenamiento;
         this.passwordEncoder = passwordEncoder;
         this.transaction = transaction;
@@ -99,6 +102,21 @@ public class DemoDataSeeder implements CommandLineRunner {
      * Cuatro periodos de 25 % que terminan alrededor de hoy: todas las actividades de la
      * demostración caen en el cuarto, y los anteriores aparecen sin notas.
      */
+    /** "LMXJV" = lunes a viernes; franja "HH:mm-HH:mm". */
+    private void bloques(ProfesorMateria pm, String aula, String patron) {
+        String[] partes = patron.split(" ");
+        String[] horas = partes[1].split("-");
+        for (char c : partes[0].toCharArray()) {
+            com.rep.model.BloqueHorario b = new com.rep.model.BloqueHorario();
+            b.setProfesorMateria(pm);
+            b.setDia(java.time.DayOfWeek.of("LMXJVSD".indexOf(c) + 1));
+            b.setHoraInicio(java.time.LocalTime.parse(horas[0]));
+            b.setHoraFin(java.time.LocalTime.parse(horas[1]));
+            b.setAula(aula);
+            bloqueHorarioRepository.save(b);
+        }
+    }
+
     private void periodos() {
         if (!periodoRepository.findAll().isEmpty()) {
             return;
@@ -142,6 +160,15 @@ public class DemoDataSeeder implements CommandLineRunner {
         ProfesorMateria lengua11 = asignar(laura, lengua, c11a);
         ProfesorMateria ingles11 = asignar(laura, ingles, c11a);
         ProfesorMateria ciencias10 = asignar(andres, ciencias, c10a);
+
+        // Horario semanal (sin cruces de curso ni de profesor)
+        bloques(mate10, "Aula 101", "LXV 07:00-08:00");
+        bloques(fisica10, "Laboratorio", "MJ 07:00-08:00");
+        bloques(lengua10, "Aula 101", "LX 08:00-09:00");
+        bloques(ciencias10, "Laboratorio", "MJV 08:00-09:00");
+        bloques(mate11, "Aula 102", "LX 09:00-10:00");
+        bloques(lengua11, "Aula 102", "MJ 09:00-10:00");
+        bloques(ingles11, "Aula 102", "LV 10:00-11:00");
 
         List<Estudiante> e10 = List.of(
                 estudiante("1098765432", "Valentina", "Torres", 16, c10a),

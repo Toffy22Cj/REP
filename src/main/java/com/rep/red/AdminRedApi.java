@@ -23,15 +23,17 @@ public class AdminRedApi {
     private final RedConfigService red;
     private final DescubrimientoService descubrimiento;
     private final HotspotService hotspot;
+    private final MdnsService mdns;
     private final AuditoriaService auditoria;
     private final int puertoAnuncio;
 
-    public AdminRedApi(RedConfigService red, DescubrimientoService descubrimiento, HotspotService hotspot,
+    public AdminRedApi(RedConfigService red, DescubrimientoService descubrimiento, HotspotService hotspot, MdnsService mdns,
             AuditoriaService auditoria,
             @org.springframework.beans.factory.annotation.Value("${app.red.anuncio.puerto:47801}") int puertoAnuncio) {
         this.red = red;
         this.descubrimiento = descubrimiento;
         this.hotspot = hotspot;
+        this.mdns = mdns;
         this.auditoria = auditoria;
         this.puertoAnuncio = puertoAnuncio;
     }
@@ -47,7 +49,8 @@ public class AdminRedApi {
                 "activo", red.descubrimientoActivo(),
                 "escuchando", descubrimiento.escuchando(),
                 "puerto", descubrimiento.puerto(),
-                "puertoAnuncio", puertoAnuncio));
+                "puertoAnuncio", puertoAnuncio,
+                "mdns", mdns.anunciando()));
         m.put("interfaces", red.interfaces());
         m.put("clientesRecientes", red.clientesRecientes());
         m.put("hotspot", hotspot.estado());

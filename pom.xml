@@ -36,6 +36,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
+		<!-- Anuncio mDNS/DNS-SD (_rep._tcp): descubrimiento compatible con iOS, macOS y Android NSD -->
+		<dependency>
+			<groupId>org.jmdns</groupId>
+			<artifactId>jmdns</artifactId>
+			<version>3.5.12</version>
+		</dependency>
 		<!-- Migraciones versionadas del esquema (ver docs/migraciones.md) -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>

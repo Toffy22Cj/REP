@@ -245,6 +245,93 @@ class PeriodosAcademicosTest {
         assertThat(resultado).doesNotContain("correcta era");
     }
 
+    // ------------------------------------------------------------------ horario de clases
+
+    @Test
+    @Order(10)
+    void elEstudianteYElProfesorVenSuHorario() throws Exception {
+        String json = mvc.perform(get("/api/estudiante/{id}/horario", idDe(MATEO)).header("Authorization", bearer(MATEO)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        JsonNode bloques = mapper.readTree(json);
+        // 10-A: Matemáticas 3 + Física 2 + Lengua 2 + Ciencias 3
+        assertThat(bloques).hasSize(10);
+        assertThat(bloques.get(0).get("dia").asInt()).isEqualTo(1);
+        assertThat(bloques.get(0).get("diaNombre").asText()).isEqualTo("Lunes");
+        assertThat(bloques.get(0).get("horaInicio").asText()).isEqualTo("07:00");
+        for (JsonNode b : bloques) assertThat(b.get("curso").asText()).isEqualTo("10-A");
+
+        mvc.perform(get("/api/profesor/horario").header("Authorization", bearer(CARLOS)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(7)))  // Mate 10-A 3, Física 2, Mate 11-A 2
+                .andExpect(jsonPath("$[*].profesor", everyItem(is("Carlos Ramírez"))));
+
+        // Un estudiante no ve el horario de otro
+        mvc.perform(get("/api/estudiante/{id}/horario", idDe("1098765432")).header("Authorization", bearer(MATEO)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(11)
+    void elAdministradorGestionaElHorarioSinCruces() throws Exception {
+        long carlosMate10 = asignacion(CARLOS, "Matemáticas", "10-A");
+        long andresCiencias10 = asignacion("1040506070", "Ciencias Naturales", "10-A");
+
+        // Sábado libre: se crea
+        String json = mvc.perform(post("/api/admin/horario").header("Authorization", bearer(ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(carlosMate10, 6, "08:00", "09:30", "Aula 5")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.diaNombre").value("Sábado"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        long id = mapper.readTree(json).get("id").asLong();
+
+        // Mismo curso, franja que se cruza: conflicto de curso
+        mvc.perform(post("/api/admin/horario").header("Authorization", bearer(ADMIN)).contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(andresCiencias10, 6, "09:00", "10:00", null)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HORARIO_CRUCE_CURSO"));
+        // Bloques que solo se tocan son válidos
+        mvc.perform(post("/api/admin/horario").header("Authorization", bearer(ADMIN)).contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(andresCiencias10, 6, "09:30", "10:30", null)))
+                .andExpect(status().isOk());
+        // El mismo profesor en otro curso a la vez: conflicto de profesor
+        long carlosMate11 = asignacion(CARLOS, "Matemáticas", "11-A");
+        mvc.perform(post("/api/admin/horario").header("Authorization", bearer(ADMIN)).contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(carlosMate11, 6, "08:30", "09:00", null)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HORARIO_CRUCE_PROFESOR"));
+        // Horas al revés
+        mvc.perform(post("/api/admin/horario").header("Authorization", bearer(ADMIN)).contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(carlosMate11, 7, "10:00", "09:00", null)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("HORARIO_HORAS_INVALIDAS"));
+        // Editar el propio bloque no choca consigo mismo
+        mvc.perform(put("/api/admin/horario/" + id).header("Authorization", bearer(ADMIN)).contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(carlosMate10, 6, "08:00", "09:00", "Aula 6")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aula").value("Aula 6"));
+        // Solo el administrador
+        mvc.perform(post("/api/admin/horario").header("Authorization", bearer(CARLOS)).contentType(MediaType.APPLICATION_JSON)
+                        .content(bloque(carlosMate10, 7, "08:00", "09:00", null)))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/admin/horario/" + id).header("Authorization", bearer(ADMIN)))
+                .andExpect(status().isNoContent());
+    }
+
+    private long asignacion(String identificacionProfesor, String materia, String curso) throws Exception {
+        String json = mvc.perform(get("/api/profesor/asignaciones").header("Authorization", bearer(identificacionProfesor)))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        for (JsonNode a : mapper.readTree(json)) {
+            if (a.get("materia").asText().equals(materia) && a.get("curso").asText().equals(curso)) return a.get("id").asLong();
+        }
+        throw new AssertionError("Asignación no encontrada");
+    }
+
+    private static String bloque(long asignacionId, int dia, String inicio, String fin, String aula) {
+        return "{\"asignacionId\":" + asignacionId + ",\"dia\":" + dia + ",\"horaInicio\":\"" + inicio
+                + "\",\"horaFin\":\"" + fin + "\"" + (aula != null ? ",\"aula\":\"" + aula + "\"" : "") + "}";
+    }
+
     // ------------------------------------------------------------------ utilidades
 
     private void actualizar(PeriodoAcademico p, LocalDate inicio, LocalDate fin, int porcentaje) throws Exception {

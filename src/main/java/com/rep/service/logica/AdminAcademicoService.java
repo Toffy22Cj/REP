@@ -22,6 +22,7 @@ public class AdminAcademicoService {
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
     private final AuditoriaService auditoria;
+    private final BloqueHorarioRepository bloqueHorarioRepository;
 
     public AdminAcademicoService(CursoRepository cursoRepository,
             MateriaRepository materiaRepository,
@@ -29,7 +30,8 @@ public class AdminAcademicoService {
             ProfesorMateriaRepository profesorMateriaRepository,
             EstudianteRepository estudianteRepository,
             UsuarioRepository usuarioRepository,
-            AuditoriaService auditoria) {
+            AuditoriaService auditoria,
+            BloqueHorarioRepository bloqueHorarioRepository) {
         this.cursoRepository = cursoRepository;
         this.materiaRepository = materiaRepository;
         this.profesorRepository = profesorRepository;
@@ -37,6 +39,7 @@ public class AdminAcademicoService {
         this.estudianteRepository = estudianteRepository;
         this.usuarioRepository = usuarioRepository;
         this.auditoria = auditoria;
+        this.bloqueHorarioRepository = bloqueHorarioRepository;
     }
 
     // ------------------------------------------------------------------ cursos
@@ -195,6 +198,8 @@ public class AdminAcademicoService {
             throw new RecursoNoEncontradoException(ErrorCode.ASIGNACION_NO_ENCONTRADA, id);
         }
         auditoria.registrar("ELIMINAR_ASIGNACION", "ID: " + id);
+        // Sus bloques del horario dejan de tener sentido sin la asignación
+        bloqueHorarioRepository.deleteByAsignacion(id);
         profesorMateriaRepository.deleteById(id);
     }
 

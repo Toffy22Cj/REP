@@ -1,5 +1,26 @@
 # Changelog — REP Backend
 
+## [Madurez: periodos, migraciones y CI 2026-11-13]
+- **Flyway**: migraciones versionadas con baseline para bases existentes. La migración
+  `V2__Enums_a_varchar` convierte las columnas `ENUM` nativas (creadas por Hibernate en
+  MySQL) a `VARCHAR`; sin ella, añadir valores a un enumerado rompía los INSERT. Las
+  entidades usan `@JdbcTypeCode(SqlTypes.VARCHAR)`. Variables `FLYWAY_ENABLED`, `DDL_AUTO`.
+- **Periodos académicos** (`PeriodoAcademico`): `/api/periodos` y `/api/admin/periodos`,
+  validación de fechas, solapes, números y porcentajes; notas por periodo
+  (`periodoId` en boletín, planilla y exportaciones) y nota anual ponderada cuando hay
+  periodos (sin periodos el cálculo no cambia). PDF con desglose por periodo.
+- **Asistencia**: estado `RETARDO` (cuenta como asistencia, se informa en el boletín). Un
+  estado desconocido ya no se guarda en silencio como falla: responde `CAMPOS_INVALIDOS`.
+- La actividad con preguntas incluye `duracionMinutos` y `fechaEntrega` (temporizador
+  del cliente).
+- Datos demo con 4 periodos de 25 %.
+- CI en GitHub Actions: pruebas con Maven y arranque real contra MySQL 8.
+- Nuevos códigos: `PERIODO_NO_ENCONTRADO`, `PERIODO_FECHAS_INVALIDAS`, `PERIODO_SOLAPADO`,
+  `PERIODO_DUPLICADO`, `PERIODO_PORCENTAJE_EXCEDIDO`.
+- Informe `docs/PRODUCT_EVOLUTION_AND_MATURITY_REPORT.md` (con fuentes) y
+  `docs/migraciones.md`.
+- Pruebas: 83 → 90.
+
 ## [Perfil, notas y gestión 2026-11-13]
 - **Mi perfil** para todos los roles: `GET/PUT /api/perfil` (y `/api/admin/perfil` para el
   panel web) y `PUT /api/perfil/contrasena`. Cambiar la contraseña invalida los tokens

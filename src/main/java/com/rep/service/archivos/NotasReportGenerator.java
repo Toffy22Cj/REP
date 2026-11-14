@@ -33,6 +33,18 @@ public class NotasReportGenerator {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final Locale ES = Locale.forLanguageTag("es-CO");
 
+    /** Texto que explica qué notas incluye el reporte. */
+    static String alcance(PeriodoResumen periodo, java.util.List<PeriodoResumen> periodos, boolean ponderado) {
+        if (periodo != null) {
+            return periodo.nombre() + " (" + periodo.fechaInicio() + " a " + periodo.fechaFin() + ")";
+        }
+        if (ponderado) {
+            return "Año lectivo · nota final ponderada: " + periodos.stream()
+                    .map(x -> x.nombre() + " " + x.porcentaje() + " %").collect(java.util.stream.Collectors.joining(", "));
+        }
+        return "Todas las actividades (sin periodos académicos configurados)";
+    }
+
     // ================================================================== boletín PDF
 
     public byte[] boletinPdf(Boletin b) {
@@ -41,6 +53,7 @@ public class NotasReportGenerator {
             doc.add(titulo("Boletín de calificaciones"));
             doc.add(new Paragraph(b.estudiante() + "  ·  Identificación " + b.identificacion() + "  ·  Curso " + b.curso())
                     .setFontSize(10));
+            doc.add(new Paragraph(alcance(b.periodo(), b.periodos(), b.ponderado())).setFontSize(10).setBold());
             doc.add(new Paragraph("Generado el " + b.generadoEn().format(FECHA) + "  ·  Nota mínima aprobatoria "
                     + nota(b.notaMinimaAprobatoria())).setFontSize(9).setFontColor(ColorConstants.GRAY));
 
@@ -59,6 +72,23 @@ public class NotasReportGenerator {
             resumen.addCell(celdaNota(b.promedioGeneral(), b.notaMinimaAprobatoria()).setBold());
             resumen.addCell(new Cell(1, 2).add(new Paragraph(textoDesempeno(b.desempenoGeneral()))).setFontSize(9));
             doc.add(resumen);
+
+            if (b.ponderado() && !b.periodos().isEmpty()) {
+                doc.add(new Paragraph("Promedio por periodo").setBold().setFontSize(11).setMarginTop(12).setFontColor(PRIMARIO));
+                float[] anchos = new float[b.periodos().size() + 2];
+                anchos[0] = 30;
+                for (int i = 1; i < anchos.length; i++) anchos[i] = 70f / (anchos.length - 1);
+                Table tp = new Table(UnitValue.createPercentArray(anchos)).useAllAvailableWidth();
+                tp.addHeaderCell(encabezado("Materia"));
+                for (PeriodoResumen pr : b.periodos()) tp.addHeaderCell(encabezado(pr.nombre() + " (" + pr.porcentaje() + " %)"));
+                tp.addHeaderCell(encabezado("Final"));
+                for (NotasMateria m : b.materias()) {
+                    tp.addCell(celda(m.materia()));
+                    for (NotaPeriodo np : m.periodos()) tp.addCell(celdaNota(np.promedio(), b.notaMinimaAprobatoria()));
+                    tp.addCell(celdaNota(m.promedio(), b.notaMinimaAprobatoria()).setBold());
+                }
+                doc.add(tp);
+            }
 
             for (NotasMateria m : b.materias()) {
                 if (m.actividades().isEmpty()) continue;
@@ -87,6 +117,7 @@ public class NotasReportGenerator {
         try (Document doc = new Document(new PdfDocument(new PdfWriter(out)), PageSize.LETTER.rotate())) {
             doc.setMargins(24, 24, 24, 24);
             doc.add(titulo("Planilla de notas · " + p.materia() + " · " + p.curso()));
+            doc.add(new Paragraph(alcance(p.periodo(), p.periodos(), p.ponderado())).setFontSize(10).setBold());
             doc.add(new Paragraph("Generado el " + p.generadoEn().format(FECHA) + "  ·  Promedio del curso "
                     + nota(p.promedioCurso()) + "  ·  Aprobados " + p.aprobados() + "  ·  Reprobados " + p.reprobados())
                     .setFontSize(9).setFontColor(ColorConstants.GRAY));

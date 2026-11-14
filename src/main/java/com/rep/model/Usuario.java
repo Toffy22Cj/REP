@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -55,6 +57,8 @@ public class Usuario implements UserDetails {
     private String identificacion;
 
     @Enumerated(EnumType.STRING)
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     @Column(name = "tipo_identificacion", nullable = false)
     private TipoIdentificacion tipoIdentificacion;
 
@@ -65,6 +69,8 @@ public class Usuario implements UserDetails {
     private String contraseña;
 
     @Enumerated(EnumType.STRING)
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     @Column(nullable = false)
     private Rol rol;
 
@@ -192,6 +198,7 @@ public class Usuario implements UserDetails {
 
     // En Usuario.java
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     @Column(nullable = true) // Puedes cambiar a false si es obligatorio
     private Sexo sexo;
 

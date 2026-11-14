@@ -102,6 +102,11 @@ seguridad) tienen el mismo formato JSON (`ApiError`):
 | `MATERIA_CON_ASIGNACIONES` | 409 | No se puede eliminar una materia asignada a profesores |
 | `ASIGNACION_NO_ENCONTRADA` | 404 | La asignación no existe |
 | `ASIGNACION_DUPLICADA` | 409 | Esa asignación profesor-materia-curso ya existe |
+| `PERIODO_NO_ENCONTRADO` | 404 | El periodo académico no existe |
+| `PERIODO_FECHAS_INVALIDAS` | 400 | La fecha de inicio del periodo debe ser anterior a la de fin |
+| `PERIODO_SOLAPADO` | 409 | Las fechas se cruzan con otro periodo del mismo año |
+| `PERIODO_DUPLICADO` | 409 | Ya existe un periodo con ese número en el año |
+| `PERIODO_PORCENTAJE_EXCEDIDO` | 400 | La suma de porcentajes del año no puede superar 100 % |
 
 ### Actividades y evaluación
 

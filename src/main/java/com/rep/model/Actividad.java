@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -42,7 +44,9 @@ public class Actividad {
     private String titulo;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('EXAMEN', 'QUIZ', 'TALLER')", nullable = false)
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
+    @Column(length = 20, nullable = false)
     private TipoActividad tipo;
 
     private String descripcion;

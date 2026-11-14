@@ -54,6 +54,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final RespuestaEstudianteRepository respuestaRepository;
     private final RecursoRepository recursoRepository;
     private final AsistenciaRepository asistenciaRepository;
+    private final PeriodoAcademicoRepository periodoRepository;
     private final AlmacenamientoArchivosService almacenamiento;
     private final PasswordEncoder passwordEncoder;
     private final TransactionTemplate transaction;
@@ -65,7 +66,8 @@ public class DemoDataSeeder implements CommandLineRunner {
             MateriaRepository materiaRepository, ProfesorMateriaRepository profesorMateriaRepository,
             ActividadRepository actividadRepository, PreguntaRepository preguntaRepository,
             RespuestaEstudianteRepository respuestaRepository, RecursoRepository recursoRepository,
-            AsistenciaRepository asistenciaRepository, AlmacenamientoArchivosService almacenamiento,
+            AsistenciaRepository asistenciaRepository, PeriodoAcademicoRepository periodoRepository,
+            AlmacenamientoArchivosService almacenamiento,
             PasswordEncoder passwordEncoder, TransactionTemplate transaction) {
         this.usuarioRepository = usuarioRepository;
         this.cursoRepository = cursoRepository;
@@ -76,6 +78,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         this.respuestaRepository = respuestaRepository;
         this.recursoRepository = recursoRepository;
         this.asistenciaRepository = asistenciaRepository;
+        this.periodoRepository = periodoRepository;
         this.almacenamiento = almacenamiento;
         this.passwordEncoder = passwordEncoder;
         this.transaction = transaction;
@@ -92,8 +95,32 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     // ================================================================== escenario
 
+    /**
+     * Cuatro periodos de 25 % que terminan alrededor de hoy: todas las actividades de la
+     * demostración caen en el cuarto, y los anteriores aparecen sin notas.
+     */
+    private void periodos() {
+        if (!periodoRepository.findAll().isEmpty()) {
+            return;
+        }
+        LocalDate hoy = LocalDate.now();
+        LocalDate fin = hoy.plusDays(45);
+        for (int n = 4; n >= 1; n--) {
+            com.rep.model.PeriodoAcademico p = new com.rep.model.PeriodoAcademico();
+            p.setAnio(hoy.getYear());
+            p.setNumero(n);
+            p.setNombre("Periodo " + n);
+            p.setFechaFin(fin);
+            p.setFechaInicio(fin.minusDays(89));
+            p.setPorcentaje(25);
+            periodoRepository.save(p);
+            fin = p.getFechaInicio().minusDays(1);
+        }
+    }
+
     private void sembrar() {
         passwordHash = passwordEncoder.encode(PASSWORD);
+        periodos();
 
         Curso c10a = curso(10, "A");
         Curso c11a = curso(11, "A");

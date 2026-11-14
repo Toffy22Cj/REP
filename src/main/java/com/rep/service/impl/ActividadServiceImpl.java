@@ -250,6 +250,8 @@ public class ActividadServiceImpl implements ActividadService {
         dto.setId(actividad.getId());
         dto.setTitulo(actividad.getTitulo());
         dto.setDescripcion(actividad.getDescripcion());
+        dto.setDuracionMinutos(actividad.getDuracionMinutos());
+        dto.setFechaEntrega(actividad.getFechaEntrega());
         // Orden estable: las colecciones son Set y antes el orden variaba entre peticiones
         dto.setPreguntas(actividad.getPreguntas().stream()
                 .sorted(java.util.Comparator.comparing(Pregunta::getId))

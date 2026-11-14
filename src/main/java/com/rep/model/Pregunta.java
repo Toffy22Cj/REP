@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -39,6 +41,8 @@ public class Pregunta {
     private String enunciado;
 
     @Enumerated(EnumType.STRING)
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     @Column(nullable = false, length = 20) // Añadido nullable=false y length
     private TipoPregunta tipo;
 

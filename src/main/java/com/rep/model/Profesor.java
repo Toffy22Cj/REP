@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -75,6 +77,7 @@ public class Profesor extends Usuario {
 
     // En la entidad Profesor:
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     @Column(nullable = false)
     private EstadoProfesor estado = EstadoProfesor.activo; // Valor por defecto en mayúsculas
 }

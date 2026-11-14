@@ -67,10 +67,13 @@ public class AsistenciaServiceImpl implements AsistenciaService {
             }
 
             // Actualizar campos
+            // Antes un estado desconocido se guardaba en silencio como falla (NO_INGRESO)
             try {
-                asistencia.setEstado(Asistencia.EstadoAsistencia.valueOf(dto.getEstado()));
+                asistencia.setEstado(Asistencia.EstadoAsistencia.valueOf(String.valueOf(dto.getEstado()).trim().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                asistencia.setEstado(Asistencia.EstadoAsistencia.NO_INGRESO); // Default or error
+                throw new com.rep.exception.ValidacionException(com.rep.exception.ErrorCode.CAMPOS_INVALIDOS,
+                        "Estado de asistencia no válido: " + dto.getEstado(),
+                        java.util.Map.of("estado", "Use PRESENTE, RETARDO, EXCUSA o NO_INGRESO"));
             }
             asistencia.setTipoExcusa(dto.getTipoExcusa());
             asistencia.setObservacion(dto.getObservacion());

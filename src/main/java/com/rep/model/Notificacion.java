@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -27,6 +29,8 @@ public class Notificacion {
     private Actividad actividad; // Opcional
 
     @Enumerated(EnumType.STRING)
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     private TipoNotificacion tipo;
 
     private String mensaje;

@@ -79,17 +79,19 @@ public class ProfesorApi {
     // Planilla de notas de un curso y materia asignados
     @GetMapping("/notas")
     public com.rep.dto.notas.NotasDTOs.Planilla planillaNotas(@RequestParam Long cursoId, @RequestParam Long materiaId,
-            @AuthenticationPrincipal Usuario usuario) {
+            @RequestParam(required = false) Long periodoId, @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
-        return notasService.planilla(cursoId, materiaId);
+        return notasService.planilla(cursoId, materiaId, periodoId);
     }
 
     @GetMapping("/notas/export")
     public ResponseEntity<byte[]> exportarPlanilla(@RequestParam Long cursoId, @RequestParam Long materiaId,
-            @RequestParam(defaultValue = "xlsx") String formato, @AuthenticationPrincipal Usuario usuario) {
+            @RequestParam(defaultValue = "xlsx") String formato, @RequestParam(required = false) Long periodoId,
+            @AuthenticationPrincipal Usuario usuario) {
         validacionService.validarProfesorCursoMateria(usuario.getId(), cursoId, materiaId);
-        var planilla = notasService.planilla(cursoId, materiaId);
-        String base = ("notas-" + planilla.materia() + "-" + planilla.curso()).replaceAll("[^A-Za-z0-9._-]", "_");
+        var planilla = notasService.planilla(cursoId, materiaId, periodoId);
+        String base = ("notas-" + planilla.materia() + "-" + planilla.curso()
+                + (planilla.periodo() != null ? "-" + planilla.periodo().nombre() : "")).replaceAll("[^A-Za-z0-9._-]", "_");
         return switch (formato.toLowerCase(java.util.Locale.ROOT)) {
             case "pdf" -> archivo(reportes.planillaPdf(planilla), base + ".pdf", "application/pdf");
             case "xlsx" -> archivo(reportes.planillaExcel(planilla), base + ".xlsx",

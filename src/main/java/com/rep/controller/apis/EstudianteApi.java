@@ -45,16 +45,18 @@ public class EstudianteApi {
 
     /** Boletín de notas: promedio y desempeño por materia, estado de cada actividad y asistencia. */
     @GetMapping("/{id}/notas")
-    public com.rep.dto.notas.NotasDTOs.Boletin notas(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+    public com.rep.dto.notas.NotasDTOs.Boletin notas(@PathVariable Long id,
+            @RequestParam(required = false) Long periodoId, @AuthenticationPrincipal Usuario usuario) {
         verificarAcceso(id, usuario);
-        return notasService.boletin(id);
+        return notasService.boletin(id, periodoId);
     }
 
     /** Boletín en PDF (para guardar o imprimir sin conexión). */
     @GetMapping(value = "/{id}/notas/pdf", produces = "application/pdf")
-    public ResponseEntity<byte[]> notasPdf(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+    public ResponseEntity<byte[]> notasPdf(@PathVariable Long id,
+            @RequestParam(required = false) Long periodoId, @AuthenticationPrincipal Usuario usuario) {
         verificarAcceso(id, usuario);
-        var boletin = notasService.boletin(id);
+        var boletin = notasService.boletin(id, periodoId);
         return ResponseEntity.ok()
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
                         org.springframework.http.ContentDisposition.attachment()

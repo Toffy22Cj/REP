@@ -41,4 +41,5 @@ columnas nuevas.
 
 Con MariaDB 10.11: una base creada por la versión anterior (9 columnas `ENUM`, 14
 usuarios, 50 asistencias) quedó en versión 2 con 0 `ENUM` y los datos intactos; una base
-nueva se creó sin `ENUM`. La CI repite el arranque contra MySQL 8.
+nueva se creó sin `ENUM`. El workflow `.github/workflows/ci.yml` (trabajo `mysql`) repite el
+arranque contra MySQL 8 cuando GitHub Actions está disponible en la cuenta.

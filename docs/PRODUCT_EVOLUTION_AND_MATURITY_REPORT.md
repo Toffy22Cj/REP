@@ -147,7 +147,7 @@ datos demo. MariaDB 10.11 se usó como sustituto de MySQL para probar las migrac
 
 - Base heredada con datos demo: 14 usuarios y 50 asistencias intactos, 0 columnas `ENUM`.
 - Base nueva: 0 `ENUM`.
-- La CI repite la prueba contra MySQL 8.
+- La CI está configurada para repetirla contra MySQL 8 (ver la nota de §5.5).
 
 Guía: `docs/migraciones.md`.
 
@@ -206,6 +206,12 @@ Guía: `docs/migraciones.md`.
 - GitHub Actions:
   - backend: `mvn verify` y arranque real contra MySQL 8;
   - cliente: Qt 6.8.3 + QtKeychain compilado + `ctest`.
+- **Nota sobre la CI:** en la primera ejecución del backend, GitHub terminó los dos
+  trabajos en 2 s sin ejecutar ningún paso ni generar registros. Es lo típico de una
+  cuenta sin minutos de Actions o con un bloqueo de facturación. En `rep-cliente` no se
+  creó ninguna ejecución (Actions posiblemente desactivado). Los workflows quedan
+  listos, pero **aún no se han visto pasar en GitHub**. Localmente pasan las mismas
+  órdenes (`mvn test`, `ctest`).
 
 ---
 
@@ -248,8 +254,8 @@ P2: después.
 
 ## 8. Riesgos
 
-- **Migraciones en MySQL 8 de producción.** Se verificaron en MariaDB 10.11 y se
-  repiten en la CI contra MySQL 8. Aun así: **haga una copia de la base antes de
+- **Migraciones en MySQL 8 de producción.** Se verificaron en MariaDB 10.11; la CI
+  contra MySQL 8 está configurada pero aún no se ha ejecutado (§5.5). Aun así: **haga una copia de la base antes de
   actualizar**.
 - **Reloj del equipo del estudiante.** Mientras no exista el punto 2 de §6, un reloj
   manipulado puede alargar el tiempo de un examen sin conexión.

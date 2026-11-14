@@ -191,6 +191,60 @@ class PeriodosAcademicosTest {
         assertThat(materia(boletin(null), "Matemáticas").get("asistencia").get("retardos").asInt()).isEqualTo(1);
     }
 
+    @Test
+    @Order(8)
+    void laListaDelEstudianteIndicaLasActividadesEntregadasConSuNota() throws Exception {
+        String json = mvc.perform(get("/api/estudiante/{id}/actividades", idDe(MATEO)).header("Authorization", bearer(MATEO)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        JsonNode cinematica = null;
+        for (JsonNode a : mapper.readTree(json)) {
+            assertThat(a.get("estadoEntrega").asText()).isIn("PENDIENTE", "EN_CURSO", "ENTREGADA", "VENCIDA");
+            if (a.get("titulo").asText().equals("Taller: Cinemática")) cinematica = a;
+        }
+        assertThat(cinematica).isNotNull();
+        assertThat(cinematica.get("estadoEntrega").asText()).isEqualTo("ENTREGADA");
+        assertThat(cinematica.get("nota").floatValue()).isEqualTo(5.0f);
+    }
+
+    @Test
+    @Order(9)
+    void elProfesorDecideSiSeMuestranLasRespuestasCorrectas() throws Exception {
+        long mateo = idDe(MATEO);
+        String lista = mvc.perform(get("/api/estudiante/{id}/actividades", mateo).header("Authorization", bearer(MATEO)))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        long actividadId = -1;
+        for (JsonNode a : mapper.readTree(lista)) {
+            if (a.get("titulo").asText().equals("Taller: Cinemática")) actividadId = a.get("id").asLong();
+        }
+        JsonNode act = mapper.readTree(mvc.perform(get("/api/actividades/" + actividadId).header("Authorization", bearer(CARLOS)))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(act.get("mostrarRespuestas").asBoolean()).isTrue(); // por defecto, como antes
+
+        // Por defecto el estudiante ve su respuesta y la correcta
+        mvc.perform(get("/api/estudiante/{id}/actividades/{a}/resultado", mateo, actividadId).header("Authorization", bearer(MATEO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.respuestasVisibles").value(true))
+                .andExpect(jsonPath("$.resultadosPreguntas[0].enunciado").isNotEmpty())
+                .andExpect(jsonPath("$.resultadosPreguntas[0].respuestaCorrecta").isNotEmpty());
+
+        // El profesor las oculta: solo nota y observaciones
+        mvc.perform(put("/api/actividades/" + actividadId).header("Authorization", bearer(CARLOS))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"" + act.get("titulo").asText() + "\",\"tipo\":\"TALLER\",\"fechaEntrega\":\""
+                                + LocalDate.now().plusDays(10) + "\",\"duracionMinutos\":40,\"materiaId\":" + act.get("materiaId")
+                                + ",\"cursoId\":" + act.get("cursoId") + ",\"mostrarRespuestas\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mostrarRespuestas").value(false));
+        String resultado = mvc.perform(get("/api/estudiante/{id}/actividades/{a}/resultado", mateo, actividadId)
+                        .header("Authorization", bearer(MATEO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.respuestasVisibles").value(false))
+                .andExpect(jsonPath("$.resultadosPreguntas", hasSize(0)))
+                .andExpect(jsonPath("$.nota").value(5.0))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(resultado).doesNotContain("correcta era");
+    }
+
     // ------------------------------------------------------------------ utilidades
 
     private void actualizar(PeriodoAcademico p, LocalDate inicio, LocalDate fin, int porcentaje) throws Exception {

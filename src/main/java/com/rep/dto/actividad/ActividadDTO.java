@@ -27,6 +27,11 @@ public class ActividadDTO {
     private Long cursoId;
     private String cursoNombre;
     private Boolean activa;
+    private Boolean mostrarRespuestas;
+    /** Solo en la lista del estudiante: PENDIENTE, EN_CURSO, ENTREGADA o VENCIDA. */
+    private String estadoEntrega;
+    /** Solo en la lista del estudiante: su nota si ya entregó. */
+    private Float nota;
 
     // Getters y Setters
     public Long getId() { return id; }
@@ -65,6 +70,7 @@ public class ActividadDTO {
         dto.setDuracionMinutos(actividad.getDuracionMinutos());
         dto.setFechaCreacion(actividad.getFechaCreacion());
         dto.setActiva(actividad.getActiva());
+        dto.setMostrarRespuestas(actividad.respuestasVisibles());
 
         if(actividad.getProfesorMateria() != null && actividad.getProfesorMateria().getProfesor() != null) {
             dto.setProfesorId(actividad.getProfesorMateria().getProfesor().getId());

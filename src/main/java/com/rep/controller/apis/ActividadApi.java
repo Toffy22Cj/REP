@@ -77,6 +77,7 @@ public class ActividadApi {
         actividad.setFechaCreacion(LocalDateTime.now());
         actividad.setActiva(true);
         actividad.setPermitirReintentos(false);
+        actividad.setMostrarRespuestas(actividadDTO.getMostrarRespuestas() == null || actividadDTO.getMostrarRespuestas());
 
         Actividad nuevaActividad = actividadService.crearActividad(actividad);
         log.info("Actividad {} creada por profesor {}", nuevaActividad.getId(), profesor.getId());
@@ -145,6 +146,9 @@ public class ActividadApi {
         actividadExistente.setDescripcion(actividadDTO.getDescripcion());
         actividadExistente.setFechaEntrega(actividadDTO.getFechaEntrega());
         actividadExistente.setDuracionMinutos(actividadDTO.getDuracionMinutos());
+        if (actividadDTO.getMostrarRespuestas() != null) {
+            actividadExistente.setMostrarRespuestas(actividadDTO.getMostrarRespuestas());
+        }
 
         return ResponseEntity.ok(ActividadDTO.fromEntity(actividadService.editarActividad(id, actividadExistente)));
     }

@@ -1,5 +1,16 @@
 # Changelog — REP Backend
 
+## [Resultados y entregas 2026-11-14]
+- **Mostrar u ocultar respuestas correctas**: nuevo campo `mostrarRespuestas` en la
+  actividad (por defecto `true`, como antes). Con `false`, el resultado del estudiante
+  solo trae nota y observaciones (`respuestasVisibles=false`).
+- El resultado por pregunta incluye `enunciado`, `respuestaEstudiante` y
+  `respuestaCorrecta`.
+- La lista de actividades del estudiante incluye `estadoEntrega` (PENDIENTE, EN_CURSO,
+  ENTREGADA, VENCIDA) y su `nota`: antes seguía ofreciendo "Resolver" en actividades
+  ya entregadas y el servidor negaba el acceso.
+- Pruebas: 90 → 92.
+
 ## [Madurez: periodos, migraciones y CI 2026-11-13]
 - **Flyway**: migraciones versionadas con baseline para bases existentes. La migración
   `V2__Enums_a_varchar` convierte las columnas `ENUM` nativas (creadas por Hibernate en

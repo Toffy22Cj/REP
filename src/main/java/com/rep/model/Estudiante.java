@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -24,7 +26,9 @@ public class Estudiante extends Usuario {
     private Curso curso;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "ENUM('activo', 'retirado', 'graduado', 'suspendido')")
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
+    @Column(nullable = false, length = 20)
     private EstadoEstudiante estado = EstadoEstudiante.activo;
 
     @Column(name = "edad", nullable = false)

@@ -68,7 +68,8 @@ public class SecurityConfig {
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/auth/**", "/api/public/**", "/api/estudiante/**", "/api/profesor/**",
-                        "/api/actividades/**", "/api/preguntas/**", "/api/registro", "/api/materiales/**", "/api/perfil/**")
+                        "/api/actividades/**", "/api/preguntas/**", "/api/registro", "/api/materiales/**", "/api/perfil/**",
+                        "/api/periodos", "/api/periodos/**")
                 .csrf(AbstractHttpConfigurer::disable) // API sin estado con Bearer token: CSRF no aplica
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -86,6 +87,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/actividades/*/preguntas")
                         .hasAnyAuthority(ESTUDIANTE, PROFESOR, ADMIN)
                         .requestMatchers("/api/perfil/**").hasAnyAuthority(ESTUDIANTE, PROFESOR, ADMIN)
+                        // Periodos: consulta para todos; la gestión va por /api/admin/periodos
+                        .requestMatchers(HttpMethod.GET, "/api/periodos", "/api/periodos/**").hasAnyAuthority(ESTUDIANTE, PROFESOR, ADMIN)
+                        .requestMatchers("/api/periodos", "/api/periodos/**").denyAll()
                         .requestMatchers("/api/estudiante/**").hasAnyAuthority(ESTUDIANTE, ADMIN)
                         // Material de estudio: publicar solo profesores; el servicio filtra por curso/asignación
                         .requestMatchers(HttpMethod.POST, "/api/materiales/**").hasAuthority(PROFESOR)

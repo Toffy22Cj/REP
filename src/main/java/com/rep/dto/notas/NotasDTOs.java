@@ -27,18 +27,30 @@ public final class NotasDTOs {
             EstadoNota estado, Float nota, String observaciones) {
     }
 
-    public record ResumenAsistencia(long presentes, long ausencias, long excusas) {
-        public static final ResumenAsistencia VACIO = new ResumenAsistencia(0, 0, 0);
+    public record ResumenAsistencia(long presentes, long ausencias, long excusas, long retardos) {
+        public static final ResumenAsistencia VACIO = new ResumenAsistencia(0, 0, 0, 0);
     }
 
+    /** Promedio de un periodo y su peso en la nota anual. */
+    public record NotaPeriodo(Long periodoId, String nombre, int porcentaje, Float promedio) {
+    }
+
+    public record PeriodoResumen(Long id, String nombre, int porcentaje, LocalDate fechaInicio, LocalDate fechaFin) {
+    }
+
+    /**
+     * {@code promedio}: del periodo pedido; sin periodo, la nota anual ponderada por
+     * {@code periodos} (o la media simple si la institución no definió periodos).
+     */
     public record NotasMateria(Long materiaId, String materia, String profesor, Float promedio, String desempeno,
             Boolean aprobada, int calificadas, int pendientes, ResumenAsistencia asistencia,
-            List<NotaActividad> actividades) {
+            List<NotaActividad> actividades, List<NotaPeriodo> periodos) {
     }
 
     public record Boletin(Long estudianteId, String estudiante, String identificacion, String curso,
             LocalDateTime generadoEn, float notaMinimaAprobatoria, Float promedioGeneral, String desempenoGeneral,
-            int materiasAprobadas, int materiasReprobadas, List<NotasMateria> materias) {
+            int materiasAprobadas, int materiasReprobadas, List<NotasMateria> materias,
+            PeriodoResumen periodo, List<PeriodoResumen> periodos, boolean ponderado) {
     }
 
     public record ColumnaActividad(Long actividadId, String titulo, String tipo, LocalDate fechaEntrega,
@@ -49,11 +61,12 @@ public final class NotasDTOs {
     }
 
     public record FilaEstudiante(Long estudianteId, String estudiante, String identificacion, List<CeldaNota> notas,
-            Float promedio, String desempeno, Boolean aprobada, long ausencias) {
+            Float promedio, String desempeno, Boolean aprobada, long ausencias, List<NotaPeriodo> periodos) {
     }
 
     public record Planilla(Long cursoId, String curso, Long materiaId, String materia, LocalDateTime generadoEn,
             float notaMinimaAprobatoria, List<ColumnaActividad> actividades, List<FilaEstudiante> estudiantes,
-            Float promedioCurso, int aprobados, int reprobados) {
+            Float promedioCurso, int aprobados, int reprobados,
+            PeriodoResumen periodo, List<PeriodoResumen> periodos, boolean ponderado) {
     }
 }

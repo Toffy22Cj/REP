@@ -1,5 +1,7 @@
 package com.rep.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -32,6 +34,8 @@ public class Asistencia {
     private LocalDate fecha;
 
     @Enumerated(EnumType.STRING)
+
+    @JdbcTypeCode(SqlTypes.VARCHAR) // VARCHAR y no ENUM nativo: añadir valores no rompe MySQL
     @Column(nullable = false)
     private EstadoAsistencia estado;
 
@@ -41,9 +45,14 @@ public class Asistencia {
     @Column(columnDefinition = "TEXT")
     private String observacion;
 
+    /**
+     * PRESENTE y RETARDO cuentan como asistencia; NO_INGRESO es una falla; EXCUSA es una
+     * inasistencia justificada (no cuenta como falla).
+     */
     public enum EstadoAsistencia {
         PRESENTE,
         NO_INGRESO,
-        EXCUSA
+        EXCUSA,
+        RETARDO
     }
 }

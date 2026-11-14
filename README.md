@@ -49,6 +49,15 @@ Solo cuentan los intentos **fallidos** (`LOGIN_MAX_INTENTOS`, por defecto 5, dur
 `LOGIN_BLOQUEO_MINUTOS`, por defecto 15). El contador está en memoria: **reiniciar el
 servidor desbloquea inmediatamente**.
 
+### Periodos académicos y migraciones
+
+- El administrador define los periodos del año (fechas y porcentaje) en el cliente de
+  escritorio. Con periodos, las notas se consultan por periodo y la nota anual se
+  pondera (Decreto 1290). Sin periodos, el cálculo es la media simple de siempre.
+- El esquema se versiona con Flyway: ver [`docs/migraciones.md`](docs/migraciones.md).
+  **Haga una copia de la base antes de actualizar** (`mysqldump colegio > copia.sql`).
+- Informe de madurez y hoja de ruta: [`docs/PRODUCT_EVOLUTION_AND_MATURITY_REPORT.md`](docs/PRODUCT_EVOLUTION_AND_MATURITY_REPORT.md).
+
 ### Notas y funcionamiento sin internet
 
 - `NOTA_MINIMA_APROBATORIA` (por defecto `3.0`) y `VENCIDAS_CUENTAN_CERO` (por defecto
@@ -61,7 +70,7 @@ servidor desbloquea inmediatamente**.
 ### 3. Compilar y probar
 
 ```bash
-mvn test   # 83 pruebas (unitarias + integración de seguridad con H2)
+mvn test   # 90 pruebas (unitarias + integración de seguridad con H2)
 ```
 
 ### 3b. Compilar

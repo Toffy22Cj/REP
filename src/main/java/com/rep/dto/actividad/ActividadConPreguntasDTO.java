@@ -10,6 +10,9 @@ public class ActividadConPreguntasDTO {
     private Long id;
     private String titulo;
     private String descripcion;
+    /** Tiempo para resolverla (el cliente muestra la cuenta regresiva). */
+    private Integer duracionMinutos;
+    private java.time.LocalDate fechaEntrega;
     private List<PreguntaConOpcionesDTO> preguntas;
 
     /**

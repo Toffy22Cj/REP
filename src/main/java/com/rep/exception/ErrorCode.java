@@ -67,6 +67,11 @@ public enum ErrorCode {
     MATERIA_CON_ASIGNACIONES(HttpStatus.CONFLICT, "No se puede eliminar una materia asignada a profesores"),
     ASIGNACION_NO_ENCONTRADA(HttpStatus.NOT_FOUND, "La asignación no existe"),
     ASIGNACION_DUPLICADA(HttpStatus.CONFLICT, "Esa asignación profesor-materia-curso ya existe"),
+    PERIODO_NO_ENCONTRADO(HttpStatus.NOT_FOUND, "El periodo académico no existe"),
+    PERIODO_FECHAS_INVALIDAS(HttpStatus.BAD_REQUEST, "La fecha de inicio del periodo debe ser anterior a la de fin"),
+    PERIODO_SOLAPADO(HttpStatus.CONFLICT, "Las fechas se cruzan con otro periodo del mismo año"),
+    PERIODO_DUPLICADO(HttpStatus.CONFLICT, "Ya existe un periodo con ese número en el año"),
+    PERIODO_PORCENTAJE_EXCEDIDO(HttpStatus.BAD_REQUEST, "La suma de porcentajes del año no puede superar 100 %"),
 
     // ---------------------------------------------------------------- actividades y evaluación
     ACTIVIDAD_NO_ENCONTRADA(HttpStatus.NOT_FOUND, "La actividad no existe"),
